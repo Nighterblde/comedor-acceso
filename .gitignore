@@ -1,0 +1,35 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.rsuser
+TestResults/
+coverage*/
+*.coverage
+*.trx
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+
+# Configuración local y secretos
+appsettings.Development.local.json
+*.env
+.env*
+!.env.example
+secrets.json
+
+# Editores y sistema
+.vs/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Pruebas de carga
+load/resultados/
