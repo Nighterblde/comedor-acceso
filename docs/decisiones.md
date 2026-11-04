@@ -15,6 +15,8 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-09](#d-09-el-cotejo-de-la-factura-cuenta-comidas-servidas) | El cotejo de la factura cuenta comidas servidas | Aceptada, revisable |
 | [D-10](#d-10-integraciones-simuladas-en-la-v1) | Integraciones simuladas en la v1 | Aceptada |
 | [D-11](#d-11-uso-de-la-cuenta-de-otro-empleado) | Uso de la cuenta de otro empleado como riesgo aceptado | Aceptada |
+| [D-12](#d-12-un-solo-punto-de-entrada) | Un solo punto de entrada | Aceptada |
+| [D-13](#d-13-diseño-institucional-sin-identidad-oficial) | Diseño institucional sin identidad oficial | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -24,7 +26,7 @@ El documento de partida describe 15 módulos más funciones hospitalarias. Espec
 
 Un servidor en la red del cliente con una sola base de datos; los dispositivos usan el navegador.
 
-- **Motivo:** con 2 o 3 puntos en red interna, una sola base de datos garantiza que nadie consuma dos veces. Es lo que más importa en un conteo que sirve para pagar al proveedor.
+- **Motivo:** con un solo punto de entrada en red interna, una sola base de datos garantiza que nadie consuma dos veces. Es lo que más importa en un conteo que sirve para pagar al proveedor.
 - **Descartado:** aplicación instalada por punto con base local (conflictos al sincronizar sin conexión) y software comercial (mala integración con la base de turnos propia).
 
 ## D-03 C# por capas y Angular con separación MVC
@@ -76,3 +78,16 @@ La fuente de RR. HH. y el autenticador de la empresa se programan contra interfa
 ## D-11 Uso de la cuenta de otro empleado
 
 Si alguien usa credenciales ajenas, la comida se descuenta al titular y el total no aumenta: la factura sigue correspondiendo a comidas servidas. Se acepta el riesgo; el chef detecta los casos evidentes.
+
+## D-12 Un solo punto de entrada
+
+El comedor tiene una sola entrada, donde el chef sirve la comida. Ahí está la única pantalla con el QR rotativo, la lista "Por servir" y la captura manual.
+
+- **Consecuencia:** la concurrencia que importa es la de un mismo empleado por dos canales (celular y captura manual) o el doble clic en Servido; ambas las cubre la restricción única.
+- **Futuro:** el modelo conserva la entidad PuntoEntrada, así que agregar otra entrada no cambia el diseño.
+
+## D-13 Diseño institucional sin identidad oficial
+
+La interfaz usa un estilo institucional sencillo (Montserrat, verde institucional y acento dorado) definido en la [guía de diseño](diseno.md), sin logotipos, escudos ni nombres de instituciones.
+
+- **Motivo:** la identidad oficial pertenece al cliente; solo se incorpora si la proporciona y autoriza su uso.

@@ -4,9 +4,10 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión | 1.0 |
+| Versión | 1.1 |
 | Fecha | 4 de noviembre de 2026 |
-| Implementa | [SRS v1.0](srs.md) |
+| Implementa | [SRS v1.1](srs.md) |
+| Diseño | [Guía de diseño](diseno.md) |
 | Tareas | 16 (1 a 15, con la 8 dividida en 8a y 8b) |
 
 > **Para agentes:** usar la subskill subagent-driven-development (recomendada) o executing-plans para implementar este plan tarea por tarea. Los pasos usan casillas para dar seguimiento.
@@ -17,7 +18,7 @@
 
 **Tecnología:** .NET 8 LTS, ASP.NET Core, EF Core 8 con SQL Server, xUnit, Moq, Testcontainers.MsSql, ClosedXML, QuestPDF; Angular actual con NgModules, Jasmine y Karma, angularx-qrcode; k6 para la prueba de carga.
 
-**Spec:** [docs/srs.md](srs.md). Quien ejecute el plan lee ambos.
+**Spec:** [docs/srs.md](srs.md). **Diseño:** [docs/diseno.md](diseno.md). Quien ejecute el plan lee los tres.
 
 ## Restricciones globales
 
@@ -40,7 +41,7 @@ Toda tarea cumple implícitamente esta lista.
 - Usuarios del sistema: roles `Punto`, `Encargado`, `Supervisor`, `Administrador`; JWT de 12 h (`Jwt:HorasSistema = 12`) salvo `Punto`, de 30 días (`Jwt:DiasPunto = 30`); contraseñas con `PasswordHasher<UsuarioSistema>`.
 - Pantalla del chef: consulta solicitudes cada 2 s. "Por servir" = consumos del punto sin entrega cuya fecha de servicio y tiempo de comida son los del horario en curso.
 - Textos de UI en español. Motivos exactos: "No registrado", "Contrato vencido", "Hoy es tu día de descanso", "Fuera de horario", "Tu turno no tiene derecho a este tiempo de comida", "Ya consumiste este tiempo de comida". Token inválido: "Escanea de nuevo el código de la entrada".
-- Versión de Angular fijada en la Tarea 1 (la estable vigente al generar el proyecto) y anotada en `README.md`.
+- Interfaz según la guía de diseño [docs/diseno.md](diseno.md) (tipografía, colores, componentes y pantallas de referencia). Versión de Angular fijada en la Tarea 1 (la estable vigente al generar el proyecto) y anotada en `README.md`.
 - Pruebas de integración usan SQL Server en Testcontainers (Docker en desarrollo y en CI).
 - Commits pequeños, uno por paso de commit, con prefijos `feat:`, `test:`, `chore:`.
 
@@ -339,7 +340,7 @@ Comando de prueba del frontend en todas las tareas siguientes, desde `frontend/c
 
 ## Tarea 11: Núcleo del frontend e inicio de sesión del sistema
 
-**Archivos:** crear `modelos/*.model.ts`, `core/almacen.ts`, `auth.service.ts`, `auth.interceptor.ts`, `rol.guard.ts`, `core.module.ts`; `login/login.module.ts`, `login.component.*`; `environments/environment.ts` con `apiUrl`; rutas en `app-routing.module.ts`.
+**Archivos:** crear `modelos/*.model.ts`, `core/almacen.ts`, `auth.service.ts`, `auth.interceptor.ts`, `rol.guard.ts`, `core.module.ts`; `login/login.module.ts`, `login.component.*`; `environments/environment.ts` con `apiUrl`; src/styles/\_tokens.scss con los tokens de docs/diseno.md, importado en styles.scss; rutas en `app-routing.module.ts`.
 
 **Interfaces (produce):**
 
@@ -413,7 +414,7 @@ Pantallas: Reportes con rango de fechas, tablas y botones Excel/PDF; Administrac
 
 **Archivos:** crear `load/validacion.k6.js`, `docs/aceptacion.md`.
 
-- [ ] **Paso 1:** escribir el escenario k6: 1,000 empleados simulados con sesión previa; 3 puntos; 50 validaciones por minuto sostenidas durante 20 minutos y un pico de 150 por minuto durante 2 minutos. Umbrales: `http_req_duration{name:celular}` p95 < 2000 ms, `{name:manual}` p95 < 1000 ms, `http_req_failed` < 1 %.
+- [ ] **Paso 1:** escribir el escenario k6: 1,000 empleados simulados con sesión previa; 1 punto de entrada; 50 validaciones por minuto sostenidas durante 20 minutos y un pico de 150 por minuto durante 2 minutos. Umbrales: `http_req_duration{name:celular}` p95 < 2000 ms, `{name:manual}` p95 < 1000 ms, `http_req_failed` < 1 %.
 - [ ] **Paso 2:** `k6 run load/validacion.k6.js` contra un entorno con SQL Server → los umbrales pasan; luego verificar que el conteo de Consumo es igual al número de autorizados.
 - [ ] **Paso 3:** recorrer cada criterio de la sección 9.2 del SRS en un entorno de prueba y registrar el resultado y la evidencia en `docs/aceptacion.md`.
 - [ ] **Paso 4:** `git commit -m "test: carga y aceptación"`

@@ -4,12 +4,17 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión | 1.0 |
+| Versión | 1.1 |
 | Fecha | 4 de noviembre de 2026 |
 | Estado | Borrador para revisión con el cliente |
 | Alcance | Subproyecto 1 de la plataforma del comedor |
-| Plan asociado | [plan.md](plan.md) |
+| Documentos asociados | [Plan de implementación](plan.md) · [Guía de diseño](diseno.md) · [Decisiones](decisiones.md) |
 | Fuente editable | Documento colaborativo en Claude (este archivo es una exportación) |
+
+| Versión | Cambios |
+| --- | --- |
+| 1.0 | Versión inicial aprobada para planeación. |
+| 1.1 | Un solo punto de entrada, donde el chef sirve la comida. Referencia a la guía de diseño. |
 
 ## 1. Introducción
 
@@ -55,7 +60,7 @@ Es un sistema nuevo e independiente que corre en un servidor dentro de la red de
 
 ### 2.3 Escala de operación
 
-Un comedor, 2 o 3 puntos de entrada y de 300 a 1,000 comidas por servicio.
+Un comedor con un solo punto de entrada, donde el chef sirve la comida, y de 300 a 1,000 comidas por servicio. El modelo de datos admite agregar puntos en el futuro sin cambiar el diseño.
 
 ### 2.4 Restricciones
 
@@ -95,7 +100,7 @@ Un comedor, 2 o 3 puntos de entrada y de 300 a 1,000 comidas por servicio.
 
 - Servidor y red interna provistos por el cliente.
 
-- Una pantalla o tablet por punto de entrada, a la vista del chef, para el QR rotativo, la lista de solicitudes y la captura manual.
+- Una pantalla o tablet en la entrada, a la vista del chef, para el QR rotativo, la lista de solicitudes y la captura manual.
 
 ### 2.7 Riesgos aceptados
 
@@ -125,7 +130,7 @@ Prioridad: **Alta** = indispensable para la v1; **Media** = deseable en la v1.
 | RF-11                          | El celular muestra un pase a pantalla completa: Autorizado o Rechazado, foto, nombre, turno, tiempo de comida, hora, y una animación continua que distingue el pase vivo de una captura de pantalla.                                                                                                             | Alta      |
 | RF-12                          | Un rechazo muestra su motivo: no registrado, contrato vencido, día de descanso, fuera de horario, turno sin derecho a este tiempo o ya consumió.                                                                                                                                                                 | Alta      |
 | RF-13                          | El rechazo es definitivo; no hay excepciones manuales en la v1.                                                                                                                                                                                                                                                  | Alta      |
-| RF-14                          | Un empleado puede consumir solo una vez por tiempo de comida y fecha de servicio, sin importar el punto ni el canal.                                                                                                                                                                                             | Alta      |
+| RF-14                          | Un empleado puede consumir solo una vez por tiempo de comida y fecha de servicio, sin importar el canal (celular, manual o contingencia).                                                                                                                                                                        | Alta      |
 | RF-15                          | El chef puede capturar la matrícula de un empleado sin celular en la pantalla del punto; aplica las mismas verificaciones.                                                                                                                                                                                       | Alta      |
 | RF-16                          | La identificación es independiente de la validación, de modo que se puedan agregar otros métodos (por ejemplo, huella) sin cambiar las reglas.                                                                                                                                                                   | Alta      |
 | RF-31                          | Etapa de registro previo: un enlace permite iniciar sesión y dejar el celular listo antes del arranque, sin registrar consumo.                                                                                                                                                                                   | Media     |
@@ -151,9 +156,9 @@ Prioridad: **Alta** = indispensable para la v1; **Media** = deseable en la v1.
 | ID     | Categoría      | Requisito                                                                                                                                                                          |
 |--------|----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | RNF-01 | Rendimiento    | Con sesión ya iniciada, el pase aparece en menos de 2 segundos desde que se escanea el QR; la captura manual responde en menos de 1 segundo.                                       |
-| RNF-02 | Capacidad      | Soporta 3 puntos de entrada y 1,000 consumos por servicio, con picos de 50 validaciones por minuto, sin degradarse.                                                                |
+| RNF-02 | Capacidad      | Soporta en su punto de entrada 1,000 consumos por servicio, con picos de 50 validaciones por minuto, sin degradarse.                                                               |
 | RNF-03 | Integridad     | Dos validaciones simultáneas del mismo empleado producen un solo consumo (restricción única en base de datos sobre matrícula, fecha de servicio y tiempo de comida).               |
-| RNF-04 | Auditoría      | Los registros de consumo, entrega y rechazo son de solo inserción; ningún endpoint ni rol los modifica.                                                                                     |
+| RNF-04 | Auditoría      | Los registros de consumo, entrega y rechazo son de solo inserción; ningún endpoint ni rol los modifica.                                                                            |
 | RNF-05 | Disponibilidad | Si la fuente RR. HH. no responde, el sistema sigue validando con la última copia sincronizada y muestra un aviso.                                                                  |
 | RNF-06 | Seguridad      | Tokens de QR firmados con HMAC-SHA256 y clave del servidor; contraseñas de usuarios del sistema con hash; HTTPS dentro de la red; las credenciales de la empresa nunca se guardan. |
 | RNF-07 | Respaldo       | Respaldo automático diario de la base de datos del sistema.                                                                                                                        |
@@ -174,12 +179,12 @@ Infraestructura implementa las interfaces que define Aplicación; la API solo la
 
 ### 5.1 Backend en C#: arquitectura por capas
 
-| Capa            | Proyecto               | Contenido                                                                                                                                                                                                                                                              | Depende de                                      |
-|-----------------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
-| Dominio         | Comedor.Domain         | Entidades (Empleado, Turno, TiempoComida, ReglaDerecho, Consumo, Rechazo, Entrega, PuntoEntrada), reglas puras ("¿tiene derecho?", "¿ya comió?", fecha de servicio) y motivos de rechazo.                                                                                       | Nada                                            |
+| Capa            | Proyecto               | Contenido                                                                                                                                                                                                                                                                                                | Depende de                                      |
+|-----------------|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
+| Dominio         | Comedor.Domain         | Entidades (Empleado, Turno, TiempoComida, ReglaDerecho, Consumo, Rechazo, Entrega, PuntoEntrada), reglas puras ("¿tiene derecho?", "¿ya comió?", fecha de servicio) y motivos de rechazo.                                                                                                                | Nada                                            |
 | Aplicación      | Comedor.Application    | Casos de uso: EmitirTokenQr, ValidarAcceso, ListarSolicitudes, MarcarServido, IniciarSesionEmpleado, SincronizarPersonal, GenerarReporte, AdministrarReglas. Interfaces (IEmpleadoRepositorio, IConsumoRepositorio, IFuentePersonalRRHH, IAutenticadorEmpresa, IFirmaToken, IReloj, IExportador) y DTOs. | Dominio                                         |
-| Infraestructura | Comedor.Infrastructure | EF Core sobre SQL Server, repositorios, adaptadores de la fuente RR. HH. y del autenticador de la empresa (simulados en la v1), firma HMAC de tokens, exportación a Excel (ClosedXML) y PDF (QuestPDF).                                                                | Aplicación                                      |
-| Presentación    | Comedor.Api            | Controladores REST, autenticación JWT por roles, tarea programada de sincronización, registro de dependencias.                                                                                                                                                         | Aplicación (Infraestructura solo para conectar) |
+| Infraestructura | Comedor.Infrastructure | EF Core sobre SQL Server, repositorios, adaptadores de la fuente RR. HH. y del autenticador de la empresa (simulados en la v1), firma HMAC de tokens, exportación a Excel (ClosedXML) y PDF (QuestPDF).                                                                                                  | Aplicación                                      |
+| Presentación    | Comedor.Api            | Controladores REST, autenticación JWT por roles, tarea programada de sincronización, registro de dependencias.                                                                                                                                                                                           | Aplicación (Infraestructura solo para conectar) |
 
 Un proyecto de pruebas por capa: Comedor.Domain.Tests, Comedor.Application.Tests y Comedor.Api.Tests (integración).
 
@@ -193,7 +198,7 @@ Angular se basa en componentes; la separación MVC se aplica así:
 
 - **Controlador:** servicios Angular (pase.service.ts, punto.service.ts, reportes.service.ts, admin.service.ts, auth.service.ts) con la lógica de pantalla; son los únicos que llaman a la API.
 
-Cuatro módulos funcionales: **Pase** (celular del empleado: inicio de sesión y pase), **Punto** (pantalla del chef: QR rotativo, solicitudes por servir y captura manual), **Reportes** y **Administración**, más un módulo compartido de autenticación.
+Cuatro módulos funcionales: **Pase** (celular del empleado: inicio de sesión y pase), **Punto** (pantalla del chef: QR rotativo, solicitudes por servir y captura manual), **Reportes** y **Administración**, más un módulo compartido de autenticación. La interfaz sigue la guía de diseño del repositorio ([docs/diseno.md](diseno.md)): estilo institucional sencillo, tipografía Montserrat, verde institucional con acento dorado, sin logotipos oficiales hasta que el cliente los proporcione.
 
 ### 5.3 Base de datos
 
@@ -207,7 +212,7 @@ Antes de las verificaciones, el servidor confirma que el token del QR es autént
 
 flujo de validación · 6 verificaciones
 
-La verificación "¿ya consumió?" y el registro del consumo ocurren en una sola transacción con restricción única (empleado, fecha, tiempo de comida), de modo que dos puntos de entrada no pueden registrar a la misma persona dos veces (RNF-03).
+La verificación "¿ya consumió?" y el registro del consumo ocurren en una sola transacción con restricción única (empleado, fecha, tiempo de comida), de modo que dos intentos simultáneos (por ejemplo, celular y captura manual) no pueden registrar a la misma persona dos veces (RNF-03).
 
 **Secuencia técnica (celular):** la pantalla del punto pide GET /api/puntos/{id}/qr cada 30 s y dibuja el QR con la URL /pase?t=\<token\> → el celular abre esa URL; si no hay sesión, auth.service.ts llama POST /api/empleados/sesion (valida con IAutenticadorEmpresa y devuelve un JWT de empleado) → pase.service.ts llama POST /api/accesos/celular con el token → ValidarAcceso verifica el token, aplica las reglas y guarda el consumo o el rechazo → el celular muestra el pase.
 
@@ -243,7 +248,7 @@ Ningún error puede producir un consumo duplicado ni perder uno registrado.
 | ID o contraseña de la empresa incorrectos                                               | El celular muestra "Credenciales incorrectas"; tras 5 intentos fallidos en 15 minutos se bloquea ese ID por 15 minutos.                            |
 | El servicio de autenticación de la empresa no responde                                  | El celular muestra "No se pudo verificar tu cuenta; acude con el encargado" y el chef usa la captura manual.                                       |
 | Empleado sin celular, sin batería o sin Wi-Fi                                           | El chef captura su matrícula en el punto (RF-15).                                                                                                  |
-| El chef presiona Servido dos veces o desde dos pantallas                                | La entrega es única por consumo; el segundo clic no crea otra y la pantalla lo muestra como ya servido.                                            |
+| El chef presiona Servido dos veces seguidas                                             | La entrega es única por consumo; el segundo clic no crea otra y la pantalla lo muestra como ya servido.                                            |
 | Un autorizado nunca recoge su comida                                                    | Queda en "Por servir" hasta el fin del horario; luego sale de la lista y aparece en el reporte como autorizado sin servir.                         |
 | La pantalla del punto pierde conexión                                                   | Deja de mostrar QR y muestra "Sin conexión"; un QR que no se renueva caduca solo a los 60 segundos. Al reconectar, recupera la lista "Por servir". |
 | El servidor no está disponible                                                          | Procedimiento de contingencia: lista en papel firmada por el chef, capturada después por un administrador como consumos de canal Contingencia.     |
@@ -261,7 +266,7 @@ La captura de contingencia agrega un requisito: **RF-26 (Media)** registrar cons
 | Unitarias de aplicación | Casos de uso con repositorios simulados                                                                | xUnit + Moq                   |
 | Integración             | API + SQL Server real: restricción única, inmutabilidad de consumos, sincronización                    | xUnit + WebApplicationFactory |
 | Frontend                | Servicios y componentes de la pantalla de entrada                                                      | Jasmine/Karma o Jest          |
-| Carga                   | 3 puntos simultáneos, 1,000 validaciones por servicio                                                  | k6 o JMeter                   |
+| Carga                   | Un punto con 1,000 validaciones por servicio y picos de 50 por minuto                                  | k6 o JMeter                   |
 
 ### 9.2 Criterios de aceptación
 
@@ -275,7 +280,7 @@ La captura de contingencia agrega un requisito: **RF-26 (Media)** registrar cons
 
 - [ ] Cada uno de los seis motivos de rechazo aparece en el pase cuando corresponde.
 
-- [ ] Un segundo intento del mismo empleado en el mismo tiempo de comida, por cualquier punto o canal, es rechazado.
+- [ ] Un segundo intento del mismo empleado en el mismo tiempo de comida, por cualquier canal, es rechazado.
 
 - [ ] Dos validaciones simultáneas del mismo empleado producen un solo consumo.
 

@@ -6,7 +6,7 @@ Sistema para controlar el acceso al comedor de personal: valida en tiempo real s
 
 ## Cómo funciona
 
-1. La pantalla del punto de entrada muestra un **código QR que cambia cada 30 segundos**.
+1. La pantalla de la entrada, donde el chef sirve la comida, muestra un **código QR que cambia cada 30 segundos**.
 2. El empleado lo escanea con la cámara de su celular e inicia sesión una sola vez con su ID y contraseña de la empresa.
 3. El sistema aplica **seis verificaciones**: registrado, contrato vigente, día laboral, servicio en curso, turno con derecho y que no haya comido ya.
 4. El celular muestra un pase **Autorizado** o **Rechazado** con el motivo. La solicitud aparece al instante en la **pantalla del chef**, con foto y nombre.
@@ -22,6 +22,7 @@ Quien no tenga celular puede identificarse con su matrícula ante el chef, que l
 | --- | --- |
 | [Especificación de requisitos (SRS)](docs/srs.md) | Alcance, usuarios, requisitos funcionales y no funcionales, arquitectura, modelo de datos, errores, criterios de aceptación y pendientes con el cliente. |
 | [Plan de implementación](docs/plan.md) | 16 tareas con desarrollo guiado por pruebas: archivos, interfaces, pruebas y comandos de cada una. |
+| [Guía de diseño](docs/diseno.md) | Principios, colores, tipografía, componentes, pantallas de referencia y reglas de accesibilidad del frontend. |
 | [Registro de decisiones](docs/decisiones.md) | Decisiones de arquitectura y de negocio, con su motivo y alternativas descartadas. |
 
 ## Arquitectura
@@ -31,7 +32,7 @@ Quien no tenga celular puede identificarse con su matrícula ante el chef, que l
 | Componente | Tecnología |
 | --- | --- |
 | Backend | C# · ASP.NET Core sobre .NET 8 LTS, arquitectura por capas (Dominio, Aplicación, Infraestructura, API) |
-| Frontend | Angular con NgModules, separación modelo-vista-controlador |
+| Frontend | Angular con NgModules, separación modelo-vista-controlador; interfaz según la [guía de diseño](docs/diseno.md) |
 | Base de datos | SQL Server con Entity Framework Core 8 |
 | Pruebas | xUnit, Moq, Testcontainers (SQL Server), Jasmine y Karma, k6 |
 | Reportes | ClosedXML (Excel) y QuestPDF (PDF) |
