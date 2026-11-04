@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Comedor.Application\Comedor.Application.csproj" />
+    <ProjectReference Include="..\..\src\Comedor.Infrastructure\Comedor.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
