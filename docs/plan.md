@@ -6,11 +6,13 @@
 | --- | --- |
 | Versión | 1.3 |
 | Fecha | 4 de noviembre de 2026 |
-| Implementa | [SRS v1.3](srs.md) |
+| Implementa | [SRS v1.4](srs.md) |
 | Diseño | [Guía de diseño](diseno.md) |
 | Tareas | 16 (1 a 15, con la 8 dividida en 8a y 8b) |
 
 > **Para agentes:** usar la subskill subagent-driven-development (recomendada) o executing-plans para implementar este plan tarea por tarea. Los pasos usan casillas para dar seguimiento.
+
+**Avance al 5 de noviembre de 2026:** tareas 1 a 13 terminadas y fusionadas en `main` (pull requests #1 a #6). Faltan la Tarea 14 (Reportes y Administración en el frontend) y la Tarea 15 (prueba de carga y aceptación).
 
 **Objetivo:** construir el sistema de control de acceso y consumo del comedor de personal descrito en el SRS: entrada por celular con QR permanente impreso, captura manual del encargado, registro inalterable y reportes de cotejo de factura.
 
@@ -112,7 +114,7 @@ load/validacion.k6.js
 
 **Interfaces:** produce la solución y las referencias de la sección Restricciones globales.
 
-- [ ] **Paso 1: escribir la prueba que falla**
+- [x] **Paso 1: escribir la prueba que falla**
 
 ```csharp
 [Fact] public void Dominio_NoReferenciaOtrosEnsamblados() =>
@@ -121,10 +123,10 @@ load/validacion.k6.js
 [Fact] public void Aplicacion_NoReferenciaInfraestructuraNiApi() => /* mismas aserciones sobre Comedor.Application con "Comedor.Infrastructure" y "Comedor.Api" */;
 ```
 
-- [ ] **Paso 2:** `dotnet test backend/Comedor.sln` → falla de compilación (no existe `Empleado`).
-- [ ] **Paso 3:** crear proyectos y referencias; `Empleado` como `record` vacío temporal.
-- [ ] **Paso 4:** `dotnet test backend/Comedor.sln` → PASA. `cd frontend/comedor-web && npx ng test --watch=false --browsers=ChromeHeadless` → PASA.
-- [ ] **Paso 5:** `git commit -m "chore: estructura del monorepo y reglas de dependencia"`
+- [x] **Paso 2:** `dotnet test backend/Comedor.sln` → falla de compilación (no existe `Empleado`).
+- [x] **Paso 3:** crear proyectos y referencias; `Empleado` como `record` vacío temporal.
+- [x] **Paso 4:** `dotnet test backend/Comedor.sln` → PASA. `cd frontend/comedor-web && npx ng test --watch=false --browsers=ChromeHeadless` → PASA.
+- [x] **Paso 5:** `git commit -m "chore: estructura del monorepo y reglas de dependencia"`
 
 ## Tarea 2: Dominio, reglas de derecho y fecha de servicio
 
@@ -143,7 +145,7 @@ load/validacion.k6.js
 
 Orden de `Evaluar`: (1) empleado nulo o inactivo → NoRegistrado; (2) se toma la regla de su turno que contiene la hora y su fecha de servicio, o la fecha del calendario si no hay ninguna; contrato no vigente en esa fecha → ContratoVencido; (3) esa fecha no está en sus días laborales → DiaDescanso; (4) ninguna regla de ningún turno contiene la hora → FueraDeHorario; (5) ninguna regla de su turno la contiene → TurnoSinDerecho; (6) `yaConsumio(fecha, tiempo)` → YaConsumio; si no, autorizado.
 
-- [ ] **Paso 1: escribir las pruebas que fallan.** Reglas fijas: M-Comida 13:00–15:00, V-Cena 19:00–21:00, N-Desayuno 06:00–07:30, N-Cena 23:30–00:30. Contrato 2026-08-01 a 2026-12-31 salvo donde se indica.
+- [x] **Paso 1: escribir las pruebas que fallan.** Reglas fijas: M-Comida 13:00–15:00, V-Cena 19:00–21:00, N-Desayuno 06:00–07:30, N-Cena 23:30–00:30. Contrato 2026-08-01 a 2026-12-31 salvo donde se indica.
 
 | Prueba | Entrada | Aserción |
 | --- | --- | --- |
@@ -165,10 +167,10 @@ Orden de `Evaluar`: (1) empleado nulo o inactivo → NoRegistrado; (2) se toma l
 
 Días laborales en todas las pruebas: lunes a viernes, salvo donde se indica. Reglas adicionales: N-Desayuno 06:00–07:30 con `PerteneceAJornadaAnterior = true`.
 
-- [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Domain.Tests` → FALLA (tipos no definidos).
-- [ ] **Paso 3:** implementar los tipos con las firmas de arriba.
-- [ ] **Paso 4:** mismo comando → PASA (incluye las pruebas de la Tarea 1).
-- [ ] **Paso 5:** `git commit -m "feat: dominio y reglas de derecho"`
+- [x] **Paso 2:** `dotnet test backend/tests/Comedor.Domain.Tests` → FALLA (tipos no definidos).
+- [x] **Paso 3:** implementar los tipos con las firmas de arriba.
+- [x] **Paso 4:** mismo comando → PASA (incluye las pruebas de la Tarea 1).
+- [x] **Paso 5:** `git commit -m "feat: dominio y reglas de derecho"`
 
 ## Tarea 3: Persistencia con EF Core y SQL Server
 
@@ -183,11 +185,11 @@ Días laborales en todas las pruebas: lunes a viernes, salvo donde se indica. Re
 - `IPuntoRepositorio`: `Task<PuntoEntrada?> ObtenerAsync(string id)`, `Task<IReadOnlyList<PuntoEntrada>> TodosAsync()`, `Task GuardarAsync(PuntoEntrada p)`.
 - `ComedorDbContext.SaveChangesAsync` lanza `InvalidOperationException("Los consumos, rechazos y entregas no se modifican ni se borran")` si hay un Consumo, Rechazo o Entrega en estado Modified o Deleted.
 
-* [ ] **Paso 1: escribir las pruebas que fallan:** `RegistrarConsumo_DosVecesMismaClave_LanzaConsumoDuplicado`; `YaConsumio_TrasRegistrar_EsVerdadero`; `YaConsumio_OtraFechaServicio_EsFalso`; `RegistrarEntrega_DosVeces_LanzaEntregaDuplicada`; `Solicitudes_IncluyeConsumosYRechazosDelPunto_ConServido`; `DiasLaborales_IdaYVuelta` (lunes, miércoles y viernes se guardan y se leen iguales); `ModificarConsumo_LanzaInvalidOperation`; `BorrarEntrega_LanzaInvalidOperation`.
-* [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Api.Tests --filter Persistencia` → FALLA.
-* [ ] **Paso 3:** implementar DbContext, índices únicos, conversión de `DiasLaborales`, repositorios y migración `Inicial`.
-* [ ] **Paso 4:** mismo comando → PASA.
-* [ ] **Paso 5:** `git commit -m "feat: persistencia y registro inalterable"`
+* [x] **Paso 1: escribir las pruebas que fallan:** `RegistrarConsumo_DosVecesMismaClave_LanzaConsumoDuplicado`; `YaConsumio_TrasRegistrar_EsVerdadero`; `YaConsumio_OtraFechaServicio_EsFalso`; `RegistrarEntrega_DosVeces_LanzaEntregaDuplicada`; `Solicitudes_IncluyeConsumosYRechazosDelPunto_ConServido`; `DiasLaborales_IdaYVuelta` (lunes, miércoles y viernes se guardan y se leen iguales); `ModificarConsumo_LanzaInvalidOperation`; `BorrarEntrega_LanzaInvalidOperation`.
+* [x] **Paso 2:** `dotnet test backend/tests/Comedor.Api.Tests --filter Persistencia` → FALLA.
+* [x] **Paso 3:** implementar DbContext, índices únicos, conversión de `DiasLaborales`, repositorios y migración `Inicial`.
+* [x] **Paso 4:** mismo comando → PASA.
+* [x] **Paso 5:** `git commit -m "feat: persistencia y registro inalterable"`
 
 ## Tarea 4: Token QR firmado y rotativo
 
@@ -202,11 +204,11 @@ Días laborales en todas las pruebas: lunes a viernes, salvo donde se indica. Re
 - `ValidadorTokenQr.ValidarAsync(string token) → Task<string?>`: devuelve el PuntoId solo si la firma es válida, `Ahora() - EmitidoEn ≤ 60 s` y el punto está activo.
 - **Cambio posterior ([D-21](decisiones.md#d-21-qr-permanente-impreso)):** la Tarea 13 quita la condición de antigüedad; las pruebas de 59 y 61 s se sustituyen por `TokenAntiguo_SigueSiendoValido`.
 
-* [ ] **Paso 1: escribir las pruebas que fallan:** `TokenRecienEmitido_EsValido`; `TokenCon59Segundos_EsValido`; `TokenCon61Segundos_EsInvalido`; `TokenAlterado_EsInvalido` (cambiar un carácter de la parte 1); `TokenFirmadoConOtraClave_EsInvalido`; `TokenDePuntoInactivo_EsInvalido`; `Emitir_PuntoInactivo_Lanza`. Usar un `IReloj` falso y `FirmaTokenHmac` real.
-* [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Application.Tests --filter Qr` → FALLA.
-* [ ] **Paso 3:** implementar con `System.Security.Cryptography.HMACSHA256` y comparación con `CryptographicOperations.FixedTimeEquals`.
-* [ ] **Paso 4:** mismo comando → PASA.
-* [ ] **Paso 5:** `git commit -m "feat: token QR firmado"`
+* [x] **Paso 1: escribir las pruebas que fallan:** `TokenRecienEmitido_EsValido`; `TokenCon59Segundos_EsValido`; `TokenCon61Segundos_EsInvalido`; `TokenAlterado_EsInvalido` (cambiar un carácter de la parte 1); `TokenFirmadoConOtraClave_EsInvalido`; `TokenDePuntoInactivo_EsInvalido`; `Emitir_PuntoInactivo_Lanza`. Usar un `IReloj` falso y `FirmaTokenHmac` real.
+* [x] **Paso 2:** `dotnet test backend/tests/Comedor.Application.Tests --filter Qr` → FALLA.
+* [x] **Paso 3:** implementar con `System.Security.Cryptography.HMACSHA256` y comparación con `CryptographicOperations.FixedTimeEquals`.
+* [x] **Paso 4:** mismo comando → PASA.
+* [x] **Paso 5:** `git commit -m "feat: token QR firmado"`
 
 ## Tarea 5: Caso de uso ValidarAcceso (celular y manual)
 
@@ -219,11 +221,11 @@ Días laborales en todas las pruebas: lunes a viernes, salvo donde se indica. Re
 
 Comportamiento: normalizar matrícula; en celular, token inválido → `EscanearDeNuevo` con el texto exacto, sin registrar nada; un rechazo se registra con `Rechazo.Crear`; un autorizado se registra con `Consumo.Crear`; si `RegistrarConsumoAsync` lanza `ConsumoDuplicadoException`, se registra un Rechazo YaConsumio y se devuelve Rechazado con su texto.
 
-- [ ] **Paso 1: escribir las pruebas que fallan:** `Celular_TokenInvalido_EscanearDeNuevo_SinRegistros` (verifica `RegistrarRechazoAsync` y `RegistrarConsumoAsync` nunca llamados); `Celular_Autorizado_RegistraConsumoCanalCelular`; `Manual_Autorizado_RegistraConsumoCanalManualConEncargado`; `Manual_MatriculaConEspaciosYMinusculas_SeNormaliza` (" ab123 " → busca "AB123"); `Rechazo_RegistraMotivo`; `ConsumoDuplicado_DevuelveYaConsumio_YRegistraRechazo`; `CruceMedianoche_SegundoIntento_EsYaConsumio` (repositorio en memoria; 00:15 y 00:20 del 2026-11-11 con regla N-Cena 23:30–00:30).
-- [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Application.Tests --filter Accesos` → FALLA.
-- [ ] **Paso 3:** implementar `ValidarAcceso`.
-- [ ] **Paso 4:** mismo comando → PASA.
-- [ ] **Paso 5:** `git commit -m "feat: caso de uso de validación de acceso"`
+- [x] **Paso 1: escribir las pruebas que fallan:** `Celular_TokenInvalido_EscanearDeNuevo_SinRegistros` (verifica `RegistrarRechazoAsync` y `RegistrarConsumoAsync` nunca llamados); `Celular_Autorizado_RegistraConsumoCanalCelular`; `Manual_Autorizado_RegistraConsumoCanalManualConEncargado`; `Manual_MatriculaConEspaciosYMinusculas_SeNormaliza` (" ab123 " → busca "AB123"); `Rechazo_RegistraMotivo`; `ConsumoDuplicado_DevuelveYaConsumio_YRegistraRechazo`; `CruceMedianoche_SegundoIntento_EsYaConsumio` (repositorio en memoria; 00:15 y 00:20 del 2026-11-11 con regla N-Cena 23:30–00:30).
+- [x] **Paso 2:** `dotnet test backend/tests/Comedor.Application.Tests --filter Accesos` → FALLA.
+- [x] **Paso 3:** implementar `ValidarAcceso`.
+- [x] **Paso 4:** mismo comando → PASA.
+- [x] **Paso 5:** `git commit -m "feat: caso de uso de validación de acceso"`
 
 ## Tarea 6: Inicio de sesión del empleado
 
@@ -236,11 +238,11 @@ Comportamiento: normalizar matrícula; en celular, token inválido → `Escanear
 - `enum ErrorSesion { CredencialesIncorrectas, Bloqueado, ServicioNoDisponible }`; `record ResultadoSesion(bool Exito, string? Token, ErrorSesion? Error)`; `Task<ResultadoSesion> IniciarSesionEmpleado.EjecutarAsync(string id, string contrasena)`.
 - `ControlIntentos` en memoria (`IMemoryCache`): `bool EstaBloqueado(string id)`, `void RegistrarFallo(string id)`, `void Limpiar(string id)`, con 5 fallos en 15 min → bloqueo de 15 min según `IReloj`.
 
-* [ ] **Paso 1: escribir las pruebas que fallan:** `CredencialesCorrectas_DevuelveJwtRolEmpleado_SubMatricula_Vigencia30Dias`; `CredencialesIncorrectas_DevuelveError`; `CincoFallos_SextoIntentoBloqueado_AunConContrasenaCorrecta`; `Bloqueo_SeLevantaA15Minutos`; `AutenticadorLanza_DevuelveServicioNoDisponible`; `IdSeNormaliza` (" ab123 " → "AB123").
-* [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Application.Tests --filter Sesion` → FALLA.
-* [ ] **Paso 3:** implementar; el JWT usa `System.IdentityModel.Tokens.Jwt` con la clave `Jwt:Clave`.
-* [ ] **Paso 4:** mismo comando → PASA.
-* [ ] **Paso 5:** `git commit -m "feat: inicio de sesión de empleado"`
+* [x] **Paso 1: escribir las pruebas que fallan:** `CredencialesCorrectas_DevuelveJwtRolEmpleado_SubMatricula_Vigencia30Dias`; `CredencialesIncorrectas_DevuelveError`; `CincoFallos_SextoIntentoBloqueado_AunConContrasenaCorrecta`; `Bloqueo_SeLevantaA15Minutos`; `AutenticadorLanza_DevuelveServicioNoDisponible`; `IdSeNormaliza` (" ab123 " → "AB123").
+* [x] **Paso 2:** `dotnet test backend/tests/Comedor.Application.Tests --filter Sesion` → FALLA.
+* [x] **Paso 3:** implementar; el JWT usa `System.IdentityModel.Tokens.Jwt` con la clave `Jwt:Clave`.
+* [x] **Paso 4:** mismo comando → PASA.
+* [x] **Paso 5:** `git commit -m "feat: inicio de sesión de empleado"`
 
 ## Tarea 7: Sincronización de personal
 
@@ -254,11 +256,11 @@ Comportamiento: normalizar matrícula; en celular, token inválido → `Escanear
 
 Reglas: matrícula vacía o turno no presente en el catálogo → omitido; empleado local ausente en la fuente → `Activo = false` (baja); la fuente lanza excepción → `Exito = false`, datos locales intactos.
 
-- [ ] **Paso 1: escribir las pruebas que fallan:** `EmpleadoNuevo_CuentaComoAlta`; `CambioDeTurno_CuentaComoCambio`; `AusenteEnFuente_SeDaDeBaja`; `MatriculaVacia_SeOmiteYContinua`; `TurnoDesconocido_SeOmite`; `FuenteCaida_NoModificaDatos_YRegistraError`; `CadaEjecucion_EscribeBitacora`.
-- [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Application.Tests --filter Sincronizacion` → FALLA.
-- [ ] **Paso 3:** implementar caso de uso, adaptador simulado y tarea programada.
-- [ ] **Paso 4:** mismo comando → PASA.
-- [ ] **Paso 5:** `git commit -m "feat: sincronización de personal"`
+- [x] **Paso 1: escribir las pruebas que fallan:** `EmpleadoNuevo_CuentaComoAlta`; `CambioDeTurno_CuentaComoCambio`; `AusenteEnFuente_SeDaDeBaja`; `MatriculaVacia_SeOmiteYContinua`; `TurnoDesconocido_SeOmite`; `FuenteCaida_NoModificaDatos_YRegistraError`; `CadaEjecucion_EscribeBitacora`.
+- [x] **Paso 2:** `dotnet test backend/tests/Comedor.Application.Tests --filter Sincronizacion` → FALLA.
+- [x] **Paso 3:** implementar caso de uso, adaptador simulado y tarea programada.
+- [x] **Paso 4:** mismo comando → PASA.
+- [x] **Paso 5:** `git commit -m "feat: sincronización de personal"`
 
 ## Tarea 8a: API base, autenticación y roles
 
@@ -270,11 +272,11 @@ Reglas: matrícula vacía o turno no presente en el catálogo → omitido; emple
 - `GET /api/auth/yo` (cualquier rol del sistema) → `{usuario, rol}`.
 - Se siembra un administrador desde `Semilla:Admin` si no hay usuarios.
 
-* [ ] **Paso 1: escribir las pruebas que fallan:** `Login_AdminSemilla_DevuelveToken12h`; `Login_RolPunto_DevuelveToken30Dias`; `Login_ContrasenaIncorrecta_401`; `Yo_SinToken_401`; `Yo_ConToken_DevuelveUsuarioYRol`.
-* [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Api.Tests --filter AuthTests` → FALLA.
-* [ ] **Paso 3:** implementar configuración y controlador.
-* [ ] **Paso 4:** mismo comando → PASA.
-* [ ] **Paso 5:** `git commit -m "feat: API base y autenticación por roles"`
+* [x] **Paso 1: escribir las pruebas que fallan:** `Login_AdminSemilla_DevuelveToken12h`; `Login_RolPunto_DevuelveToken30Dias`; `Login_ContrasenaIncorrecta_401`; `Yo_SinToken_401`; `Yo_ConToken_DevuelveUsuarioYRol`.
+* [x] **Paso 2:** `dotnet test backend/tests/Comedor.Api.Tests --filter AuthTests` → FALLA.
+* [x] **Paso 3:** implementar configuración y controlador.
+* [x] **Paso 4:** mismo comando → PASA.
+* [x] **Paso 5:** `git commit -m "feat: API base y autenticación por roles"`
 
 ## Tarea 8b: Endpoints de acceso, pantalla del chef y concurrencia
 
@@ -296,11 +298,11 @@ Reglas: matrícula vacía o turno no presente en el catálogo → omitido; emple
 
 La matrícula del canal celular sale del `sub` del JWT, nunca del cuerpo. El usuario de la sesión queda como encargado de la captura manual y de la entrega.
 
-- [ ] **Paso 1: escribir las pruebas que fallan:** `AccesoCelular_SinToken_401`; `AccesoManual_ConRolEmpleado_403`; `AccesoCelular_TokenQrDeOtraClave_EscanearDeNuevo`; `FlujoCompleto_SesionQrYAcceso_Autorizado`; `Solicitudes_AutorizadoAparecePorServir_ConNombre`; `Servido_MarcaServidoEnSolicitudes`; `Servido_DosVecesSimultaneas_UnaEntrega` (`Task.WhenAll`: una respuesta `yaServido=false`, otra `true`, 1 fila en Entrega, ningún 500); `Servido_ConsumoInexistente_404`; `Concurrencia_CelularYManualSimultaneos_UnSoloConsumo` (exactamente un `Autorizado`, un `Rechazado` con "Ya consumiste este tiempo de comida", ningún 500, 1 fila en Consumo).
-- [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Api.Tests --filter AccesosApiTests` → FALLA.
-- [ ] **Paso 3:** implementar casos de uso y controladores.
-- [ ] **Paso 4:** mismo comando → PASA.
-- [ ] **Paso 5:** `git commit -m "feat: endpoints de acceso y pantalla del chef"`
+- [x] **Paso 1: escribir las pruebas que fallan:** `AccesoCelular_SinToken_401`; `AccesoManual_ConRolEmpleado_403`; `AccesoCelular_TokenQrDeOtraClave_EscanearDeNuevo`; `FlujoCompleto_SesionQrYAcceso_Autorizado`; `Solicitudes_AutorizadoAparecePorServir_ConNombre`; `Servido_MarcaServidoEnSolicitudes`; `Servido_DosVecesSimultaneas_UnaEntrega` (`Task.WhenAll`: una respuesta `yaServido=false`, otra `true`, 1 fila en Entrega, ningún 500); `Servido_ConsumoInexistente_404`; `Concurrencia_CelularYManualSimultaneos_UnSoloConsumo` (exactamente un `Autorizado`, un `Rechazado` con "Ya consumiste este tiempo de comida", ningún 500, 1 fila en Consumo).
+- [x] **Paso 2:** `dotnet test backend/tests/Comedor.Api.Tests --filter AccesosApiTests` → FALLA.
+- [x] **Paso 3:** implementar casos de uso y controladores.
+- [x] **Paso 4:** mismo comando → PASA.
+- [x] **Paso 5:** `git commit -m "feat: endpoints de acceso y pantalla del chef"`
 
 ## Tarea 9: Reportes y exportación
 
@@ -314,11 +316,11 @@ La matrícula del canal celular sale del `sub` del JWT, nunca del cuerpo. El usu
 - Rutas (roles Supervisor y Administrador): `GET /api/reportes/conteo`, `/cotejo`, `/detalle`, `/cotejo.xlsx`, `/cotejo.pdf`, `/detalle.xlsx`, `/conteo.xlsx`, `/conteo.pdf`, con `?desde=yyyy-MM-dd&hasta=yyyy-MM-dd`; fechas faltantes, inválidas o `desde > hasta` → 400.
 - Las consultas viven en `Infrastructure` detrás de `Abstracciones/IConsultaReportes.cs`, porque `Application` no ve el `DbContext`. Turno, Área y Nombre salen del empleado unido por matrícula ("Sin dato" si no existe). Más detalles en [D-18](decisiones.md#d-18-detalles-de-la-api-no-fijados-en-el-plan).
 
-* [ ] **Paso 1: escribir las pruebas que fallan:** sembrar el 2026-11-10 tres consumos servidos (2 Comida, 1 Cena), un consumo Comida sin servir, un consumo N-Cena a las 00:15 del 2026-11-11 servido (fecha de servicio 2026-11-10) y un rechazo. `Cotejo_AgrupaPorFechaServicio` (2026-11-10: Comida 2 servidas y 1 sin servir; Cena 2 servidas); `Cotejo_ExcluyeRechazos`; `Cotejo_ContingenciaCuentaComoServida`; `Conteo_AgrupaPorTurnoYArea`; `CotejoExcel_ReleidoConClosedXML_TotalServidasEs4`; `CotejoPdf_EmpiezaConFirmaPdf` (primeros bytes `%PDF`); `Detalle_FiltraPorCanal`; `Reportes_ConRolEncargado_403`.
-* [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Api.Tests --filter ReportesTests` → FALLA.
-* [ ] **Paso 3:** implementar consultas con LINQ sobre el DbContext, exportadores y controlador.
-* [ ] **Paso 4:** mismo comando → PASA.
-* [ ] **Paso 5:** `git commit -m "feat: reportes y exportación"`
+* [x] **Paso 1: escribir las pruebas que fallan:** sembrar el 2026-11-10 tres consumos servidos (2 Comida, 1 Cena), un consumo Comida sin servir, un consumo N-Cena a las 00:15 del 2026-11-11 servido (fecha de servicio 2026-11-10) y un rechazo. `Cotejo_AgrupaPorFechaServicio` (2026-11-10: Comida 2 servidas y 1 sin servir; Cena 2 servidas); `Cotejo_ExcluyeRechazos`; `Cotejo_ContingenciaCuentaComoServida`; `Conteo_AgrupaPorTurnoYArea`; `CotejoExcel_ReleidoConClosedXML_TotalServidasEs4`; `CotejoPdf_EmpiezaConFirmaPdf` (primeros bytes `%PDF`); `Detalle_FiltraPorCanal`; `Reportes_ConRolEncargado_403`.
+* [x] **Paso 2:** `dotnet test backend/tests/Comedor.Api.Tests --filter ReportesTests` → FALLA.
+* [x] **Paso 3:** implementar consultas con LINQ sobre el DbContext, exportadores y controlador.
+* [x] **Paso 4:** mismo comando → PASA.
+* [x] **Paso 5:** `git commit -m "feat: reportes y exportación"`
 
 ## Tarea 10: Administración y contingencia
 
@@ -333,11 +335,11 @@ La matrícula del canal celular sale del `sub` del JWT, nunca del cuerpo. El usu
 - `POST /api/admin/sincronizacion` → `ResultadoSincronizacion`; `GET /api/admin/sincronizacion` → últimas 20 filas de bitácora.
 - `POST /api/admin/contingencia` `{matricula, fechaServicio, tiempoComida, referenciaLista}` → `RegistrarContingencia.EjecutarAsync` crea un Consumo canal Contingencia con el administrador como autor y la referencia; un duplicado devuelve 409 con "Ya consumiste este tiempo de comida". Sin reglas de derecho; matrícula inexistente → 400 "No registrado"; referencia y tiempo de comida obligatorios; punto = el punto activo; hora = la de captura ([D-15](decisiones.md#d-15-reglas-de-la-captura-de-contingencia)).
 
-* [ ] **Paso 1: escribir las pruebas que fallan:** `Regla_InicioIgualFin_Lanza`; `Regla_TraslapadaEnMismoTurno_Lanza`; `Regla_CruceMedianoche_SeGuarda`; `Regla_JornadaAnterior_SeGuarda`; `Usuario_ContrasenaNoSeDevuelve`; `Usuario_LoginConContrasenaNueva_Funciona`; `Contingencia_RegistraCanalContingencia`; `Contingencia_Duplicado_409`; `Admin_ConRolSupervisor_403`.
-* [ ] **Paso 2:** `dotnet test backend/Comedor.sln --filter "FullyQualifiedName~Administracion|FullyQualifiedName~AdminTests"` → FALLA.
-* [ ] **Paso 3:** implementar casos de uso y controlador.
-* [ ] **Paso 4:** `dotnet test backend/Comedor.sln` → PASA todo el backend.
-* [ ] **Paso 5:** `git commit -m "feat: administración y contingencia"`
+* [x] **Paso 1: escribir las pruebas que fallan:** `Regla_InicioIgualFin_Lanza`; `Regla_TraslapadaEnMismoTurno_Lanza`; `Regla_CruceMedianoche_SeGuarda`; `Regla_JornadaAnterior_SeGuarda`; `Usuario_ContrasenaNoSeDevuelve`; `Usuario_LoginConContrasenaNueva_Funciona`; `Contingencia_RegistraCanalContingencia`; `Contingencia_Duplicado_409`; `Admin_ConRolSupervisor_403`.
+* [x] **Paso 2:** `dotnet test backend/Comedor.sln --filter "FullyQualifiedName~Administracion|FullyQualifiedName~AdminTests"` → FALLA.
+* [x] **Paso 3:** implementar casos de uso y controlador.
+* [x] **Paso 4:** `dotnet test backend/Comedor.sln` → PASA todo el backend.
+* [x] **Paso 5:** `git commit -m "feat: administración y contingencia"`
 
 Comando de prueba del frontend en todas las tareas siguientes, desde `frontend/comedor-web`: `npx ng test --watch=false --browsers=ChromeHeadless --include=<ruta>`. Con Angular 22 la ruta debe apuntar a los archivos de prueba: donde una tarea dice `--include=src/app/<carpeta>/**`, usar `--include='src/app/<carpeta>/**/*.spec.ts'` (con `**` solo, el compilador intenta cargar `.html` y `.scss` y falla).
 
@@ -355,11 +357,11 @@ Comando de prueba del frontend en todas las tareas siguientes, desde `frontend/c
 - Los módulos Pase, Punto, Reportes y Administración se crean vacíos para que la carga diferida compile; las Tareas 12 a 14 los llenan. Se conservan los nombres generados por Angular 22: `app-module.ts` y `app-routing-module.ts` ([D-18](decisiones.md#d-18-detalles-de-la-api-no-fijados-en-el-plan)).
 - Rutas: `/login`, `/pase` y /registro (módulo Pase, sin guard), `/punto/:id` (Punto, Encargado), `/reportes` (Supervisor, Administrador), `/admin` (Administrador), con carga diferida por módulo.
 
-* [ ] **Paso 1: escribir las pruebas que fallan** (`HttpTestingController`): `login_guardaTokenYRol`; `interceptor_usaTokenEmpleadoEnAccesoCelular`; `interceptor_usaTokenSistemaEnReportes`; `interceptor_noAgregaTokenEnLogin`; `almacen_noLanzaSiLocalStorageFalla`; `rolGuard_redirigeSinRol`.
-* [ ] **Paso 2:** comando con `--include=src/app/core/**` → FALLA.
-* [ ] **Paso 3:** implementar; `LoginComponent` solo muestra el formulario y llama a `AuthService`.
-* [ ] **Paso 4:** mismo comando → PASA.
-* [ ] **Paso 5:** `git commit -m "feat: núcleo del frontend y login del sistema"`
+* [x] **Paso 1: escribir las pruebas que fallan** (`HttpTestingController`): `login_guardaTokenYRol`; `interceptor_usaTokenEmpleadoEnAccesoCelular`; `interceptor_usaTokenSistemaEnReportes`; `interceptor_noAgregaTokenEnLogin`; `almacen_noLanzaSiLocalStorageFalla`; `rolGuard_redirigeSinRol`.
+* [x] **Paso 2:** comando con `--include=src/app/core/**` → FALLA.
+* [x] **Paso 3:** implementar; `LoginComponent` solo muestra el formulario y llama a `AuthService`.
+* [x] **Paso 4:** mismo comando → PASA.
+* [x] **Paso 5:** `git commit -m "feat: núcleo del frontend y login del sistema"`
 
 ## Tarea 12: Módulo Pase (celular del empleado)
 
@@ -374,11 +376,11 @@ Flujo: `/pase?t=<token>` → sin token de empleado muestra `login-empleado` (ID 
 
 Registro previo (`/registro`): el mismo `login-empleado`; al iniciar sesión muestra "Listo. El día que abra el comedor solo escanea el código de la entrada" y no llama a `validar`.
 
-- [ ] **Paso 1: escribir las pruebas que fallan:** `sinSesion_muestraLogin`; `conSesion_llamaValidarConToken`; `autorizado_muestraAutorizadoYNombre`; `rechazado_muestraMotivo`; `escanearDeNuevo_muestraTextoExacto`; `relojAvanza` (fakeAsync, `tick(1000)` cambia el segundo); `respuesta401_vuelveALogin`; `registro_trasLogin_muestraListo_sinValidar`.
-- [ ] **Paso 2:** comando con `--include=src/app/pase/**` → FALLA.
-- [ ] **Paso 3:** implementar; estilos móviles primero, texto del estado de al menos 48 px.
-- [ ] **Paso 4:** mismo comando → PASA.
-- [ ] **Paso 5:** `git commit -m "feat: pase del empleado y registro previo"`
+- [x] **Paso 1: escribir las pruebas que fallan:** `sinSesion_muestraLogin`; `conSesion_llamaValidarConToken`; `autorizado_muestraAutorizadoYNombre`; `rechazado_muestraMotivo`; `escanearDeNuevo_muestraTextoExacto`; `relojAvanza` (fakeAsync, `tick(1000)` cambia el segundo); `respuesta401_vuelveALogin`; `registro_trasLogin_muestraListo_sinValidar`.
+- [x] **Paso 2:** comando con `--include=src/app/pase/**` → FALLA.
+- [x] **Paso 3:** implementar; estilos móviles primero, texto del estado de al menos 48 px.
+- [x] **Paso 4:** mismo comando → PASA.
+- [x] **Paso 5:** `git commit -m "feat: pase del empleado y registro previo"`
 
 ## Tarea 13: Módulo Punto (pantalla de entrada) y QR permanente
 
@@ -394,11 +396,11 @@ Registro previo (`/registro`): el mismo `login-empleado`; al iniciar sesión mue
 
 Comportamiento: la pantalla reúne dos componentes. A la izquierda, la captura manual (campo "Matrícula"; envía al presionar Enter y limpia el campo; su resultado aparece en la lista como cualquier solicitud). Al centro, "Por servir": tarjetas con nombre, turno, tiempo de comida y botón "Servido", en orden de llegada; al presionar Servido la tarjeta sale de la lista. A la derecha, los últimos 10 rechazos con su motivo, sin botones. `solicitudes` consulta cada 2 000 ms; si una consulta falla muestra "Sin conexión" y sigue intentando; al reconectar, recupera la lista. No hay botones de aprobar ni rechazar. La barra superior muestra el punto y la hora.
 
-- [ ] **Paso 1: escribir las pruebas que fallan.** Frontend (fakeAsync): `solicitudes_consultaCada2Segundos`; `autorizadoSinServir_muestraBotonServido`; `tarjeta_muestraNombreSinFoto`; `rechazado_noMuestraBotones`; `servido_quitaTarjetaDeLaLista`; `noHayBotonesDeAprobarNiRechazar`; `enter_enviaMatricula`; `errorDeRed_muestraSinConexion`. Backend: `TokenAntiguo_SigueSiendoValido` (sustituye a las de 59 y 61 s); `Qr_ConRolAdministrador_DevuelveToken`.
-- [ ] **Paso 2:** `--include='src/app/punto/**/*.spec.ts'` y `dotnet test backend/Comedor.sln --filter "FullyQualifiedName~Qr"` → FALLA.
-- [ ] **Paso 3:** implementar con `timer(0, 2000)` y `switchMap`; quitar la condición de antigüedad y las claves de configuración.
-- [ ] **Paso 4:** mismos comandos → PASA; después `dotnet test backend/Comedor.sln` completo.
-- [ ] **Paso 5:** `git commit -m "feat: pantalla del chef en el punto de entrada"`
+- [x] **Paso 1: escribir las pruebas que fallan.** Frontend (fakeAsync): `solicitudes_consultaCada2Segundos`; `autorizadoSinServir_muestraBotonServido`; `tarjeta_muestraNombreSinFoto`; `rechazado_noMuestraBotones`; `servido_quitaTarjetaDeLaLista`; `noHayBotonesDeAprobarNiRechazar`; `enter_enviaMatricula`; `errorDeRed_muestraSinConexion`. Backend: `TokenAntiguo_SigueSiendoValido` (sustituye a las de 59 y 61 s); `Qr_ConRolAdministrador_DevuelveToken`.
+- [x] **Paso 2:** `--include='src/app/punto/**/*.spec.ts'` y `dotnet test backend/Comedor.sln --filter "FullyQualifiedName~Qr"` → FALLA.
+- [x] **Paso 3:** implementar con `timer(0, 2000)` y `switchMap`; quitar la condición de antigüedad y las claves de configuración.
+- [x] **Paso 4:** mismos comandos → PASA; después `dotnet test backend/Comedor.sln` completo.
+- [x] **Paso 5:** `git commit -m "feat: pantalla del chef en el punto de entrada"`
 
 ## Tarea 14: Módulos Reportes y Administración
 
