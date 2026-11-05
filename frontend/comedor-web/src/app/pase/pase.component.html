@@ -8,9 +8,6 @@
   @case ('escanear') {
     <main class="aviso"><p role="status">{{ textoEscanear }}</p></main>
   }
-  @case ('fallo') {
-    <main class="aviso"><p role="alert">{{ textoFallo }}</p></main>
-  }
   @case ('registrado') {
     <main class="aviso"><p role="status">{{ textoRegistrado }}</p></main>
   }
@@ -37,25 +34,33 @@
             </section>
           }
 
-          <section class="tarjeta">
-            <div class="avatar">
-              @if (r.fotoUrl) {
-                <img [src]="r.fotoUrl" alt="Foto de {{ r.nombre }}" />
-              } @else {
-                <span aria-hidden="true">{{ iniciales() }}</span>
+          @if (r.nombre || r.matricula || r.turno || r.tiempoComida) {
+            <section class="tarjeta">
+              @if (r.nombre) {
+                <div class="avatar">
+                  @if (r.fotoUrl) {
+                    <img [src]="r.fotoUrl" alt="Foto de {{ r.nombre }}" />
+                  } @else {
+                    <span aria-hidden="true">{{ iniciales() }}</span>
+                  }
+                </div>
+                <p class="nombre">{{ r.nombre }}</p>
               }
-            </div>
-            <p class="nombre">{{ r.nombre }}</p>
-            <p class="matricula">Matrícula {{ r.matricula }}</p>
-            <p class="chips">
-              @if (r.turno) {
-                <span class="chip turno">{{ r.turno }}</span>
+              @if (r.matricula) {
+                <p class="matricula">Matrícula {{ r.matricula }}</p>
               }
-              @if (r.tiempoComida) {
-                <span class="chip comida">{{ r.tiempoComida }}</span>
+              @if (r.turno || r.tiempoComida) {
+                <p class="chips">
+                  @if (r.turno) {
+                    <span class="chip turno">{{ r.turno }}</span>
+                  }
+                  @if (r.tiempoComida) {
+                    <span class="chip comida">{{ r.tiempoComida }}</span>
+                  }
+                </p>
               }
-            </p>
-          </section>
+            </section>
+          }
 
           <p class="reloj" aria-label="Hora actual" data-prueba="reloj">{{ ahora() | date: 'HH:mm:ss' }}</p>
         </div>

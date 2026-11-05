@@ -25,12 +25,7 @@ export class LoginEmpleadoComponent {
   constructor(private readonly pase: PaseService) {}
 
   entrar(): void {
-    if (this.enviando) {
-      return;
-    }
-    if (this.formulario.invalid) {
-      this.formulario.markAllAsTouched();
-      this.error = 'Escribe tu número de empleado y tu contraseña';
+    if (this.enviando || this.formulario.invalid) {
       return;
     }
     this.enviando = true;

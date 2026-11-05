@@ -148,12 +148,68 @@ describe('módulo Pase', () => {
 
   it('respuesta401_vuelveALogin', () => {
     localStorage.setItem('comedor.token.empleado', 'jwt-vencido');
+    localStorage.setItem('comedor.token.sistema', 'jwt-sistema');
     const f = crear('abc.def');
     http.expectOne(URL_CELULAR).flush({}, { status: 401, statusText: 'Unauthorized' });
     f.detectChanges();
 
     expect(localStorage.getItem('comedor.token.empleado')).toBeNull();
+    expect(localStorage.getItem('comedor.token.sistema')).toBe('jwt-sistema');
     expect(f.nativeElement.querySelector('app-login-empleado')).not.toBeNull();
+
+    // Conserva t: tras iniciar sesión de nuevo, vuelve a validar el mismo token.
+    const el: HTMLElement = f.nativeElement;
+    (el.querySelector('#id') as HTMLInputElement).value = '12345';
+    (el.querySelector('#id') as HTMLInputElement).dispatchEvent(new Event('input'));
+    (el.querySelector('#contrasena') as HTMLInputElement).value = 'secreta';
+    (el.querySelector('#contrasena') as HTMLInputElement).dispatchEvent(new Event('input'));
+    (el.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+    http.expectOne(URL_SESION).flush({ token: 'jwt-nuevo' });
+    const segunda = http.expectOne(URL_CELULAR);
+    expect(segunda.request.body).toEqual({ tokenQr: 'abc.def' });
+    segunda.flush(resultado({}));
+  });
+
+  it('errorDeRedOServidor_muestraEscanearDeNuevo', () => {
+    localStorage.setItem('comedor.token.empleado', 'jwt');
+    const f = crear('abc.def');
+    http.expectOne(URL_CELULAR).flush({}, { status: 500, statusText: 'Error' });
+    f.detectChanges();
+
+    expect(texto(f)).toContain(TEXTO_ESCANEAR);
+    expect(localStorage.getItem('comedor.token.empleado')).toBe('jwt');
+  });
+
+  it('rechazadoNoRegistrado_conNulos_muestraMotivoSinEtiquetasVacias', () => {
+    localStorage.setItem('comedor.token.empleado', 'jwt');
+    const f = crear('abc.def');
+    http.expectOne(URL_CELULAR).flush(
+      resultado({
+        estado: 'Rechazado',
+        motivo: 'No registrado',
+        nombre: null,
+        matricula: null,
+        turno: null,
+        tiempoComida: null,
+        fotoUrl: null,
+      }),
+    );
+    f.detectChanges();
+
+    expect(texto(f)).toContain('RECHAZADO');
+    expect(texto(f)).toContain('No registrado');
+    expect(texto(f)).not.toContain('Matrícula');
+    expect(f.nativeElement.querySelector('.chip')).toBeNull();
+    expect(f.nativeElement.querySelector('.avatar')).toBeNull();
+  });
+
+  it('login_conCamposVacios_noEnviaYDeshabilitaEntrar', () => {
+    const f = crear('abc.def');
+    const el: HTMLElement = f.nativeElement;
+
+    expect((el.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBeTrue();
+    (el.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+    http.expectNone(URL_SESION);
   });
 
   it('login_muestraPuntoDelToken', () => {

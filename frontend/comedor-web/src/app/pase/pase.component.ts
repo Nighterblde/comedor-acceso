@@ -6,9 +6,8 @@ import { PaseService } from './pase.service';
 
 export const TEXTO_ESCANEAR = 'Escanea de nuevo el código de la entrada';
 export const TEXTO_REGISTRADO = 'Listo. El día que abra el comedor solo escanea el código de la entrada';
-export const TEXTO_FALLO = 'No se pudo validar tu acceso; escanea de nuevo el código de la entrada';
 
-type Vista = 'login' | 'cargando' | 'pase' | 'escanear' | 'registrado' | 'fallo';
+type Vista = 'login' | 'cargando' | 'pase' | 'escanear' | 'registrado';
 
 @Component({
   selector: 'app-pase',
@@ -19,7 +18,6 @@ type Vista = 'login' | 'cargando' | 'pase' | 'escanear' | 'registrado' | 'fallo'
 export class PaseComponent implements OnInit, OnDestroy {
   readonly textoEscanear = TEXTO_ESCANEAR;
   readonly textoRegistrado = TEXTO_REGISTRADO;
-  readonly textoFallo = TEXTO_FALLO;
 
   readonly vista = signal<Vista>('cargando');
   readonly resultado = signal<ResultadoAcceso | null>(null);
@@ -83,7 +81,7 @@ export class PaseComponent implements OnInit, OnDestroy {
           this.pase.cerrarSesion();
           this.vista.set('login');
         } else {
-          this.vista.set('fallo');
+          this.vista.set('escanear');
         }
       },
     });

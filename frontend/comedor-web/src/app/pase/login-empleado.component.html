@@ -23,7 +23,7 @@
         <p id="error-login" class="error" role="alert">{{ error }}</p>
       }
 
-      <button type="submit" class="primario" [disabled]="enviando">
+      <button type="submit" class="primario" [disabled]="enviando || formulario.invalid">
         {{ enviando ? 'Validando…' : 'Entrar' }}
       </button>
     </form>
