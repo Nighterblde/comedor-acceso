@@ -14,14 +14,14 @@ internal static class ExportadorExcel
         var fila = 2;
         foreach (var f in filas)
         {
-            hoja.Cell(fila, 1).Value = f.FechaServicio.ToString("yyyy-MM-dd");
-            hoja.Cell(fila, 2).Value = f.TiempoComida;
+            Texto(hoja.Cell(fila, 1), f.FechaServicio.ToString("yyyy-MM-dd"));
+            Texto(hoja.Cell(fila, 2), f.TiempoComida);
             hoja.Cell(fila, 3).Value = f.Servidas;
             hoja.Cell(fila, 4).Value = f.SinServir;
             fila++;
         }
 
-        hoja.Cell(fila, 1).Value = "Total";
+        Texto(hoja.Cell(fila, 1), "Total");
         hoja.Cell(fila, 3).Value = filas.Sum(f => f.Servidas);
         hoja.Cell(fila, 4).Value = filas.Sum(f => f.SinServir);
         hoja.Row(fila).Style.Font.Bold = true;
@@ -37,26 +37,35 @@ internal static class ExportadorExcel
         var fila = 2;
         foreach (var f in filas)
         {
-            hoja.Cell(fila, 1).Value = f.FechaHora.ToString("yyyy-MM-dd HH:mm:ss");
-            hoja.Cell(fila, 2).Value = f.Matricula;
-            hoja.Cell(fila, 3).Value = f.Nombre;
-            hoja.Cell(fila, 4).Value = f.TiempoComida;
-            hoja.Cell(fila, 5).Value = f.PuntoId;
-            hoja.Cell(fila, 6).Value = f.Canal.ToString();
-            hoja.Cell(fila, 7).Value = f.Resultado;
-            hoja.Cell(fila, 8).Value = f.Motivo ?? "";
-            hoja.Cell(fila, 9).Value = f.Servido ? "Sí" : "No";
+            Texto(hoja.Cell(fila, 1), f.FechaHora.ToString("yyyy-MM-dd HH:mm:ss"));
+            Texto(hoja.Cell(fila, 2), f.Matricula);
+            Texto(hoja.Cell(fila, 3), f.Nombre);
+            Texto(hoja.Cell(fila, 4), f.TiempoComida);
+            Texto(hoja.Cell(fila, 5), f.PuntoId);
+            Texto(hoja.Cell(fila, 6), f.Canal.ToString());
+            Texto(hoja.Cell(fila, 7), f.Resultado);
+            Texto(hoja.Cell(fila, 8), f.Motivo ?? "");
+            Texto(hoja.Cell(fila, 9), f.Servido ? "Sí" : "No");
             fila++;
         }
 
         return Bytes(libro, hoja);
     }
 
+    /// <summary>
+    /// Guarda el valor como texto literal: nunca como número (se perderían ceros a la izquierda) ni como fórmula
+    /// (la matrícula de un rechazo "No registrado" la escribe el usuario).
+    /// </summary>
+    private static void Texto(IXLCell celda, string valor)
+    {
+        celda.Value = (XLCellValue)valor;
+    }
+
     private static void Encabezado(IXLWorksheet hoja, params string[] titulos)
     {
         for (var i = 0; i < titulos.Length; i++)
         {
-            hoja.Cell(1, i + 1).Value = titulos[i];
+            Texto(hoja.Cell(1, i + 1), titulos[i]);
         }
 
         hoja.Row(1).Style.Font.Bold = true;

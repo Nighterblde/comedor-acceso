@@ -209,6 +209,41 @@ public class ReportesTests(SqlServerFixture sql)
     }
 
     [Fact]
+    public async Task DetalleExcel_MatriculaNumericaOFormula_SeGuardaComoTextoLiteral()
+    {
+        using var fabrica = await CrearFabricaSembradaAsync();
+        using (var scope = fabrica.Services.CreateScope())
+        {
+            var repo = scope.ServiceProvider.GetRequiredService<IAccesoRepositorio>();
+            var hora = new DateTime(2026, 11, 10, 9, 0, 0);
+            await repo.RegistrarRechazoAsync(Rechazo.Crear("0012345", hora, Dia, null, "=P1", Canal.Manual, null,
+                MotivoRechazo.NoRegistrado));
+            await repo.RegistrarRechazoAsync(Rechazo.Crear("=HYPERLINK(\"x\")", hora.AddMinutes(1), Dia, null,
+                ComedorApiFactory.PuntoId, Canal.Manual, null, MotivoRechazo.NoRegistrado));
+        }
+
+        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+
+        var r = await c.GetAsync($"/api/reportes/detalle.xlsx?{Rango}&motivo=NoRegistrado");
+
+        using var libro = new XLWorkbook(await r.Content.ReadAsStreamAsync());
+        var hoja = libro.Worksheet(1);
+        var celdas = hoja.RowsUsed().Skip(1).SelectMany(f => f.CellsUsed()).ToList();
+        Assert.All(celdas, x => Assert.False(x.HasFormula));
+        var matriculas = hoja.RowsUsed().Skip(1).Select(f => f.Cell(2)).ToList();
+        Assert.Equal(2, matriculas.Count);
+        foreach (var esperado in new[] { "0012345", "=HYPERLINK(\"x\")" })
+        {
+            var cel = Assert.Single(matriculas, m => m.GetString() == esperado);
+            Assert.Equal(XLDataType.Text, cel.DataType);
+            Assert.False(cel.HasFormula);
+        }
+
+        var punto = hoja.RowsUsed().Skip(1).Select(f => f.Cell(5)).Single(p => p.GetString() == "=P1");
+        Assert.Equal(XLDataType.Text, punto.DataType);
+    }
+
+    [Fact]
     public async Task Reportes_FechasInvalidas_400()
     {
         using var fabrica = await CrearFabricaSembradaAsync();
