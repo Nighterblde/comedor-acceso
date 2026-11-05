@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, Signal } from '@angular/core';
 import { EstadoSincronizacion } from '../modelos/reporte.model';
 import { SincronizacionService } from './sincronizacion.service';
 
@@ -31,12 +31,13 @@ import { SincronizacionService } from './sincronizacion.service';
   `,
 })
 export class AvisoSincronizacionComponent implements OnInit {
-  readonly estado = signal<EstadoSincronizacion | null>(null);
+  readonly estado: Signal<EstadoSincronizacion | null>;
 
-  constructor(private readonly sincronizacion: SincronizacionService) {}
+  constructor(private readonly sincronizacion: SincronizacionService) {
+    this.estado = sincronizacion.estado;
+  }
 
   ngOnInit(): void {
-    // Si la consulta falla, no se muestra aviso: este aviso no debe impedir usar la pantalla.
-    this.sincronizacion.estado().subscribe({ next: (e) => this.estado.set(e), error: () => undefined });
+    this.sincronizacion.refrescar();
   }
 }

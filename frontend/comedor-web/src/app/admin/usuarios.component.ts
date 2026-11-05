@@ -19,6 +19,8 @@ export class UsuariosComponent implements OnInit {
   readonly usuarios = signal<UsuarioSistema[]>([]);
   readonly error = signal<string | null>(null);
   usuario: UsuarioEdicion = usuarioVacio();
+  /** Al editar, el usuario no cambia: cambiarlo crearía otra cuenta y dejaría activa la anterior (D-23). */
+  editando = false;
 
   constructor(private readonly admin: AdminService) {}
 
@@ -28,11 +30,13 @@ export class UsuariosComponent implements OnInit {
 
   editar(u: UsuarioSistema): void {
     this.usuario = { ...u, contrasena: '' };
+    this.editando = true;
     this.error.set(null);
   }
 
   nuevo(): void {
     this.usuario = usuarioVacio();
+    this.editando = false;
     this.error.set(null);
   }
 
@@ -43,6 +47,7 @@ export class UsuariosComponent implements OnInit {
     this.admin.guardarUsuario(cuerpo).subscribe({
       next: () => {
         this.usuario = usuarioVacio();
+        this.editando = false;
         this.cargar();
       },
       error: (e) => this.error.set(textoDeError(e)),

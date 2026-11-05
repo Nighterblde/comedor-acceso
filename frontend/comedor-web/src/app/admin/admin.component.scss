@@ -32,6 +32,13 @@
   }
 }
 
+@media print {
+  // Sin la navegación, el contenido ocuparía la columna de 220 px y el QR saldría recortado.
+  .admin {
+    display: block;
+  }
+}
+
 @media (max-width: 760px) {
   .admin {
     grid-template-columns: 1fr;

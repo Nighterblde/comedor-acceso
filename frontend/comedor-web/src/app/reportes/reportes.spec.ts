@@ -1,5 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { of } from 'rxjs';
@@ -7,6 +8,7 @@ import { environment } from '../../environments/environment';
 import { AvisoSincronizacionComponent } from '../compartido/aviso-sincronizacion.component';
 import { SincronizacionService } from '../compartido/sincronizacion.service';
 import { AuthService } from '../core/auth.service';
+import { EstadoSincronizacion } from '../modelos/reporte.model';
 import { ReportesComponent } from './reportes.component';
 import { ReportesService } from './reportes.service';
 
@@ -83,10 +85,7 @@ describe('módulo reportes', () => {
         ]),
       );
       servicio.descargar.and.returnValue(of(undefined));
-      const sincronizacion = jasmine.createSpyObj<SincronizacionService>('SincronizacionService', ['estado']);
-      sincronizacion.estado.and.returnValue(
-        of({ ultimaFallida: false, ultimaEjecucion: null, ultimaExitosa: null }),
-      );
+      const sincronizacion = { estado: signal(null), refrescar: jasmine.createSpy('refrescar') };
       TestBed.configureTestingModule({
         declarations: [ReportesComponent, AvisoSincronizacionComponent],
         imports: [FormsModule],
@@ -134,26 +133,42 @@ describe('módulo reportes', () => {
     }));
   });
 
+  describe('SincronizacionService', () => {
+    it('refrescar_guardaElEstadoDeLaApi', () => {
+      TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+      const http = TestBed.inject(HttpTestingController);
+      const servicio = TestBed.inject(SincronizacionService);
+
+      servicio.refrescar();
+      http
+        .expectOne(`${environment.apiUrl}/api/sincronizacion/estado`)
+        .flush({ ultimaFallida: true, ultimaEjecucion: '2026-11-04T02:00:00', ultimaExitosa: null });
+
+      expect(servicio.estado()?.ultimaFallida).toBeTrue();
+      http.verify();
+    });
+  });
+
   describe('AvisoSincronizacionComponent', () => {
-    function armar(estado: { ultimaFallida: boolean; ultimaEjecucion: string | null; ultimaExitosa: string | null }) {
-      const sincronizacion = jasmine.createSpyObj<SincronizacionService>('SincronizacionService', ['estado']);
-      sincronizacion.estado.and.returnValue(of(estado));
+    function armar(estado: EstadoSincronizacion | null) {
+      const sincronizacion = { estado: signal(estado), refrescar: jasmine.createSpy('refrescar') };
       TestBed.configureTestingModule({
         declarations: [AvisoSincronizacionComponent],
         providers: [{ provide: SincronizacionService, useValue: sincronizacion }],
       });
       const f = TestBed.createComponent(AvisoSincronizacionComponent);
       f.detectChanges();
-      return f;
+      return { f, sincronizacion };
     }
 
     it('ultimaSincronizacionFallida_muestraAviso', () => {
-      const f = armar({
+      const { f, sincronizacion } = armar({
         ultimaFallida: true,
         ultimaEjecucion: '2026-11-04T02:00:00',
         ultimaExitosa: '2026-11-03T02:00:00',
       });
 
+      expect(sincronizacion.refrescar).toHaveBeenCalledTimes(1);
       const aviso = f.nativeElement.querySelector('[role="status"]') as HTMLElement;
       expect(aviso.textContent).toContain(
         'La última sincronización con RR. HH. falló; se usan los datos del 03/11/2026',
@@ -161,11 +176,28 @@ describe('módulo reportes', () => {
     });
 
     it('ultimaSincronizacionExitosa_noMuestraAviso', () => {
-      const f = armar({
+      const { f } = armar({
         ultimaFallida: false,
         ultimaEjecucion: '2026-11-04T02:00:00',
         ultimaExitosa: '2026-11-04T02:00:00',
       });
+
+      expect(f.nativeElement.querySelector('[role="status"]')).toBeNull();
+    });
+
+    it('aviso_seActualizaAlCambiarElEstado', () => {
+      const { f, sincronizacion } = armar({
+        ultimaFallida: true,
+        ultimaEjecucion: '2026-11-04T02:00:00',
+        ultimaExitosa: '2026-11-03T02:00:00',
+      });
+
+      sincronizacion.estado.set({
+        ultimaFallida: false,
+        ultimaEjecucion: '2026-11-05T10:00:00',
+        ultimaExitosa: '2026-11-05T10:00:00',
+      });
+      f.detectChanges();
 
       expect(f.nativeElement.querySelector('[role="status"]')).toBeNull();
     });

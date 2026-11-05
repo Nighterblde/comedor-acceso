@@ -1,5 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { textoDeError } from '../compartido/errores';
+import { SincronizacionService } from '../compartido/sincronizacion.service';
 import { BitacoraSincronizacion, ResultadoSincronizacion } from '../modelos/administracion.model';
 import { AdminService } from './admin.service';
 
@@ -16,7 +17,10 @@ export class SincronizacionComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly sincronizando = signal(false);
 
-  constructor(private readonly admin: AdminService) {}
+  constructor(
+    private readonly admin: AdminService,
+    private readonly estado: SincronizacionService,
+  ) {}
 
   ngOnInit(): void {
     this.cargar();
@@ -30,10 +34,12 @@ export class SincronizacionComponent implements OnInit {
         this.resultado.set(r);
         this.sincronizando.set(false);
         this.cargar();
+        this.estado.refrescar();
       },
       error: (e) => {
         this.error.set(textoDeError(e));
         this.sincronizando.set(false);
+        this.estado.refrescar();
       },
     });
   }

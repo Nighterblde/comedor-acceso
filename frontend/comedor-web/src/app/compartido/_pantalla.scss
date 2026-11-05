@@ -82,6 +82,11 @@ h2 {
   select:focus-visible {
     outline: var(--foco);
   }
+
+  input[readonly] {
+    background: var(--color-fondo);
+    color: var(--color-texto-secundario);
+  }
 }
 
 .casilla {

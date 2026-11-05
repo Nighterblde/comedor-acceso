@@ -6,7 +6,7 @@
       <div class="campos">
         <div class="campo">
           <label for="punto-id">Clave</label>
-          <input id="punto-id" name="id" [(ngModel)]="punto.id" required />
+          <input id="punto-id" name="id" [(ngModel)]="punto.id" [readOnly]="editando" required />
         </div>
         <div class="campo">
           <label for="punto-nombre">Nombre</label>

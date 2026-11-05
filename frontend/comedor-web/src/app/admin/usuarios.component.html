@@ -5,7 +5,7 @@
     <div class="campos">
       <div class="campo">
         <label for="usuario-nombre">Usuario</label>
-        <input id="usuario-nombre" name="usuario" [(ngModel)]="usuario.usuario" required autocomplete="off" />
+        <input id="usuario-nombre" name="usuario" [(ngModel)]="usuario.usuario" [readOnly]="editando" required autocomplete="off" />
       </div>
       <div class="campo">
         <label for="usuario-rol">Rol</label>

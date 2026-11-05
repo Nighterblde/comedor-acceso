@@ -19,6 +19,8 @@ export class PuntosComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly qr = signal<{ punto: PuntoEntrada; url: string } | null>(null);
   punto: PuntoEntrada = puntoVacio();
+  /** Al editar, la clave no cambia: cambiarla crearía otro punto en lugar de renombrar (D-23). */
+  editando = false;
 
   constructor(private readonly admin: AdminService) {}
 
@@ -28,11 +30,13 @@ export class PuntosComponent implements OnInit {
 
   editar(p: PuntoEntrada): void {
     this.punto = { ...p };
+    this.editando = true;
     this.error.set(null);
   }
 
   nuevo(): void {
     this.punto = puntoVacio();
+    this.editando = false;
     this.error.set(null);
   }
 
@@ -41,6 +45,7 @@ export class PuntosComponent implements OnInit {
     this.admin.guardarPunto(this.punto).subscribe({
       next: () => {
         this.punto = puntoVacio();
+        this.editando = false;
         this.cargar();
       },
       error: (e) => this.error.set(textoDeError(e)),
