@@ -288,7 +288,7 @@ Reglas: matrícula vacía o turno no presente en el catálogo → omitido; emple
 | Método y ruta | Rol | Cuerpo | Respuesta |
 | --- | --- | --- | --- |
 | `POST /api/empleados/sesion` | anónimo | `{id, contrasena}` | `{token}` o 401 con `{error}` |
-| `GET /api/puntos/{id}/qr` | Punto, Encargado (Administrador desde la Tarea 13, para imprimirlo) |  | `{token, url, expiraEn}`; `url` = `{App:UrlPublica}/pase?t={token}` |
+| `GET /api/puntos/{id}/qr` | Punto, Encargado (Administrador desde la Tarea 13, para imprimirlo) |  | `{token, url}` (sin `expiraEn` desde la Tarea 13: el token no caduca, D-21); `url` = `{App:UrlPublica}/pase?t={token}` |
 | `POST /api/accesos/celular` | Empleado | `{tokenQr}` | `ResultadoAcceso` |
 | `POST /api/accesos/manual` | Punto, Encargado | `{matricula, puntoId}` | `ResultadoAcceso` |
 | `GET /api/puntos/{id}/solicitudes?desde=` | Punto, Encargado |  | `SolicitudPunto[]`, más recientes primero |
