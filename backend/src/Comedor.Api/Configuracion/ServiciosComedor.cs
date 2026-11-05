@@ -6,9 +6,11 @@ using Comedor.Api.Tareas;
 using Comedor.Application.Abstracciones;
 using Comedor.Application.Accesos;
 using Comedor.Application.Qr;
+using Comedor.Application.Reportes;
 using Comedor.Application.Sesion;
 using Comedor.Application.Sincronizacion;
 using Comedor.Infrastructure;
+using Comedor.Infrastructure.Exportacion;
 using Comedor.Infrastructure.Externos;
 using Comedor.Infrastructure.Persistencia;
 using Comedor.Infrastructure.Repositorios;
@@ -51,6 +53,8 @@ public static class ServiciosComedor
         servicios.AddScoped<IPuntoRepositorio, PuntoRepositorio>();
         servicios.AddScoped<IBitacoraSincronizacionRepositorio, BitacoraSincronizacionRepositorio>();
         servicios.AddScoped<IUsuarioSistemaRepositorio, UsuarioSistemaRepositorio>();
+        servicios.AddScoped<IConsultaReportes, ConsultaReportes>();
+        servicios.AddSingleton<IExportador, Exportador>();
 
         servicios.AddSingleton(TimeProvider.System);
         var zona = config["Comedor:ZonaHoraria"] ?? "America/Hermosillo";
@@ -105,6 +109,7 @@ public static class ServiciosComedor
         servicios.AddScoped<MarcarServido>();
         servicios.AddScoped<ListarSolicitudes>();
         servicios.AddScoped<SincronizarPersonal>();
+        servicios.AddScoped<GenerarReporte>();
 
         if (config.GetValue("Sincronizacion:Habilitada", true))
         {
