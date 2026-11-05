@@ -8,4 +8,7 @@ public interface IBitacoraSincronizacionRepositorio
 
     /// <summary>Las filas más recientes primero.</summary>
     Task<IReadOnlyList<BitacoraSincronizacion>> UltimasAsync(int cantidad);
+
+    /// <summary>La sincronización exitosa más reciente, o null si nunca hubo una.</summary>
+    Task<BitacoraSincronizacion?> UltimaExitosaAsync();
 }
