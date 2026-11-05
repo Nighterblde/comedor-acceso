@@ -71,6 +71,21 @@ Lee docs/srs.md y docs/plan.md y ejecuta el plan con subagent-driven-development
 
 Cada tarea sigue el mismo ciclo: escribir la prueba, comprobar que falla, implementar, comprobar que pasa y hacer commit. Las reglas del proyecto para quien programe están en [CLAUDE.md](CLAUDE.md).
 
+### Configuración local
+
+Los secretos no se guardan en el repositorio. La API se niega a iniciar (con un error que nombra la clave) si faltan `Jwt:Clave`, `Qr:ClaveFirma` o `ConnectionStrings:Comedor`. Desde `backend/src/Comedor.Api`:
+
+```bash
+dotnet user-secrets set "Jwt:Clave" "<mínimo 32 caracteres>"
+dotnet user-secrets set "Qr:ClaveFirma" "<mínimo 32 caracteres>"
+dotnet user-secrets set "ConnectionStrings:Comedor" "Server=localhost;Database=Comedor;Trusted_Connection=True;TrustServerCertificate=True"
+# Administrador inicial: solo se siembra si no hay usuarios
+dotnet user-secrets set "Semilla:Admin:Usuario" "<usuario>"
+dotnet user-secrets set "Semilla:Admin:Contrasena" "<contraseña>"
+```
+
+En producción se usan variables de entorno equivalentes (`Jwt__Clave`, `Qr__ClaveFirma`, `ConnectionStrings__Comedor`, `Semilla__Admin__Usuario`, `Semilla__Admin__Contrasena`). Al iniciar, la API aplica las migraciones.
+
 ### Convenciones
 
 - **Idioma:** código de dominio, textos de interfaz y documentación en español.

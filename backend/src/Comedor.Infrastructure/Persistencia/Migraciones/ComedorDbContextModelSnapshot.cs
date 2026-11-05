@@ -56,6 +56,30 @@ namespace Comedor.Infrastructure.Persistencia.Migraciones
                     b.ToTable("BitacoraSincronizacion", (string)null);
                 });
 
+            modelBuilder.Entity("Comedor.Application.Usuarios.UsuarioSistema", b =>
+                {
+                    b.Property<string>("Usuario")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("HashContrasena")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("Rol")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("Usuario");
+
+                    b.ToTable("UsuariosSistema", (string)null);
+                });
+
             modelBuilder.Entity("Comedor.Domain.Accesos.Consumo", b =>
                 {
                     b.Property<Guid>("Id")
