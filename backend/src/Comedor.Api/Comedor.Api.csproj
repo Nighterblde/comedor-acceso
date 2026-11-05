@@ -5,6 +5,11 @@
     <ProjectReference Include="..\Comedor.Infrastructure\Comedor.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="datos\empleados-simulados.json" CopyToOutputDirectory="PreserveNewest" />
+    <InternalsVisibleTo Include="Comedor.Api.Tests" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>

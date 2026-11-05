@@ -1,3 +1,4 @@
+using Comedor.Application.Sincronizacion;
 using Comedor.Domain.Accesos;
 using Comedor.Domain.Empleados;
 using Comedor.Domain.Puntos;
@@ -16,6 +17,7 @@ public class ComedorDbContext(DbContextOptions<ComedorDbContext> opciones) : DbC
     public DbSet<Consumo> Consumos => Set<Consumo>();
     public DbSet<Rechazo> Rechazos => Set<Rechazo>();
     public DbSet<Entrega> Entregas => Set<Entrega>();
+    public DbSet<BitacoraSincronizacion> Bitacora => Set<BitacoraSincronizacion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ComedorDbContext).Assembly);

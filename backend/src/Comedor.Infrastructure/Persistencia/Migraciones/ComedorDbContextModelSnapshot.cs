@@ -22,6 +22,40 @@ namespace Comedor.Infrastructure.Persistencia.Migraciones
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Comedor.Application.Sincronizacion.BitacoraSincronizacion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Altas")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Bajas")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Cambios")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Exito")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Omitidos")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Fecha");
+
+                    b.ToTable("BitacoraSincronizacion", (string)null);
+                });
+
             modelBuilder.Entity("Comedor.Domain.Accesos.Consumo", b =>
                 {
                     b.Property<Guid>("Id")
