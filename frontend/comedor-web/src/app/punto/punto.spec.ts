@@ -1,16 +1,12 @@
 import { Type } from '@angular/core';
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { QRCodeComponent } from 'angularx-qrcode';
 import { of, throwError } from 'rxjs';
-import { ResultadoAcceso, TokenQrRespuesta } from '../modelos/pase.model';
+import { ResultadoAcceso } from '../modelos/pase.model';
 import { SolicitudPunto } from '../modelos/consumo.model';
 import { CapturaManualComponent } from './captura-manual.component';
 import { PuntoService } from './punto.service';
-import { QrRotativoComponent } from './qr-rotativo.component';
 import { SolicitudesComponent } from './solicitudes.component';
-
-const qr: TokenQrRespuesta = { token: 't', url: 'http://x/p?t=t', expiraEn: '2026-11-04T12:00:00' };
 
 function solicitud(parcial: Partial<SolicitudPunto>): SolicitudPunto {
   return {
@@ -32,7 +28,7 @@ function solicitud(parcial: Partial<SolicitudPunto>): SolicitudPunto {
 function crear<T>(tipo: Type<T>, servicio: unknown): ComponentFixture<T> {
   TestBed.configureTestingModule({
     declarations: [tipo],
-    imports: [FormsModule, QRCodeComponent],
+    imports: [FormsModule],
     providers: [{ provide: PuntoService, useValue: servicio }],
   });
   const f = TestBed.createComponent(tipo);
@@ -41,56 +37,6 @@ function crear<T>(tipo: Type<T>, servicio: unknown): ComponentFixture<T> {
 }
 
 describe('módulo punto', () => {
-  describe('qr-rotativo', () => {
-    it('pideQrAlIniciar', fakeAsync(() => {
-      const servicio = jasmine.createSpyObj<PuntoService>('PuntoService', ['obtenerQr']);
-      servicio.obtenerQr.and.returnValue(of(qr));
-      const f = crear(QrRotativoComponent, servicio);
-      f.detectChanges();
-      tick(0);
-      f.detectChanges();
-
-      expect(servicio.obtenerQr).toHaveBeenCalledOnceWith('P1');
-      expect(f.nativeElement.querySelector('qrcode')).not.toBeNull();
-      f.destroy();
-    }));
-
-    it('renuevaQrCada30Segundos', fakeAsync(() => {
-      const servicio = jasmine.createSpyObj<PuntoService>('PuntoService', ['obtenerQr']);
-      servicio.obtenerQr.and.returnValue(of(qr));
-      const f = crear(QrRotativoComponent, servicio);
-      f.detectChanges();
-      tick(0);
-      expect(servicio.obtenerQr).toHaveBeenCalledTimes(1);
-      tick(30000);
-      expect(servicio.obtenerQr).toHaveBeenCalledTimes(2);
-      f.detectChanges();
-      expect(f.nativeElement.textContent).toContain('El código cambia en');
-      f.destroy();
-    }));
-
-    it('errorDeRed_ocultaQrYMuestraSinConexion', fakeAsync(() => {
-      const servicio = jasmine.createSpyObj<PuntoService>('PuntoService', ['obtenerQr']);
-      servicio.obtenerQr.and.returnValues(of(qr), throwError(() => new Error('red')), of(qr));
-      const f = crear(QrRotativoComponent, servicio);
-      f.detectChanges();
-      tick(0);
-      f.detectChanges();
-      expect(f.nativeElement.querySelector('qrcode')).not.toBeNull();
-
-      tick(30000);
-      f.detectChanges();
-      expect(f.nativeElement.querySelector('qrcode')).toBeNull();
-      expect(f.nativeElement.textContent).toContain('Sin conexión');
-
-      tick(30000);
-      f.detectChanges();
-      expect(f.nativeElement.querySelector('qrcode')).not.toBeNull();
-      expect(f.nativeElement.textContent).not.toContain('Sin conexión');
-      f.destroy();
-    }));
-  });
-
   describe('solicitudes', () => {
     function armar(lista: SolicitudPunto[]) {
       const servicio = jasmine.createSpyObj<PuntoService>('PuntoService', ['solicitudes', 'marcarServido']);
@@ -119,6 +65,37 @@ describe('módulo punto', () => {
       const botones = Array.from<HTMLButtonElement>(f.nativeElement.querySelectorAll('button'));
       expect(botones.length).toBe(1);
       expect(botones[0].textContent).toContain('Servido');
+      expect(f.nativeElement.textContent).toContain('Ana Pérez');
+      f.destroy();
+    }));
+
+    it('tarjeta_muestraNombreSinFoto', fakeAsync(() => {
+      const { f } = armar([solicitud({ fotoUrl: 'http://x/foto.jpg' })]);
+      const texto: string = f.nativeElement.textContent;
+      expect(texto).toContain('Ana Pérez');
+      expect(texto).toContain('Matutino');
+      expect(texto).toContain('Comida');
+      expect(f.nativeElement.querySelector('img')).toBeNull();
+      expect(f.nativeElement.querySelector('.avatar')).toBeNull();
+      f.destroy();
+    }));
+
+    it('errorDeRed_muestraSinConexion', fakeAsync(() => {
+      const servicio = jasmine.createSpyObj<PuntoService>('PuntoService', ['solicitudes', 'marcarServido']);
+      servicio.solicitudes.and.returnValues(
+        throwError(() => new Error('red')),
+        of([solicitud({})]),
+      );
+      const f = crear(SolicitudesComponent, servicio);
+      f.detectChanges();
+      tick(0);
+      f.detectChanges();
+      expect(f.nativeElement.textContent).toContain('Sin conexión');
+
+      tick(2000);
+      f.detectChanges();
+      expect(servicio.solicitudes).toHaveBeenCalledTimes(2);
+      expect(f.nativeElement.textContent).not.toContain('Sin conexión');
       expect(f.nativeElement.textContent).toContain('Ana Pérez');
       f.destroy();
     }));

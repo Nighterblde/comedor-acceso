@@ -1,15 +1,11 @@
 <section class="por-servir" aria-labelledby="titulo-por-servir">
   <h2 id="titulo-por-servir">Por servir</h2>
+  @if (sinConexion()) {
+    <p class="sin-conexion" role="status">Sin conexión</p>
+  }
   <ul class="lista">
     @for (s of porServir(); track s.consumoId) {
       <li class="tarjeta">
-        <span class="avatar" aria-hidden="true">
-          @if (s.fotoUrl) {
-            <img [src]="s.fotoUrl" alt="" />
-          } @else {
-            {{ iniciales(s) }}
-          }
-        </span>
         <div class="datos">
           <p class="nombre">{{ s.nombre ?? s.matricula }}</p>
           <p class="chips">

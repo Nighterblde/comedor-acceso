@@ -3,17 +3,11 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SolicitudPunto } from '../modelos/consumo.model';
-import { ResultadoAcceso, TokenQrRespuesta } from '../modelos/pase.model';
+import { ResultadoAcceso } from '../modelos/pase.model';
 
 @Injectable({ providedIn: 'root' })
 export class PuntoService {
   constructor(private readonly http: HttpClient) {}
-
-  obtenerQr(puntoId: string): Observable<TokenQrRespuesta> {
-    return this.http.get<TokenQrRespuesta>(
-      `${environment.apiUrl}/api/puntos/${encodeURIComponent(puntoId)}/qr`,
-    );
-  }
 
   solicitudes(puntoId: string, desde?: string): Observable<SolicitudPunto[]> {
     let params = new HttpParams();

@@ -1,5 +1,5 @@
 import { Component, Input, OnDestroy, OnInit, signal } from '@angular/core';
-import { catchError, EMPTY, Subscription, switchMap, timer } from 'rxjs';
+import { catchError, of, Subscription, switchMap, timer } from 'rxjs';
 import { SolicitudPunto } from '../modelos/consumo.model';
 import { PuntoService } from './punto.service';
 
@@ -16,6 +16,7 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
 
   readonly porServir = signal<SolicitudPunto[]>([]);
   readonly rechazos = signal<SolicitudPunto[]>([]);
+  readonly sinConexion = signal(false);
 
   private readonly servidos = new Set<string>();
   private readonly enCurso = new Set<string>();
@@ -26,9 +27,14 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.suscripcion = timer(0, 2000)
       .pipe(
-        switchMap(() => this.servicio.solicitudes(this.puntoId).pipe(catchError(() => EMPTY))),
+        switchMap(() => this.servicio.solicitudes(this.puntoId).pipe(catchError(() => of(null)))),
       )
-      .subscribe((lista) => this.actualizar(lista));
+      .subscribe((lista) => {
+        this.sinConexion.set(lista === null);
+        if (lista) {
+          this.actualizar(lista);
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -49,15 +55,6 @@ export class SolicitudesComponent implements OnInit, OnDestroy {
       },
       error: () => this.enCurso.delete(id),
     });
-  }
-
-  iniciales(s: SolicitudPunto): string {
-    const base = (s.nombre ?? s.matricula).trim();
-    return base
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((p) => p.charAt(0).toUpperCase())
-      .join('');
   }
 
   private actualizar(lista: SolicitudPunto[]): void {

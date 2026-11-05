@@ -29,25 +29,11 @@ h2 {
   border-radius: var(--radio-tarjeta);
 }
 
-.avatar {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  overflow: hidden;
-  font-size: 22px;
+.sin-conexion {
+  margin: 0 0 16px;
+  font-size: 17px;
   font-weight: 700;
-  color: var(--color-institucional-900);
-  background: var(--color-chip-verde);
-  border-radius: 50%;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+  color: var(--color-rechazado);
 }
 
 .datos {
