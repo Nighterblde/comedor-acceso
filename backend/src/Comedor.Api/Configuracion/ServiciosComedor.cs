@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
 using Comedor.Api.Tareas;
 using Comedor.Application.Abstracciones;
 using Comedor.Application.Accesos;
@@ -101,6 +102,8 @@ public static class ServiciosComedor
         servicios.AddScoped<ValidarAcceso>();
         servicios.AddScoped<IniciarSesionEmpleado>();
         servicios.AddScoped<IniciarSesionSistema>();
+        servicios.AddScoped<MarcarServido>();
+        servicios.AddScoped<ListarSolicitudes>();
         servicios.AddScoped<SincronizarPersonal>();
 
         if (config.GetValue("Sincronizacion:Habilitada", true))
@@ -131,7 +134,8 @@ public static class ServiciosComedor
         servicios.AddCors(o => o.AddDefaultPolicy(p =>
             p.WithOrigins(origenes).AllowAnyHeader().AllowAnyMethod()));
 
-        servicios.AddControllers();
+        servicios.AddControllers().AddJsonOptions(o =>
+            o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
         servicios.AddProblemDetails();
         return servicios;
     }
