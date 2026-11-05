@@ -1,13 +1,17 @@
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
+import { LoginEmpleadoComponent } from './login-empleado.component';
+import { PaseComponent } from './pase.component';
 
-// Las rutas /pase y /registro viven aqui; la Tarea 12 les asigna componentes.
 const routes: Routes = [
-  { path: 'pase', children: [] },
-  { path: 'registro', children: [] },
+  { path: 'pase', component: PaseComponent },
+  { path: 'registro', component: PaseComponent, data: { registro: true } },
 ];
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
+  declarations: [PaseComponent, LoginEmpleadoComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule.forChild(routes)],
 })
 export class PaseModule {}

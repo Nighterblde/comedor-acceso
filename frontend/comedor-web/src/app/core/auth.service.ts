@@ -46,6 +46,10 @@ export class AuthService {
     return leer(CLAVE_ROL);
   }
 
+  cerrarSesionEmpleado(): void {
+    borrar(CLAVE_TOKEN_EMPLEADO);
+  }
+
   cerrarSesion(): void {
     borrar(CLAVE_TOKEN_SISTEMA);
     borrar(CLAVE_TOKEN_EMPLEADO);
