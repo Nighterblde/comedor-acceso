@@ -11,5 +11,11 @@ public class Exportador : IExportador
     public byte[] CotejoPdf(IReadOnlyList<FilaCotejo> filas, DateOnly desde, DateOnly hasta) =>
         ExportadorPdf.Cotejo(filas, desde, hasta);
 
+    public byte[] ConteoExcel(IReadOnlyList<FilaConteo> filas, DateOnly desde, DateOnly hasta) =>
+        ExportadorExcel.Conteo(filas);
+
+    public byte[] ConteoPdf(IReadOnlyList<FilaConteo> filas, DateOnly desde, DateOnly hasta) =>
+        ExportadorPdf.Conteo(filas, desde, hasta);
+
     public byte[] DetalleExcel(IReadOnlyList<FilaDetalle> filas) => ExportadorExcel.Detalle(filas);
 }

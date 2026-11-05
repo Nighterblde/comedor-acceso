@@ -6,6 +6,28 @@ namespace Comedor.Infrastructure.Exportacion;
 /// <summary>Genera los libros de Excel; el PDF vive en ExportadorPdf.</summary>
 internal static class ExportadorExcel
 {
+    public static byte[] Conteo(IReadOnlyList<FilaConteo> filas)
+    {
+        using var libro = new XLWorkbook();
+        var hoja = libro.AddWorksheet("Conteo");
+        Encabezado(hoja, "Fecha de servicio", "Tiempo de comida", "Turno", "Área", "Total");
+        var fila = 2;
+        foreach (var f in filas)
+        {
+            Texto(hoja.Cell(fila, 1), f.FechaServicio.ToString("yyyy-MM-dd"));
+            Texto(hoja.Cell(fila, 2), f.TiempoComida);
+            Texto(hoja.Cell(fila, 3), f.Turno);
+            Texto(hoja.Cell(fila, 4), f.Area);
+            hoja.Cell(fila, 5).Value = f.Total;
+            fila++;
+        }
+
+        Texto(hoja.Cell(fila, 1), "Total");
+        hoja.Cell(fila, 5).Value = filas.Sum(f => f.Total);
+        hoja.Row(fila).Style.Font.Bold = true;
+        return Bytes(libro, hoja);
+    }
+
     public static byte[] Cotejo(IReadOnlyList<FilaCotejo> filas)
     {
         using var libro = new XLWorkbook();

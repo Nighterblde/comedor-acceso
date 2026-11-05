@@ -53,6 +53,22 @@ public class ReportesController(GenerarReporte reportes, IExportador exportador)
         return File(exportador.CotejoPdf(filas, d, h), "application/pdf", $"cotejo-{d:yyyy-MM-dd}_{h:yyyy-MM-dd}.pdf");
     }
 
+    [HttpGet("conteo.xlsx")]
+    public async Task<IActionResult> ConteoExcel([FromQuery] string? desde, [FromQuery] string? hasta)
+    {
+        if (!Rango(desde, hasta, out var d, out var h)) return RangoInvalido();
+        var filas = await reportes.ConteoAsync(d, h);
+        return File(exportador.ConteoExcel(filas, d, h), TipoExcel, $"conteo-{d:yyyy-MM-dd}_{h:yyyy-MM-dd}.xlsx");
+    }
+
+    [HttpGet("conteo.pdf")]
+    public async Task<IActionResult> ConteoPdf([FromQuery] string? desde, [FromQuery] string? hasta)
+    {
+        if (!Rango(desde, hasta, out var d, out var h)) return RangoInvalido();
+        var filas = await reportes.ConteoAsync(d, h);
+        return File(exportador.ConteoPdf(filas, d, h), "application/pdf", $"conteo-{d:yyyy-MM-dd}_{h:yyyy-MM-dd}.pdf");
+    }
+
     [HttpGet("detalle.xlsx")]
     public async Task<IActionResult> DetalleExcel([FromQuery] string? desde, [FromQuery] string? hasta,
         [FromQuery] string? matricula, [FromQuery] string? puntoId, [FromQuery] Canal? canal,

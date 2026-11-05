@@ -8,5 +8,9 @@ public interface IExportador
 
     byte[] CotejoPdf(IReadOnlyList<FilaCotejo> filas, DateOnly desde, DateOnly hasta);
 
+    byte[] ConteoExcel(IReadOnlyList<FilaConteo> filas, DateOnly desde, DateOnly hasta);
+
+    byte[] ConteoPdf(IReadOnlyList<FilaConteo> filas, DateOnly desde, DateOnly hasta);
+
     byte[] DetalleExcel(IReadOnlyList<FilaDetalle> filas);
 }

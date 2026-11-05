@@ -173,6 +173,41 @@ public class ReportesTests(SqlServerFixture sql)
     }
 
     [Fact]
+    public async Task ConteoExcel_ReleidoConClosedXML_TotalEs5()
+    {
+        using var fabrica = await CrearFabricaSembradaAsync();
+        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+
+        var r = await c.GetAsync($"/api/reportes/conteo.xlsx?{Rango}");
+
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", r.Content.Headers.ContentType!.MediaType);
+        Assert.Equal("conteo-2026-11-10_2026-11-10.xlsx", r.Content.Headers.ContentDisposition!.FileName);
+        using var libro = new XLWorkbook(await r.Content.ReadAsStreamAsync());
+        var hoja = libro.Worksheet(1);
+        Assert.Equal("Área", hoja.Cell(1, 4).GetString());
+        var ultima = hoja.LastRowUsed()!;
+        Assert.Equal(7, ultima.RowNumber());
+        Assert.Equal("Total", ultima.Cell(1).GetString());
+        Assert.Equal(5, (int)ultima.Cell(5).GetDouble());
+    }
+
+    [Fact]
+    public async Task ConteoPdf_EmpiezaConFirmaPdf()
+    {
+        using var fabrica = await CrearFabricaSembradaAsync();
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
+
+        var r = await c.GetAsync($"/api/reportes/conteo.pdf?{Rango}");
+
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        Assert.Equal("application/pdf", r.Content.Headers.ContentType!.MediaType);
+        Assert.Equal("conteo-2026-11-10_2026-11-10.pdf", r.Content.Headers.ContentDisposition!.FileName);
+        var bytes = await r.Content.ReadAsByteArrayAsync();
+        Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(bytes, 0, 4));
+    }
+
+    [Fact]
     public async Task Detalle_FiltraPorCanal()
     {
         using var fabrica = await CrearFabricaSembradaAsync();
