@@ -130,12 +130,11 @@ Turno y tiempo de comida se guardan como texto, sin catálogo, y se comparan dis
 
 ## D-18 Detalles de la API no fijados en el plan
 
-Decisiones de implementación de las Tareas 9 a 11, tomadas con la lectura mínima del plan:
+Decisiones de implementación de las Tareas 9 a 12, tomadas con la lectura mínima del plan:
 
 - **Reportes:** Turno, Área y Nombre salen del empleado unido por matrícula; si no existe, "Sin dato" (y nombre vacío). En el detalle, Resultado es "Autorizado" o "Rechazado" y Motivo es el texto exacto del rechazo; los rechazos sin fecha de servicio se filtran por la fecha en que ocurrieron. Fechas faltantes, inválidas o `desde > hasta` responden 400. Los archivos se llaman `<reporte>-<desde>_<hasta>.<ext>` y sus celdas de texto se guardan como texto literal.
 - **Administración:** `DELETE /api/admin/reglas?turno=&tiempoComida=` (404 si no existe). Al editar una regla, el traslape no se compara contra ella misma. Los errores 400 y 409 responden `{ "error": "<texto>" }`. El rol de un usuario debe ser uno de los cuatro del sistema; la contraseña es obligatoria al crear y opcional al editar. La baja de puntos y usuarios es `activo = false`.
 - **Frontend:** se conservan los nombres generados por Angular 22 (`app-module.ts`, `app-routing-module.ts`). Si falta el rol, el guard redirige a `/login?returnUrl=<ruta>` y, tras iniciar sesión, se vuelve a esa ruta; entrando directo a `/login` no hay página de inicio por rol.
-
 - **Pase del empleado (Tarea 12):** los errores de sesión de la API se traducen a los tres textos del plan ("Credenciales incorrectas", "Cuenta bloqueada por 15 minutos" y, para cualquier otro error o falta de conexión, "No se pudo verificar tu cuenta; acude con el encargado"). Un error de red o del servidor al validar el pase muestra el texto ya especificado "Escanea de nuevo el código de la entrada", sin crear un texto nuevo. `/pase` sin código QR y con sesión muestra ese mismo texto sin validar. El inicio de sesión del celular muestra el punto leído del propio QR (por ejemplo "Entrada P1"). Con el formulario incompleto, el botón Entrar queda desactivado, sin mensaje adicional. En un rechazo "No registrado" se ocultan los datos que la API no envía.
 
 ## D-19 El pase no muestra el área
