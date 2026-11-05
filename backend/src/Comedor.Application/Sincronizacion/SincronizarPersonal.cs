@@ -27,6 +27,7 @@ public class SincronizarPersonal(
         var locales = (await empleados.TodosAsync()).ToDictionary(e => e.Matricula);
         var validos = new Dictionary<string, EmpleadoFuente>();
         var omitidos = 0;
+        var invalidas = new HashSet<string>();
         foreach (var fila in filas)
         {
             var matricula = (fila.Matricula ?? string.Empty).Trim().ToUpperInvariant();
@@ -35,6 +36,10 @@ public class SincronizarPersonal(
                 || !validos.TryAdd(matricula, fila with { Matricula = matricula }))
             {
                 omitidos++;
+                if (matricula.Length > 0)
+                {
+                    invalidas.Add(matricula);
+                }
             }
         }
 
@@ -56,7 +61,8 @@ public class SincronizarPersonal(
             }
         }
 
-        foreach (var local in locales.Values.Where(e => e.Activo && !validos.ContainsKey(e.Matricula)))
+        foreach (var local in locales.Values.Where(e => e.Activo && !validos.ContainsKey(e.Matricula)
+                                                      && !invalidas.Contains(e.Matricula)))
         {
             bajas++;
             porGuardar.Add(local with { Activo = false });
@@ -64,7 +70,16 @@ public class SincronizarPersonal(
 
         if (porGuardar.Count > 0)
         {
-            await empleados.GuardarAsync(porGuardar);
+            try
+            {
+                await empleados.GuardarAsync(porGuardar);
+            }
+            catch (Exception ex)
+            {
+                await bitacora.RegistrarAsync(
+                    new BitacoraSincronizacion(Guid.NewGuid(), reloj.Ahora(), false, 0, 0, 0, 0, ex.Message));
+                return new ResultadoSincronizacion(false, 0, 0, 0, 0, ex.Message);
+            }
         }
 
         await bitacora.RegistrarAsync(

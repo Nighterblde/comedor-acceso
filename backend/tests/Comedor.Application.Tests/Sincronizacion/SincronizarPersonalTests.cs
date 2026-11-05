@@ -24,6 +24,7 @@ public class SincronizarPersonalTests
     {
         public List<Empleado> Guardados { get; } = [];
         public int Llamadas { get; private set; }
+        public Exception? ErrorAlGuardar { get; init; }
 
         public Task<Empleado?> ObtenerAsync(string matricula) =>
             Task.FromResult(iniciales.FirstOrDefault(e => e.Matricula == matricula));
@@ -33,6 +34,11 @@ public class SincronizarPersonalTests
         public Task GuardarAsync(IEnumerable<Empleado> empleados)
         {
             Llamadas++;
+            if (ErrorAlGuardar is not null)
+            {
+                throw ErrorAlGuardar;
+            }
+
             Guardados.AddRange(empleados);
             return Task.CompletedTask;
         }
@@ -181,5 +187,33 @@ public class SincronizarPersonalTests
 
         Assert.Equal(1, r.Cambios);
         Assert.True(Assert.Single(repo.Guardados).Activo);
+    }
+
+    [Fact]
+    public async Task GuardadoFalla_RegistraBitacoraConError()
+    {
+        var repo = new RepoEmpleados { ErrorAlGuardar = new InvalidOperationException("bd caída") };
+        var bitacora = new RepoBitacora();
+        var r = await Crear(new FuenteFalsa([Fuente("A1")]), repo, bitacora).EjecutarAsync();
+
+        Assert.False(r.Exito);
+        Assert.Equal("bd caída", r.Error);
+        Assert.Equal((0, 0, 0, 0), (r.Altas, r.Cambios, r.Bajas, r.Omitidos));
+        var fila = Assert.Single(bitacora.Filas);
+        Assert.False(fila.Exito);
+        Assert.Equal("bd caída", fila.Error);
+        Assert.Equal(Hora, fila.Fecha);
+    }
+
+    [Fact]
+    public async Task FilaInvalida_DeEmpleadoExistente_NoSeDaDeBaja()
+    {
+        var repo = new RepoEmpleados(Local("A1", "Matutino"));
+        var r = await Crear(new FuenteFalsa([Fuente("a1", "Madrugada")]), repo, new RepoBitacora()).EjecutarAsync();
+
+        Assert.True(r.Exito);
+        Assert.Equal(1, r.Omitidos);
+        Assert.Equal(0, r.Bajas);
+        Assert.Equal(0, repo.Llamadas);
     }
 }
