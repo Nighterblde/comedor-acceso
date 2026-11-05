@@ -27,6 +27,13 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-21](#d-21-qr-permanente-impreso) | QR permanente impreso, sin comprobar presencia | Aceptada, riesgo conocido |
 | [D-22](#d-22-estado-de-la-sincronización-para-el-aviso-de-rnf-05) | Estado de la sincronización para el aviso de RNF-05 | Aceptada |
 | [D-23](#d-23-detalles-del-frontend-de-reportes-y-administración) | Detalles del frontend de Reportes y Administración | Aceptada |
+| [D-24](#d-24-entorno-de-desarrollo-y-pruebas) | Entorno de desarrollo y pruebas | Aceptada |
+| [D-25](#d-25-detalles-del-dominio-y-la-persistencia) | Detalles del dominio y la persistencia | Aceptada, riesgo conocido |
+| [D-26](#d-26-detalles-de-la-validación-de-acceso) | Detalles de la validación de acceso | Aceptada |
+| [D-27](#d-27-sesión-del-empleado-y-bloqueo-por-intentos) | Sesión del empleado y bloqueo por intentos | Aceptada, riesgo conocido |
+| [D-28](#d-28-reglas-de-la-sincronización-de-personal) | Reglas de la sincronización de personal | Aceptada, revisable |
+| [D-29](#d-29-api-base-seguridad-y-configuración) | API base, seguridad y configuración | Aceptada |
+| [D-30](#d-30-pantalla-del-chef-y-endpoints-de-acceso) | Pantalla del chef y endpoints de acceso | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -182,3 +189,76 @@ Decisiones de implementación de la Tarea 14 donde el plan no dice nada:
 - **Claves al editar:** al editar un punto o un usuario, su clave o nombre de usuario queda de solo lectura. **Motivo:** la API guarda por clave, así que cambiarla crearía otro registro y dejaría activo el anterior (en usuarios, una cuenta vieja con acceso). Para "renombrar" se da de alta el nuevo y se desactiva el anterior.
 - **Sincronización:** el botón muestra "Sincronizando…" mientras trabaja; el resultado dice "Sincronización correcta." o "La sincronización falló: <error>", seguido de altas, cambios, bajas y omitidos; la bitácora marca cada fila como "Correcta" o "Falló". Después de sincronizar, el aviso de RNF-05 se actualiza sin recargar la página.
 - **QR impreso (D-21):** la vista imprimible muestra "Comedor de personal", el nombre y la clave del punto y el QR; al imprimir se ocultan la barra, la navegación y el resto de la página.
+
+## D-24 Entorno de desarrollo y pruebas
+
+Decisiones de las Tareas 1 a 8 sobre herramientas, donde el plan no dice nada.
+
+- **.NET 8 aunque la máquina solo tenga .NET 10:** todos los proyectos apuntan a `net8.0` (SRS §2.4). Si solo está instalado .NET 10, las pruebas se corren con la variable de entorno `DOTNET_ROLL_FORWARD=Major`, que no se guarda en el repositorio.
+- **Ajuste solo de pruebas:** el servidor de pruebas de .NET 8 falla al escribir JSON cuando corre sobre .NET 10, así que `ComedorApiFactory` registra un filtro de arranque (`EscritorEstandarFilter`) que lo evita. Vive solo en el proyecto de pruebas y no afecta a la API. **Pendiente:** activarlo solo cuando el runtime sea mayor que 8, para que un CI con .NET 8 pruebe el flujo real.
+- **Karma y Jasmine:** Angular CLI 22 genera Vitest por defecto; se usó Karma con Jasmine porque el plan y el SRS §9.1 los nombran.
+- **Prueba de arquitectura:** revisa las dependencias de `Comedor.Application` a través de la clase marcador `EnsambladoAplicacion`.
+- **Migraciones:** `dotnet-ef` va como herramienta local (`.config/dotnet-tools.json`), y una fábrica de diseño con una cadena localhost sin contraseña permite generar migraciones sin levantar la API.
+- **Pruebas de integración:** comparten un contenedor de SQL Server (Testcontainers), y cada fábrica de la API usa una base de datos con nombre único.
+
+## D-25 Detalles del dominio y la persistencia
+
+Tareas 2 y 3.
+
+- **Rechazo con Id:** `Rechazo` tiene un `Guid Id`, aunque la firma del plan no lo incluye, para poder guardarlo en la base de datos.
+- **Resultado de la evaluación:** cuando se encontró una regla del turno del empleado, el resultado incluye la regla y la fecha de servicio también en los rechazos posteriores (día de descanso, ya consumió). Así el rechazo queda con su fecha de servicio y tiempo de comida (RF-18).
+- **Enumeraciones como texto:** el canal y el motivo de rechazo se guardan como texto en la base de datos, para que las tablas de auditoría se lean sin traducir números.
+- **Consumos y entregas duplicados:** la API traduce los errores de restricción única de SQL Server (2601 y 2627) en "Ya consumiste este tiempo de comida" o en "ya servido", y desliga el registro rechazado para que la operación pueda continuar.
+- **Riesgos conocidos:** la entrega no tiene llave foránea hacia el consumo; la API valida que el consumo exista antes de servir. La protección de solo inserción vive en `SaveChanges`, así que SQL directo la evitaría; un control en la base de datos (permisos o disparadores) queda como mejora.
+
+## D-26 Detalles de la validación de acceso
+
+Tarea 5.
+
+- **Orden de "¿ya consumió?":** el evaluador del dominio es síncrono y la consulta al repositorio es asíncrona. El caso de uso evalúa las otras cinco reglas y, si autoriza, consulta si ya consumió. Es equivalente porque esa es la última verificación, y la restricción única sigue siendo la garantía ante dos intentos simultáneos (RNF-03).
+- **Captura manual:** no comprueba que el punto exista; la limita el rol de quien captura (Punto o Encargado).
+- **Token del QR inválido:** el celular recibe "Escanea de nuevo el código de la entrada" sin buscar al empleado y sin registrar nada (RF-10).
+
+## D-27 Sesión del empleado y bloqueo por intentos
+
+Tareas 6 y 8b.
+
+- **Bloqueo:** 5 fallos dentro de 15 minutos bloquean el ID 15 minutos, contados desde el quinto fallo. Mientras dura, ni la contraseña correcta deja entrar y no se consulta al autenticador. Un inicio de sesión correcto borra los fallos. El ID se normaliza (`Trim().ToUpperInvariant()`) antes de contar, así que otra capitalización no evita el bloqueo.
+- **Autenticador caído:** si el autenticador de la empresa falla, la respuesta es "servicio no disponible" y no cuenta como fallo.
+- **Respuesta de la API:** `POST /api/empleados/sesion` responde 401 con `{ "error": "CredencialesIncorrectas" | "Bloqueado" | "ServicioNoDisponible" }`, y el frontend lo traduce a los textos del plan (D-18). Un cuerpo vacío responde `CredencialesIncorrectas`, nunca 500.
+- **Token:** JWT de rol `Empleado`, `sub` = matrícula y 30 días de vigencia; las horas salen de `TimeProvider` en UTC.
+- **Estado en memoria:** el control de intentos es una sola instancia para toda la API. Se reinicia si la API se reinicia y no se comparte entre servidores, lo que basta con un solo servidor (D-02).
+- **Riesgo conocido:** varias peticiones simultáneas del mismo ID pueden entrar antes de que se registre el quinto fallo, así que en una ráfaga se pueden probar más de 5 contraseñas.
+
+## D-28 Reglas de la sincronización de personal
+
+Tarea 7.
+
+- **Catálogo de turnos:** el plan pide omitir los turnos "no presentes en el catálogo", pero no define el catálogo. Es configurable (`Sincronizacion:Turnos`) y por defecto contiene Matutino, Vespertino y Nocturno (SRS §2.6). Ver también D-17.
+- **Filas omitidas:** se omiten las filas con matrícula vacía, con turno fuera del catálogo o con matrícula repetida en la misma carga (se conserva la primera). La bitácora guarda cuántas se omitieron.
+- **Fila inválida de un empleado existente:** el empleado **no se da de baja** y queda como estaba. **Motivo:** el SRS §8 dice que el registro inválido "se omite", y el plan solo da de baja al empleado "ausente en la fuente".
+- **Reactivación:** un empleado dado de baja que vuelve a aparecer en la fuente se reactiva y cuenta como cambio.
+- **Bitácora en cada ejecución:** se registran la ejecución exitosa, la falla de la fuente y también la falla al guardar en la base de datos (RF-04).
+- **Programación:** la sincronización corre a la hora `Sincronizacion:Hora` (02:00 por defecto) y se apaga con `Sincronizacion:Habilitada`, que las pruebas usan. El empleado no guarda la "fecha de última sincronización" del SRS §7, porque no está en la firma del plan.
+- **Revisable:** si la fuente devuelve una lista vacía, todos los empleados activos se dan de baja con resultado exitoso. Conviene confirmar con informática si una lista vacía debe tratarse como falla.
+
+## D-29 API base, seguridad y configuración
+
+Tarea 8a.
+
+- **Configuración secreta:** `Jwt:Clave`, `Qr:ClaveFirma`, `ConnectionStrings:Comedor` y `Semilla:Admin` no van en `appsettings.json`; en desarrollo se cargan con `dotnet user-secrets` (README). Si falta alguna de las tres primeras, la API no arranca y dice cuál falta. El administrador semilla se crea solo si hay usuario y contraseña configurados y no existe ningún usuario.
+- **Autenticador simulado:** sus usuarios de prueba, con contraseñas ficticias, están en `appsettings.Development.json` como datos del simulador; no son credenciales reales.
+- **Usuarios del sistema:** las contraseñas se guardan con `PasswordHasher<UsuarioSistema>`. Un usuario inexistente, uno inactivo y una contraseña incorrecta reciben la misma respuesta. Para que el tiempo de respuesta tampoco delate qué usuarios existen, cuando el usuario no es válido se verifica igual contra un hash ficticio. **Pendiente:** ese hash debe actualizarse si cambian las iteraciones de `PasswordHasher`.
+- **JWT:** HS256, sin emisor ni audiencia y con 30 segundos de tolerancia de reloj. La API conserva el `sub` del token sin renombrarlo y lee el rol del claim estándar de rol.
+- **Errores inesperados:** se registran con el endpoint y el detalle, y el usuario recibe una respuesta genérica (SRS §8).
+- **HTTPS:** la API todavía no fuerza HTTPS; depende del certificado pendiente con informática (SRS §11, RNF-06).
+
+## D-30 Pantalla del chef y endpoints de acceso
+
+Tarea 8b.
+
+- **"Por servir" lo decide el servidor:** la lista de solicitudes omite los autorizados sin servir cuya fecha de servicio y tiempo de comida ya no son los de un horario en curso; los servidos y los rechazos se devuelven siempre. Sin `desde`, la lista cubre las últimas 2 horas. Así un autorizado sale de la lista al terminar su horario (SRS §8).
+- **Enumeraciones en JSON como texto:** por ejemplo, `estado` vale `"Autorizado"`, `"Rechazado"` o `"EscanearDeNuevo"`.
+- **Doble clic en Servido:** la segunda respuesta es 200 con `yaServido = true` y la hora del momento, no la de la entrega original, porque la API no la consulta.
+- **URL del QR:** el token va escapado en la URL; un punto inexistente o inactivo responde 404.
+- **Quién captura:** la matrícula del celular sale siempre del `sub` del token, y el usuario de la sesión queda como encargado de la captura manual y de la entrega. Un usuario de rol Punto no queda limitado a su propio punto; con un solo punto (D-12) no hace falta.
