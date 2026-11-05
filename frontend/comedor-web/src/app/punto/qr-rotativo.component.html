@@ -1,0 +1,11 @@
+<section class="qr">
+  @if (qr(); as qrActual) {
+    <qrcode [qrdata]="qrActual.url" [width]="240" [margin]="2" errorCorrectionLevel="M" ariaLabel="Código QR de la entrada"></qrcode>
+    <div class="progreso" aria-hidden="true">
+      <div class="progreso-barra" [style.width.%]="(segundosRestantes() / 30) * 100"></div>
+    </div>
+    <p class="cuenta">El código cambia en {{ segundosRestantes() }} s</p>
+  } @else if (sinConexion()) {
+    <p class="sin-conexion" role="status">Sin conexión</p>
+  }
+</section>
