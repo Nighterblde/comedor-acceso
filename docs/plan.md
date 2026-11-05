@@ -4,15 +4,15 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión | 1.1 |
+| Versión | 1.3 |
 | Fecha | 4 de noviembre de 2026 |
-| Implementa | [SRS v1.1](srs.md) |
+| Implementa | [SRS v1.3](srs.md) |
 | Diseño | [Guía de diseño](diseno.md) |
 | Tareas | 16 (1 a 15, con la 8 dividida en 8a y 8b) |
 
 > **Para agentes:** usar la subskill subagent-driven-development (recomendada) o executing-plans para implementar este plan tarea por tarea. Los pasos usan casillas para dar seguimiento.
 
-**Objetivo:** construir el sistema de control de acceso y consumo del comedor de personal descrito en el SRS: entrada por celular con QR rotativo, captura manual del encargado, registro inalterable y reportes de cotejo de factura.
+**Objetivo:** construir el sistema de control de acceso y consumo del comedor de personal descrito en el SRS: entrada por celular con QR permanente impreso, captura manual del encargado, registro inalterable y reportes de cotejo de factura.
 
 **Arquitectura:** monorepo con API REST en ASP.NET Core organizada por capas (Dominio, Aplicación, Infraestructura, API) y frontend Angular con NgModules separado en modelo, vista y controlador. La fuente RR. HH. y el autenticador de la empresa son interfaces con adaptadores simulados en la v1.
 
@@ -35,7 +35,7 @@ Toda tarea cumple implícitamente esta lista.
 - Día laboral: `Empleado.DiasLaborales` contiene el `DayOfWeek` de la fecha de servicio.
 - Contrato vigente si InicioContrato ≤ fecha de servicio ≤ FinContrato (ambos inclusivos).
 - Matrícula normalizada con `Trim().ToUpperInvariant()` en toda entrada.
-- QR del punto cambia cada 30 s (`Qr:SegundosRotacion = 30`); token válido 60 s (`Qr:SegundosValidez = 60`); firma HMAC-SHA256 con `Qr:ClaveFirma`.
+- QR del punto permanente e impreso ([D-21](decisiones.md#d-21-qr-permanente-impreso)): el token no caduca; firma HMAC-SHA256 con `Qr:ClaveFirma`; el validador exige firma válida y punto activo.
 - Sesión de empleado: JWT de rol `Empleado`, `sub` = matrícula, vigencia `Sesion:DiasEmpleado = 30`. Se asume que el ID de la empresa es la matrícula.
 - Bloqueo de inicio de sesión de empleado: 5 intentos fallidos en 15 minutos bloquean ese ID 15 minutos.
 - Usuarios del sistema: roles `Punto`, `Encargado`, `Supervisor`, `Administrador`; JWT de 12 h (`Jwt:HorasSistema = 12`) salvo `Punto`, de 30 días (`Jwt:DiasPunto = 30`); contraseñas con `PasswordHasher<UsuarioSistema>`.
@@ -54,7 +54,7 @@ Casos que el SRS implica pero que es fácil dejar sin probar; cada uno tiene su 
 | 1 | Intento a las 00:15 del 11-nov en un horario 23:30–00:30 | Autorizado con fecha de servicio 10-nov; un segundo intento a las 00:20 es "Ya consumiste" | Tarea 2 y Tarea 5 |
 | 2 | Desayuno nocturno 06:15 del sábado (regla de la jornada anterior) de alguien que trabaja viernes y descansa sábado | Autorizado con fecha de servicio viernes | Tarea 2 |
 | 3 | Celular y captura manual del mismo empleado al mismo tiempo | Exactamente un consumo; el otro recibe "Ya consumiste", nunca un error 500 | Tarea 8b |
-| 4 | Token firmado con otra clave, alterado, de un punto inactivo o con 61 s de antigüedad | "Escanea de nuevo el código de la entrada" y ningún rechazo registrado | Tarea 4 |
+| 4 | Token firmado con otra clave, alterado o de un punto inactivo | "Escanea de nuevo el código de la entrada" y ningún rechazo registrado | Tarea 4 |
 | 5 | El chef presiona Servido dos veces o desde dos pantallas | Una sola entrega; la segunda respuesta es 200 con `yaServido = true`, nunca 500 | Tarea 8b |
 
 ## Estructura de archivos
@@ -98,7 +98,7 @@ frontend/comedor-web/src/app/
   core/        auth.service.ts  auth.interceptor.ts  rol.guard.ts  almacen.ts  core.module.ts
   modelos/     empleado.model.ts  pase.model.ts  consumo.model.ts  reporte.model.ts
   pase/        pase.module.ts  login-empleado.component.*  pase.component.*  registro.component.*  pase.service.ts
-  punto/       punto.module.ts  qr-rotativo.component.*  captura-manual.component.*  solicitudes.component.*  punto.service.ts
+  punto/       punto.module.ts  captura-manual.component.*  solicitudes.component.*  punto.service.ts
   reportes/    reportes.module.ts  reportes.component.*  reportes.service.ts
   admin/       admin.module.ts  reglas.component.*  puntos.component.*  usuarios.component.*
                contingencia.component.*  sincronizacion.component.*  admin.service.ts
@@ -200,6 +200,7 @@ Días laborales en todas las pruebas: lunes a viernes, salvo donde se indica. Re
 - `IFirmaToken { string Firmar(TokenQr t); TokenQr? Verificar(string token); }`. Formato: `base64url("{PuntoId}|{EmitidoEn.Ticks}") + "." + base64url(HMACSHA256(clave, parte1))`; `Verificar` devuelve null ante formato o firma inválidos.
 - `EmitirTokenQr.EjecutarAsync(string puntoId) → Task<string>`; lanza `InvalidOperationException` si el punto no existe o está inactivo.
 - `ValidadorTokenQr.ValidarAsync(string token) → Task<string?>`: devuelve el PuntoId solo si la firma es válida, `Ahora() - EmitidoEn ≤ 60 s` y el punto está activo.
+- **Cambio posterior ([D-21](decisiones.md#d-21-qr-permanente-impreso)):** la Tarea 13 quita la condición de antigüedad; las pruebas de 59 y 61 s se sustituyen por `TokenAntiguo_SigueSiendoValido`.
 
 * [ ] **Paso 1: escribir las pruebas que fallan:** `TokenRecienEmitido_EsValido`; `TokenCon59Segundos_EsValido`; `TokenCon61Segundos_EsInvalido`; `TokenAlterado_EsInvalido` (cambiar un carácter de la parte 1); `TokenFirmadoConOtraClave_EsInvalido`; `TokenDePuntoInactivo_EsInvalido`; `Emitir_PuntoInactivo_Lanza`. Usar un `IReloj` falso y `FirmaTokenHmac` real.
 * [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Application.Tests --filter Qr` → FALLA.
@@ -287,7 +288,7 @@ Reglas: matrícula vacía o turno no presente en el catálogo → omitido; emple
 | Método y ruta | Rol | Cuerpo | Respuesta |
 | --- | --- | --- | --- |
 | `POST /api/empleados/sesion` | anónimo | `{id, contrasena}` | `{token}` o 401 con `{error}` |
-| `GET /api/puntos/{id}/qr` | Punto, Encargado |  | `{token, url, expiraEn}`; `url` = `{App:UrlPublica}/pase?t={token}` |
+| `GET /api/puntos/{id}/qr` | Punto, Encargado (Administrador desde la Tarea 13, para imprimirlo) |  | `{token, url}` (sin `expiraEn` desde la Tarea 13: el token no caduca, D-21); `url` = `{App:UrlPublica}/pase?t={token}` |
 | `POST /api/accesos/celular` | Empleado | `{tokenQr}` | `ResultadoAcceso` |
 | `POST /api/accesos/manual` | Punto, Encargado | `{matricula, puntoId}` | `ResultadoAcceso` |
 | `GET /api/puntos/{id}/solicitudes?desde=` | Punto, Encargado |  | `SolicitudPunto[]`, más recientes primero |
@@ -310,7 +311,8 @@ La matrícula del canal celular sale del `sub` del JWT, nunca del cuerpo. El usu
 - `record FilaConteo(DateOnly FechaServicio, string TiempoComida, string Turno, string Area, int Total)`; `record FilaCotejo(DateOnly FechaServicio, string TiempoComida, int Servidas, int SinServir)`; `record FilaDetalle(DateTime FechaHora, string Matricula, string Nombre, string TiempoComida, string PuntoId, Canal Canal, string Resultado, string? Motivo, bool Servido)`.
 - `GenerarReporte`: `ConteoAsync(DateOnly desde, DateOnly hasta)`, `CotejoFacturaAsync(DateOnly desde, DateOnly hasta)`, `DetalleAsync(DateOnly desde, DateOnly hasta, string? matricula, string? puntoId, Canal? canal, MotivoRechazo? motivo)`; rangos inclusivos sobre la fecha de servicio. Los consumos de canal Contingencia cuentan como servidos.
 - `IExportador { byte[] CotejoExcel(IReadOnlyList<FilaCotejo> filas, DateOnly desde, DateOnly hasta); byte[] CotejoPdf(...); byte[] DetalleExcel(IReadOnlyList<FilaDetalle> filas); byte[] ConteoExcel(IReadOnlyList<FilaConteo> filas, DateOnly desde, DateOnly hasta); byte[] ConteoPdf(...); }`; la última fila del cotejo es "Total" con las sumas de Servidas y SinServir; la del conteo es "Total" con la suma de Total ([D-14](decisiones.md#d-14-el-conteo-también-se-exporta)).
-- Rutas (roles Supervisor y Administrador): `GET /api/reportes/conteo`, `/cotejo`, `/detalle`, `/cotejo.xlsx`, `/cotejo.pdf`, `/detalle.xlsx`, `/conteo.xlsx`, `/conteo.pdf`, con `?desde=yyyy-MM-dd&hasta=yyyy-MM-dd`.
+- Rutas (roles Supervisor y Administrador): `GET /api/reportes/conteo`, `/cotejo`, `/detalle`, `/cotejo.xlsx`, `/cotejo.pdf`, `/detalle.xlsx`, `/conteo.xlsx`, `/conteo.pdf`, con `?desde=yyyy-MM-dd&hasta=yyyy-MM-dd`; fechas faltantes, inválidas o `desde > hasta` → 400.
+- Las consultas viven en `Infrastructure` detrás de `Abstracciones/IConsultaReportes.cs`, porque `Application` no ve el `DbContext`. Turno, Área y Nombre salen del empleado unido por matrícula ("Sin dato" si no existe). Más detalles en [D-18](decisiones.md#d-18-detalles-de-la-api-no-fijados-en-el-plan).
 
 * [ ] **Paso 1: escribir las pruebas que fallan:** sembrar el 2026-11-10 tres consumos servidos (2 Comida, 1 Cena), un consumo Comida sin servir, un consumo N-Cena a las 00:15 del 2026-11-11 servido (fecha de servicio 2026-11-10) y un rechazo. `Cotejo_AgrupaPorFechaServicio` (2026-11-10: Comida 2 servidas y 1 sin servir; Cena 2 servidas); `Cotejo_ExcluyeRechazos`; `Cotejo_ContingenciaCuentaComoServida`; `Conteo_AgrupaPorTurnoYArea`; `CotejoExcel_ReleidoConClosedXML_TotalServidasEs4`; `CotejoPdf_EmpiezaConFirmaPdf` (primeros bytes `%PDF`); `Detalle_FiltraPorCanal`; `Reportes_ConRolEncargado_403`.
 * [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Api.Tests --filter ReportesTests` → FALLA.
@@ -325,10 +327,11 @@ La matrícula del canal celular sale del `sub` del JWT, nunca del cuerpo. El usu
 **Interfaces (produce), rutas con rol Administrador:**
 
 - `GET|PUT|DELETE /api/admin/reglas` (`{turno, tiempoComida, inicio, fin, perteneceAJornadaAnterior}` con horas `HH:mm`); `AdministrarReglas.GuardarAsync` rechaza `inicio == fin` con `ArgumentException("El inicio y el fin no pueden ser iguales")` y una regla que se traslapa con otra del mismo turno con `ArgumentException("Se traslapa con {tiempoComida} de {inicio} a {fin}")`; la API responde 400 con ese texto.
-- `GET|PUT /api/admin/puntos` (`{id, nombre, activo}`).
-- `GET|PUT /api/admin/usuarios` (`{usuario, rol, activo, contrasena?}`); la contraseña se guarda con `PasswordHasher<UsuarioSistema>` y nunca se devuelve.
+- `DELETE /api/admin/reglas?turno=&tiempoComida=`; 404 si la regla no existe. Al editar una regla, el traslape no se compara contra ella misma. Los errores 400 y 409 de administración responden `{ "error": "<texto>" }`.
+- `GET|PUT /api/admin/puntos` (`{id, nombre, activo}`); la baja es `activo = false`.
+- `GET|PUT /api/admin/usuarios` (`{usuario, rol, activo, contrasena?}`); la contraseña se guarda con `PasswordHasher<UsuarioSistema>` y nunca se devuelve. El rol debe ser `Punto`, `Encargado`, `Supervisor` o `Administrador` (400 si no); la contraseña es obligatoria al crear y opcional al editar. No se protege al último administrador activo ([D-16](decisiones.md#d-16-sin-protección-del-último-administrador)).
 - `POST /api/admin/sincronizacion` → `ResultadoSincronizacion`; `GET /api/admin/sincronizacion` → últimas 20 filas de bitácora.
-- `POST /api/admin/contingencia` `{matricula, fechaServicio, tiempoComida, referenciaLista}` → `RegistrarContingencia.EjecutarAsync` crea un Consumo canal Contingencia con el administrador como autor y la referencia; un duplicado devuelve 409 con "Ya consumiste este tiempo de comida".
+- `POST /api/admin/contingencia` `{matricula, fechaServicio, tiempoComida, referenciaLista}` → `RegistrarContingencia.EjecutarAsync` crea un Consumo canal Contingencia con el administrador como autor y la referencia; un duplicado devuelve 409 con "Ya consumiste este tiempo de comida". Sin reglas de derecho; matrícula inexistente → 400 "No registrado"; referencia y tiempo de comida obligatorios; punto = el punto activo; hora = la de captura ([D-15](decisiones.md#d-15-reglas-de-la-captura-de-contingencia)).
 
 * [ ] **Paso 1: escribir las pruebas que fallan:** `Regla_InicioIgualFin_Lanza`; `Regla_TraslapadaEnMismoTurno_Lanza`; `Regla_CruceMedianoche_SeGuarda`; `Regla_JornadaAnterior_SeGuarda`; `Usuario_ContrasenaNoSeDevuelve`; `Usuario_LoginConContrasenaNueva_Funciona`; `Contingencia_RegistraCanalContingencia`; `Contingencia_Duplicado_409`; `Admin_ConRolSupervisor_403`.
 * [ ] **Paso 2:** `dotnet test backend/Comedor.sln --filter "FullyQualifiedName~Administracion|FullyQualifiedName~AdminTests"` → FALLA.
@@ -336,7 +339,7 @@ La matrícula del canal celular sale del `sub` del JWT, nunca del cuerpo. El usu
 * [ ] **Paso 4:** `dotnet test backend/Comedor.sln` → PASA todo el backend.
 * [ ] **Paso 5:** `git commit -m "feat: administración y contingencia"`
 
-Comando de prueba del frontend en todas las tareas siguientes, desde `frontend/comedor-web`: `npx ng test --watch=false --browsers=ChromeHeadless --include=<ruta>`.
+Comando de prueba del frontend en todas las tareas siguientes, desde `frontend/comedor-web`: `npx ng test --watch=false --browsers=ChromeHeadless --include=<ruta>`. Con Angular 22 la ruta debe apuntar a los archivos de prueba: donde una tarea dice `--include=src/app/<carpeta>/**`, usar `--include='src/app/<carpeta>/**/*.spec.ts'` (con `**` solo, el compilador intenta cargar `.html` y `.scss` y falla).
 
 ## Tarea 11: Núcleo del frontend e inicio de sesión del sistema
 
@@ -348,7 +351,8 @@ Comando de prueba del frontend en todas las tareas siguientes, desde `frontend/c
 - `almacen.ts`: `leer(clave): string | null`, `guardar(clave, valor)`, `borrar(clave)`, cada una envuelta en try/catch.
 - `AuthService`: `login(usuario, contrasena): Observable<void>` (guarda `comedor.token.sistema` y `comedor.rol`), `iniciarSesionEmpleado(id, contrasena): Observable<void>` (guarda `comedor.token.empleado`), `tokenSistema()`, `tokenEmpleado()`, `rol()`, `cerrarSesion()`.
 - `AuthInterceptor`: agrega `Authorization: Bearer` con el token del empleado en rutas `/api/accesos/celular` y con el del sistema en el resto de `/api/*` salvo login y sesión.
-- `rolGuard(roles: string[])`: redirige a `/login` si el rol no está.
+- `rolGuard(roles: string[])`: redirige a `/login?returnUrl=<ruta>` si el rol no está; tras iniciar sesión, `LoginComponent` vuelve a `returnUrl`. Sin `returnUrl` se queda en `/login` (no hay página de inicio por rol).
+- Los módulos Pase, Punto, Reportes y Administración se crean vacíos para que la carga diferida compile; las Tareas 12 a 14 los llenan. Se conservan los nombres generados por Angular 22: `app-module.ts` y `app-routing-module.ts` ([D-18](decisiones.md#d-18-detalles-de-la-api-no-fijados-en-el-plan)).
 - Rutas: `/login`, `/pase` y /registro (módulo Pase, sin guard), `/punto/:id` (Punto, Encargado), `/reportes` (Supervisor, Administrador), `/admin` (Administrador), con carga diferida por módulo.
 
 * [ ] **Paso 1: escribir las pruebas que fallan** (`HttpTestingController`): `login_guardaTokenYRol`; `interceptor_usaTokenEmpleadoEnAccesoCelular`; `interceptor_usaTokenSistemaEnReportes`; `interceptor_noAgregaTokenEnLogin`; `almacen_noLanzaSiLocalStorageFalla`; `rolGuard_redirigeSinRol`.
@@ -376,21 +380,24 @@ Registro previo (`/registro`): el mismo `login-empleado`; al iniciar sesión mue
 - [ ] **Paso 4:** mismo comando → PASA.
 - [ ] **Paso 5:** `git commit -m "feat: pase del empleado y registro previo"`
 
-## Tarea 13: Módulo Punto (pantalla de entrada)
+## Tarea 13: Módulo Punto (pantalla de entrada) y QR permanente
 
-**Archivos:** crear `punto/punto.module.ts`, `punto.service.ts`, `qr-rotativo.component.*`, `solicitudes.component.*`, `captura-manual.component.*`; dependencia `angularx-qrcode`. La pantalla del punto reúne los tres componentes: QR a un lado, lista de solicitudes al centro y captura manual abajo.
+**Archivos:** frontend: crear `punto/punto.module.ts`, `punto.service.ts`, `solicitudes.component.*`, `captura-manual.component.*`. Backend: modificar `Qr/ValidadorTokenQr.cs` y sus pruebas, el rol de `GET /api/puntos/{id}/qr` y la configuración `Qr`.
+
+**Cambio respecto a la versión 1.2 ([D-20](decisiones.md#d-20-la-pantalla-del-chef-no-muestra-foto), [D-21](decisiones.md#d-21-qr-permanente-impreso)):** el QR es permanente e impreso, así que la pantalla del chef no lo muestra ni lo renueva; las tarjetas muestran el nombre sin foto.
 
 **Interfaces:**
 
-- Consume: rutas `qr`, `solicitudes`, `servido` y `accesos/manual` de la Tarea 8b.
-- Produce: `PuntoService.obtenerQr(puntoId): Observable<TokenQrRespuesta>`, `solicitudes(puntoId, desde?): Observable<SolicitudPunto[]>`, `marcarServido(consumoId): Observable<{yaServido: boolean}>` y `capturaManual(matricula, puntoId): Observable<ResultadoAcceso>`.
+- Consume: rutas `solicitudes`, `servido` y `accesos/manual` de la Tarea 8b.
+- Produce: `PuntoService.solicitudes(puntoId, desde?): Observable<SolicitudPunto[]>`, `marcarServido(consumoId): Observable<{yaServido: boolean}>` y `capturaManual(matricula, puntoId): Observable<ResultadoAcceso>`.
+- Backend: `ValidadorTokenQr.ValidarAsync` devuelve el PuntoId si la firma es válida y el punto está activo, sin importar la antigüedad. `GET /api/puntos/{id}/qr` admite además el rol Administrador. Se eliminan `Qr:SegundosRotacion` y `Qr:SegundosValidez`.
 
-Comportamiento: `qr-rotativo` pide QR al iniciar y cada 30 000 ms; si una petición falla muestra "Sin conexión" y oculta el QR. `solicitudes` consulta cada 2 000 ms; muestra arriba "Por servir" (tarjetas grandes con foto, nombre, turno, tiempo de comida y botón "Servido") y debajo los últimos 10 rechazos con su motivo, sin botones; al presionar Servido la tarjeta sale de la lista. No hay botones de aprobar ni rechazar. `captura-manual` envía al presionar Enter y limpia el campo; su resultado aparece en la lista como cualquier solicitud.
+Comportamiento: la pantalla reúne dos componentes. A la izquierda, la captura manual (campo "Matrícula"; envía al presionar Enter y limpia el campo; su resultado aparece en la lista como cualquier solicitud). Al centro, "Por servir": tarjetas con nombre, turno, tiempo de comida y botón "Servido", en orden de llegada; al presionar Servido la tarjeta sale de la lista. A la derecha, los últimos 10 rechazos con su motivo, sin botones. `solicitudes` consulta cada 2 000 ms; si una consulta falla muestra "Sin conexión" y sigue intentando; al reconectar, recupera la lista. No hay botones de aprobar ni rechazar. La barra superior muestra el punto y la hora.
 
-- [ ] **Paso 1: escribir las pruebas que fallan** (fakeAsync): `pideQrAlIniciar`; `renuevaQrCada30Segundos` (`tick(30000)` → segunda petición); `errorDeRed_ocultaQrYMuestraSinConexion`; `solicitudes_consultaCada2Segundos`; `autorizadoSinServir_muestraBotonServido`; `rechazado_noMuestraBotones`; `servido_quitaTarjetaDeLaLista`; `noHayBotonesDeAprobarNiRechazar`; `enter_enviaMatricula`.
-- [ ] **Paso 2:** comando con `--include=src/app/punto/**` → FALLA.
-- [ ] **Paso 3:** implementar con `timer(0, 30000)`, `timer(0, 2000)` y `switchMap`.
-- [ ] **Paso 4:** mismo comando → PASA.
+- [ ] **Paso 1: escribir las pruebas que fallan.** Frontend (fakeAsync): `solicitudes_consultaCada2Segundos`; `autorizadoSinServir_muestraBotonServido`; `tarjeta_muestraNombreSinFoto`; `rechazado_noMuestraBotones`; `servido_quitaTarjetaDeLaLista`; `noHayBotonesDeAprobarNiRechazar`; `enter_enviaMatricula`; `errorDeRed_muestraSinConexion`. Backend: `TokenAntiguo_SigueSiendoValido` (sustituye a las de 59 y 61 s); `Qr_ConRolAdministrador_DevuelveToken`.
+- [ ] **Paso 2:** `--include='src/app/punto/**/*.spec.ts'` y `dotnet test backend/Comedor.sln --filter "FullyQualifiedName~Qr"` → FALLA.
+- [ ] **Paso 3:** implementar con `timer(0, 2000)` y `switchMap`; quitar la condición de antigüedad y las claves de configuración.
+- [ ] **Paso 4:** mismos comandos → PASA; después `dotnet test backend/Comedor.sln` completo.
 - [ ] **Paso 5:** `git commit -m "feat: pantalla del chef en el punto de entrada"`
 
 ## Tarea 14: Módulos Reportes y Administración
@@ -402,9 +409,9 @@ Comportamiento: `qr-rotativo` pide QR al iniciar y cada 30 000 ms; si una petici
 - Consume: rutas de las Tareas 9 y 10.
 - Produce: `ReportesService.conteo|cotejo|detalle(desde, hasta, filtros?)` y `descargar(ruta, nombreArchivo)` (blob → enlace temporal); `AdminService` con un método por ruta de la Tarea 10.
 
-Pantallas: Reportes con rango de fechas, tablas y botones Excel/PDF; Administración con pestañas Reglas, Puntos, Usuarios, Sincronización (botón "Sincronizar ahora" y bitácora) y Contingencia (formulario con referencia obligatoria). Si la última sincronización falló, Reportes y Administración muestran el aviso "La última sincronización con RR. HH. falló; se usan los datos del {fecha}" (RNF-05).
+Pantallas: Reportes con rango de fechas, tablas y botones Excel/PDF; Administración con pestañas Reglas, Puntos (cada punto con "Imprimir QR": pide `GET /api/puntos/{id}/qr` y muestra el QR de la `url` en una vista imprimible, con dependencia `angularx-qrcode`, [D-21](decisiones.md#d-21-qr-permanente-impreso)), Usuarios, Sincronización (botón "Sincronizar ahora" y bitácora) y Contingencia (formulario con referencia obligatoria). Si la última sincronización falló, Reportes y Administración muestran el aviso "La última sincronización con RR. HH. falló; se usan los datos del {fecha}" (RNF-05).
 
-- [ ] **Paso 1: escribir las pruebas que fallan:** `cotejo_enviaRangoComoQuery`; `descargar_creaArchivoConNombre` (`cotejo-2026-11-01-2026-11-15.xlsx`); `regla_inicioIgualFin_muestraError`; `contingencia_sinReferencia_noEnvia`; `contingencia_409_muestraYaConsumiste`; `sincronizar_muestraResultado`, ultimaSincronizacionFallida\_muestraAviso.
+- [ ] **Paso 1: escribir las pruebas que fallan:** `cotejo_enviaRangoComoQuery`; `descargar_creaArchivoConNombre` (`cotejo-2026-11-01-2026-11-15.xlsx`); `regla_inicioIgualFin_muestraError`; `contingencia_sinReferencia_noEnvia`; `contingencia_409_muestraYaConsumiste`; `puntos_imprimirQr_muestraCodigoDelPunto`; `sincronizar_muestraResultado`, ultimaSincronizacionFallida\_muestraAviso.
 - [ ] **Paso 2:** comando con `--include=src/app/{reportes,admin}/**` → FALLA.
 - [ ] **Paso 3:** implementar servicios y componentes.
 - [ ] **Paso 4:** `npx ng test --watch=false --browsers=ChromeHeadless` → PASA todo el frontend.

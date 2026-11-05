@@ -8,6 +8,14 @@
 
 Antes de empezar cada tarea, vuelve a leer su sección del plan y los requisitos del SRS que implementa. Si encuentras una contradicción o un hueco, detente y pregunta; no inventes reglas de negocio.
 
+## Documentar cada cambio
+
+- Toda decisión o requerimiento nuevo se registra en `docs/decisiones.md` con una entrada `D-NN` (decisión, motivo y estado).
+- Si cambia lo que hace el sistema, se actualiza también `docs/srs.md` (sube la versión y agrega una fila a su tabla de cambios) y la sección de la tarea afectada en `docs/plan.md`.
+- Las decisiones tomadas durante una tarea donde el plan no dice nada también se documentan, en el mismo pull request o en uno de documentación.
+- `docs/srs.md` es una exportación de un documento colaborativo en Claude: al cambiarlo, avisa que hay que reflejar el cambio en ese documento.
+- Implementa solo lo especificado. Las ideas nuevas se proponen al dueño del producto; no se implementan hasta que las apruebe y queden documentadas.
+
 ## Forma de trabajo
 
 - Ejecuta el plan con la skill `subagent-driven-development`: un implementador por tarea y una revisión contra SRS y plan antes de pasar a la siguiente.
