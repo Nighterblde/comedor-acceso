@@ -18,7 +18,7 @@ public class AccesosApiTests(SqlServerFixture sql)
 
     private sealed record RespuestaToken(string Token);
 
-    private sealed record RespuestaQr(string Token, string Url, DateTime ExpiraEn);
+    private sealed record RespuestaQr(string Token, string Url);
 
     private sealed record Acceso(string Estado, string? Motivo, string? Matricula, string? Nombre);
 
@@ -142,7 +142,6 @@ public class AccesosApiTests(SqlServerFixture sql)
         var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Punto));
         var qrRespuesta = (await punto.GetFromJsonAsync<RespuestaQr>($"/api/puntos/{ComedorApiFactory.PuntoId}/qr"))!;
         Assert.Equal("http://localhost:4200/pase?t=" + Uri.EscapeDataString(qrRespuesta.Token), qrRespuesta.Url);
-        Assert.Equal(fabrica.Reloj.Valor.AddSeconds(60), qrRespuesta.ExpiraEn);
         var empleado = ConToken(fabrica, await TokenEmpleadoAsync(fabrica));
 
         var acceso = await LeerAccesoAsync(
@@ -151,6 +150,18 @@ public class AccesosApiTests(SqlServerFixture sql)
         Assert.Equal("Autorizado", acceso.Estado);
         Assert.Equal(ComedorApiFactory.EmpleadoMatricula, acceso.Matricula);
         Assert.Equal("Ana Pérez", acceso.Nombre);
+    }
+
+    [Fact]
+    public async Task Qr_ConRolAdministrador_DevuelveToken()
+    {
+        using var fabrica = await CrearFabricaAsync();
+        var admin = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Administrador));
+
+        var r = await admin.GetAsync($"/api/puntos/{ComedorApiFactory.PuntoId}/qr");
+
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        Assert.False(string.IsNullOrEmpty((await r.Content.ReadFromJsonAsync<RespuestaQr>())!.Token));
     }
 
     [Fact]

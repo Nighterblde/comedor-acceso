@@ -6,19 +6,17 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Comedor.Api.Controllers;
 
-public record RespuestaQr(string Token, string Url, DateTime ExpiraEn);
+public record RespuestaQr(string Token, string Url);
 
 [ApiController]
 [Route("api/puntos")]
-[Authorize(Roles = "Punto,Encargado")]
 public class PuntosController(
     EmitirTokenQr emitir,
     ListarSolicitudes listar,
-    OpcionesQr opciones,
-    IReloj reloj,
     IConfiguration config) : ControllerBase
 {
     [HttpGet("{id}/qr")]
+    [Authorize(Roles = "Punto,Encargado,Administrador")]
     public async Task<IActionResult> Qr(string id)
     {
         string token;
@@ -38,11 +36,11 @@ public class PuntosController(
         var baseUrl = (config["App:UrlPublica"] ?? "").TrimEnd('/');
         return Ok(new RespuestaQr(
             token,
-            $"{baseUrl}/pase?t={Uri.EscapeDataString(token)}",
-            reloj.Ahora().AddSeconds(opciones.SegundosValidez)));
+            $"{baseUrl}/pase?t={Uri.EscapeDataString(token)}"));
     }
 
     [HttpGet("{id}/solicitudes")]
+    [Authorize(Roles = "Punto,Encargado")]
     public async Task<ActionResult<IReadOnlyList<SolicitudPunto>>> Solicitudes(string id, [FromQuery] DateTime? desde) =>
         Ok(await listar.EjecutarAsync(id, desde));
 }

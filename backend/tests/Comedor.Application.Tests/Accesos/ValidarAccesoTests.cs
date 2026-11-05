@@ -88,7 +88,7 @@ public class ValidarAccesoTests
     private ValidarAcceso Crear(IAccesoRepositorio? accesos = null, ReglaDerecho? regla = null)
     {
         _reglas.Setup(r => r.TodasAsync()).ReturnsAsync(new[] { regla ?? Comida });
-        var validador = new ValidadorTokenQr(new PuntoRepositorioFalso(), _firma, _reloj, new OpcionesQr());
+        var validador = new ValidadorTokenQr(new PuntoRepositorioFalso(), _firma);
         return new ValidarAcceso(_empleados.Object, _reglas.Object, accesos ?? _accesos.Object, validador, _reloj);
     }
 

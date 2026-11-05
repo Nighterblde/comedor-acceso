@@ -1,0 +1,30 @@
+.captura {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-tarjeta);
+}
+
+label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+input {
+  box-sizing: border-box;
+  height: 52px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 17px;
+  color: var(--color-texto);
+  border: 1px solid var(--color-borde-campo);
+  border-radius: var(--radio-control);
+
+  &:focus-visible {
+    outline: var(--foco);
+    outline-offset: 2px;
+  }
+}

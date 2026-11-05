@@ -50,7 +50,7 @@ public class ValidadorTokenQrTests
         new PuntoEntrada("P2", "Entrada cerrada", false));
 
     private ValidadorTokenQr CrearValidador() =>
-        new(_puntos, _firma, _reloj, new OpcionesQr());
+        new(_puntos, _firma);
 
     private EmitirTokenQr CrearEmisor() => new(_puntos, _firma, _reloj);
 
@@ -63,10 +63,10 @@ public class ValidadorTokenQrTests
     }
 
     [Fact]
-    public async Task TokenCon59Segundos_EsValido()
+    public async Task TokenAntiguo_SigueSiendoValido()
     {
         var token = await CrearEmisor().EjecutarAsync("P1");
-        _reloj.Valor = Base.AddSeconds(59);
+        _reloj.Valor = Base.AddDays(30);
 
         Assert.Equal("P1", await CrearValidador().ValidarAsync(token));
     }
@@ -78,24 +78,6 @@ public class ValidadorTokenQrTests
         _reloj.Valor = Base.AddSeconds(60);
 
         Assert.Equal("P1", await CrearValidador().ValidarAsync(token));
-    }
-
-    [Fact]
-    public async Task TokenCon61Segundos_EsInvalido()
-    {
-        var token = await CrearEmisor().EjecutarAsync("P1");
-        _reloj.Valor = Base.AddSeconds(61);
-
-        Assert.Null(await CrearValidador().ValidarAsync(token));
-    }
-
-    [Fact]
-    public async Task TokenFuturo_EsInvalido()
-    {
-        var token = await CrearEmisor().EjecutarAsync("P1");
-        _reloj.Valor = Base.AddSeconds(-1);
-
-        Assert.Null(await CrearValidador().ValidarAsync(token));
     }
 
     [Fact]

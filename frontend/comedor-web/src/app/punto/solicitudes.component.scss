@@ -1,0 +1,113 @@
+:host {
+  display: contents;
+}
+
+h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-institucional-900);
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-top: 4px solid var(--color-autorizado);
+  border-radius: var(--radio-tarjeta);
+}
+
+.sin-conexion {
+  margin: 0 0 16px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-rechazado);
+}
+
+.datos {
+  flex: 1;
+  min-width: 0;
+}
+
+.nombre {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+.chip {
+  padding: 4px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 999px;
+
+  &.verde {
+    color: var(--color-institucional-900);
+    background: var(--color-chip-verde);
+  }
+
+  &.dorado {
+    color: #5c4520;
+    background: var(--color-chip-dorado);
+  }
+}
+
+.servido {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 24px;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-autorizado);
+  border: 0;
+  border-radius: var(--radio-control);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--foco);
+    outline-offset: 2px;
+  }
+}
+
+.rechazo {
+  padding: 14px 16px;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-tarjeta);
+
+  .nombre {
+    margin: 0 0 4px;
+    font-size: 15px;
+  }
+}
+
+.motivo {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-rechazado);
+}

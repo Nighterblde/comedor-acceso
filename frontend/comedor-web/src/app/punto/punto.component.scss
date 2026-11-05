@@ -1,0 +1,48 @@
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  color: #fff;
+  background: var(--color-institucional-900);
+}
+
+.rotulo {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-dorado-claro);
+}
+
+.pantalla {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.hora {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.franja {
+  height: 4px;
+  background: var(--color-dorado);
+}
+
+.chef {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+  padding: 24px;
+}
+
+.izquierda {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}

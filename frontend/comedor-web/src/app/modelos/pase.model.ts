@@ -14,7 +14,6 @@ export interface ResultadoAcceso {
 export interface TokenQrRespuesta {
   token: string;
   url: string;
-  expiraEn: string;
 }
 
 export interface RespuestaLogin {

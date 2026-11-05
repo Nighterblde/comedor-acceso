@@ -71,11 +71,6 @@ public static class ServiciosComedor
         var ruta = Path.Combine(AppContext.BaseDirectory, config["Fuente:RutaEmpleados"] ?? "datos/empleados-simulados.json");
         servicios.AddSingleton<IFuentePersonalRRHH>(new FuenteRRHHSimulada(ruta));
 
-        servicios.AddSingleton(new OpcionesQr
-        {
-            SegundosRotacion = config.GetValue("Qr:SegundosRotacion", 30),
-            SegundosValidez = config.GetValue("Qr:SegundosValidez", 60),
-        });
         servicios.AddSingleton(new OpcionesSesion { DiasEmpleado = config.GetValue("Sesion:DiasEmpleado", 30) });
         servicios.AddSingleton(new OpcionesJwt
         {

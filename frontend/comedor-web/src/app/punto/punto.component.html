@@ -1,0 +1,15 @@
+<header class="barra">
+  <div>
+    <p class="rotulo">Comedor de personal</p>
+    <p class="pantalla">{{ puntoId }}</p>
+  </div>
+  <time class="hora">{{ hora() | date: 'HH:mm:ss' }}</time>
+</header>
+<div class="franja"></div>
+
+<main class="chef">
+  <div class="izquierda">
+    <app-captura-manual [puntoId]="puntoId"></app-captura-manual>
+  </div>
+  <app-solicitudes [puntoId]="puntoId"></app-solicitudes>
+</main>
