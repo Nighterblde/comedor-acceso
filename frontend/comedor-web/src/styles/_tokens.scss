@@ -1,0 +1,27 @@
+:root {
+  --color-institucional-900: #10312B;
+  --color-institucional-700: #235B4E;
+  --color-autorizado: #1D5C49;
+  --color-rechazado: #8A1F34;
+  --color-dorado: #BC955C;
+  --color-dorado-claro: #D8C3A0;
+  --color-advertencia-fondo: #FBF4E6;
+  --color-advertencia-borde: #E2C98F;
+  --color-advertencia-texto: #4D3C19;
+  --color-fondo: #F5F5F2;
+  --color-superficie: #FFFFFF;
+  --color-borde: #DAD7CD;
+  --color-borde-campo: #8A918C;
+  --color-texto: #1F2421;
+  --color-texto-secundario: #4A514D;
+  --color-texto-terciario: #5A615D;
+  --color-encabezado-tabla: #EEF3F0;
+  --color-chip-verde: #E8F2EE;
+  --color-chip-dorado: #F4ECDD;
+
+  --fuente: 'Montserrat', system-ui, sans-serif;
+  --radio-control: 6px;
+  --radio-tarjeta: 10px;
+  --alto-boton: 48px;
+  --foco: 3px solid var(--color-dorado);
+}

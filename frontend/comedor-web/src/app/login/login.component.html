@@ -1,0 +1,28 @@
+<main class="pagina">
+  <section class="tarjeta">
+    <p class="rotulo">Comedor de personal</p>
+    <h1>Iniciar sesión</h1>
+
+    <form [formGroup]="formulario" (ngSubmit)="entrar()" novalidate>
+      <div class="campo">
+        <label for="usuario">Usuario</label>
+        <input id="usuario" type="text" formControlName="usuario" autocomplete="username"
+               [attr.aria-describedby]="error ? 'error-login' : null" [attr.aria-invalid]="error ? true : null" />
+      </div>
+
+      <div class="campo">
+        <label for="contrasena">Contraseña</label>
+        <input id="contrasena" type="password" formControlName="contrasena" autocomplete="current-password"
+               [attr.aria-describedby]="error ? 'error-login' : null" [attr.aria-invalid]="error ? true : null" />
+      </div>
+
+      @if (error) {
+        <p id="error-login" class="error" role="alert">{{ error }}</p>
+      }
+
+      <button type="submit" class="primario" [disabled]="enviando">
+        {{ enviando ? 'Validando…' : 'Entrar' }}
+      </button>
+    </form>
+  </section>
+</main>
