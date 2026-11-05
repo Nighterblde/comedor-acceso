@@ -22,6 +22,7 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-16](#d-16-sin-protección-del-último-administrador) | Sin protección del último administrador activo | Aceptada, riesgo conocido |
 | [D-17](#d-17-turnos-y-tiempos-de-comida-como-texto-libre) | Turnos y tiempos de comida como texto libre | Aceptada, revisable |
 | [D-18](#d-18-detalles-de-la-api-no-fijados-en-el-plan) | Detalles de la API no fijados en el plan | Aceptada |
+| [D-19](#d-19-el-pase-no-muestra-el-área) | El pase no muestra el área del empleado | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -134,3 +135,10 @@ Decisiones de implementación de las Tareas 9 a 11, tomadas con la lectura míni
 - **Reportes:** Turno, Área y Nombre salen del empleado unido por matrícula; si no existe, "Sin dato" (y nombre vacío). En el detalle, Resultado es "Autorizado" o "Rechazado" y Motivo es el texto exacto del rechazo; los rechazos sin fecha de servicio se filtran por la fecha en que ocurrieron. Fechas faltantes, inválidas o `desde > hasta` responden 400. Los archivos se llaman `<reporte>-<desde>_<hasta>.<ext>` y sus celdas de texto se guardan como texto literal.
 - **Administración:** `DELETE /api/admin/reglas?turno=&tiempoComida=` (404 si no existe). Al editar una regla, el traslape no se compara contra ella misma. Los errores 400 y 409 responden `{ "error": "<texto>" }`. El rol de un usuario debe ser uno de los cuatro del sistema; la contraseña es obligatoria al crear y opcional al editar. La baja de puntos y usuarios es `activo = false`.
 - **Frontend:** se conservan los nombres generados por Angular 22 (`app-module.ts`, `app-routing-module.ts`). Si falta el rol, el guard redirige a `/login?returnUrl=<ruta>` y, tras iniciar sesión, se vuelve a esa ruta; entrando directo a `/login` no hay página de inicio por rol.
+
+## D-19 El pase no muestra el área
+
+El pase del celular muestra foto, nombre, matrícula, turno, tiempo de comida, reloj y, si es rechazo, el motivo. No muestra el área del empleado.
+
+- **Motivo:** la respuesta de validación de la API no incluye el área y el dueño del producto decidió no agregarla; el pase cumple su función sin ella.
+- **Consecuencia:** la guía de diseño (§4, "Pase autorizado") se ajustó para no pedirla.

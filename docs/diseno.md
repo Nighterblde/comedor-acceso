@@ -131,7 +131,7 @@ La Tarea 11 crea `frontend/comedor-web/src/styles/_tokens.scss` con estos valore
 | Pantalla | Dispositivo | Contenido clave | Requisitos |
 | --- | --- | --- | --- |
 | Iniciar sesión | Celular 390 × 844 | Punto leído del QR, número de empleado, contraseña, botón Entrar, aviso de sesión por 30 días, ayuda "acude con el chef". | RF-08, RF-09, RF-31 |
-| Pase autorizado | Celular | Fondo verde, ícono, AUTORIZADO, "Pasa con el chef", tarjeta con foto, nombre, matrícula, área, chips de turno y tiempo, reloj con segundos y borde animado. | RF-11, RNF-08 |
+| Pase autorizado | Celular | Fondo verde, ícono, AUTORIZADO, "Pasa con el chef", tarjeta con foto, nombre, matrícula, chips de turno y tiempo (sin área, [D-19](decisiones.md#d-19-el-pase-no-muestra-el-área)), reloj con segundos y borde animado. | RF-11, RNF-08 |
 | Pase rechazado | Celular | Fondo guinda, ícono, RECHAZADO, tarjeta con el motivo exacto y cuándo ocurrió, datos del empleado, reloj y borde animado. | RF-11, RF-12 |
 | Pantalla del chef | Tablet o pantalla 1280 × 800, horizontal | Barra con punto, tiempo de comida en curso, servidas hoy y hora. Columna izquierda: QR con cuenta regresiva y captura manual. Centro: tarjetas "Por servir" con botón Servido. Derecha: rechazos recientes solo informativos. Sin botones de aprobar ni rechazar. | RF-07, RF-15, RF-29, RF-30 |
 | Cotejo de factura | Escritorio, adaptable | Filtro de fechas, Consultar, Exportar Excel y PDF, indicadores de servidas, sin servir y rechazos, tabla por fecha de servicio y tiempo de comida con fila de total. | RF-21, RF-23 |
