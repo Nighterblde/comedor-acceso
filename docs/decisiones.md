@@ -22,7 +22,7 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-16](#d-16-sin-protección-del-último-administrador) | Sin protección del último administrador activo | Aceptada, riesgo conocido |
 | [D-17](#d-17-turnos-y-tiempos-de-comida-como-texto-libre) | Turnos y tiempos de comida como texto libre | Aceptada, revisable |
 | [D-18](#d-18-detalles-de-la-api-no-fijados-en-el-plan) | Detalles de la API no fijados en el plan | Aceptada |
-| [D-19](#d-19-el-pase-no-muestra-el-área) | El pase no muestra el área del empleado | Aceptada |
+| [D-19](#d-19-el-pase-no-muestra-el-área) | El pase no muestra el área del empleado (mejora futura) | Pospuesta |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -138,7 +138,7 @@ Decisiones de implementación de las Tareas 9 a 11, tomadas con la lectura míni
 
 ## D-19 El pase no muestra el área
 
-El pase del celular muestra foto, nombre, matrícula, turno, tiempo de comida, reloj y, si es rechazo, el motivo. No muestra el área del empleado.
+El pase del celular muestra foto, nombre, matrícula, turno, tiempo de comida, reloj y, si es rechazo, el motivo. El área del empleado queda como **mejora futura**, fuera de la v1.
 
-- **Motivo:** la respuesta de validación de la API no incluye el área y el dueño del producto decidió no agregarla; el pase cumple su función sin ella.
-- **Consecuencia:** la guía de diseño (§4, "Pase autorizado") se ajustó para no pedirla.
+- **Motivo:** la respuesta de validación de la API no incluye el área y el pase cumple su función sin ella. El dueño del producto prefiere enfocarse en lo especificado.
+- **Si se retoma:** agregar `area` a `ResultadoAcceso` en la API (el dato ya está en Empleado) y mostrarla en la tarjeta del pase; después, quitar esta nota de la guía de diseño (§4).
