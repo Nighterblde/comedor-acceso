@@ -338,7 +338,7 @@ La matrícula del canal celular sale del `sub` del JWT, nunca del cuerpo. El usu
 * [ ] **Paso 4:** `dotnet test backend/Comedor.sln` → PASA todo el backend.
 * [ ] **Paso 5:** `git commit -m "feat: administración y contingencia"`
 
-Comando de prueba del frontend en todas las tareas siguientes, desde `frontend/comedor-web`: `npx ng test --watch=false --browsers=ChromeHeadless --include=<ruta>`.
+Comando de prueba del frontend en todas las tareas siguientes, desde `frontend/comedor-web`: `npx ng test --watch=false --browsers=ChromeHeadless --include=<ruta>`. Con Angular 22 la ruta debe apuntar a los archivos de prueba: donde una tarea dice `--include=src/app/<carpeta>/**`, usar `--include='src/app/<carpeta>/**/*.spec.ts'` (con `**` solo, el compilador intenta cargar `.html` y `.scss` y falla).
 
 ## Tarea 11: Núcleo del frontend e inicio de sesión del sistema
 
