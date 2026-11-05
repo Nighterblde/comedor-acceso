@@ -1,0 +1,327 @@
+[
+  {
+    "matricula": "E1001",
+    "nombre": "Ana Torres",
+    "area": "Cocina",
+    "turno": "Matutino",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1002",
+    "nombre": "Luis Ramírez",
+    "area": "Mantenimiento",
+    "turno": "Vespertino",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1003",
+    "nombre": "María Fernández",
+    "area": "Producción",
+    "turno": "Nocturno",
+    "diasLaborales": [
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1004",
+    "nombre": "Carlos Gómez",
+    "area": "Almacén",
+    "turno": "Matutino",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1005",
+    "nombre": "Lucía Herrera",
+    "area": "Administración",
+    "turno": "Vespertino",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Thursday",
+      "Friday",
+      "Sunday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1006",
+    "nombre": "Jorge Navarro",
+    "area": "Cocina",
+    "turno": "Nocturno",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1007",
+    "nombre": "Elena Castro",
+    "area": "Mantenimiento",
+    "turno": "Matutino",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-06-30",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1008",
+    "nombre": "Pablo Ortega",
+    "area": "Producción",
+    "turno": "Vespertino",
+    "diasLaborales": [
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1009",
+    "nombre": "Sofía Molina",
+    "area": "Almacén",
+    "turno": "Nocturno",
+    "diasLaborales": [
+      "Saturday",
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1010",
+    "nombre": "Andrés Rubio",
+    "area": "Administración",
+    "turno": "Matutino",
+    "diasLaborales": [
+      "Saturday",
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1011",
+    "nombre": "Carmen Vega",
+    "area": "Cocina",
+    "turno": "Vespertino",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1012",
+    "nombre": "Diego Salazar",
+    "area": "Mantenimiento",
+    "turno": "Nocturno",
+    "diasLaborales": [
+      "Saturday",
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1013",
+    "nombre": "Laura Peña",
+    "area": "Producción",
+    "turno": "Matutino",
+    "diasLaborales": [
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1014",
+    "nombre": "Raúl Medina",
+    "area": "Almacén",
+    "turno": "Vespertino",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Thursday",
+      "Friday",
+      "Sunday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-09-30",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1015",
+    "nombre": "Isabel Cortés",
+    "area": "Administración",
+    "turno": "Nocturno",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Thursday",
+      "Friday",
+      "Sunday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1016",
+    "nombre": "Héctor Ibarra",
+    "area": "Cocina",
+    "turno": "Matutino",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1017",
+    "nombre": "Patricia Luna",
+    "area": "Mantenimiento",
+    "turno": "Vespertino",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1018",
+    "nombre": "Miguel Ángel Reyes",
+    "area": "Producción",
+    "turno": "Nocturno",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1019",
+    "nombre": "Valeria Domínguez",
+    "area": "Almacén",
+    "turno": "Matutino",
+    "diasLaborales": [
+      "Saturday",
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  },
+  {
+    "matricula": "E1020",
+    "nombre": "Tomás Aguilar",
+    "area": "Administración",
+    "turno": "Vespertino",
+    "diasLaborales": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ],
+    "inicioContrato": "2026-01-01",
+    "finContrato": "2026-12-31",
+    "fotoUrl": null
+  }
+]

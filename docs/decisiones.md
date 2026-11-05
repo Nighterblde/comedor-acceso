@@ -17,6 +17,7 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-11](#d-11-uso-de-la-cuenta-de-otro-empleado) | Uso de la cuenta de otro empleado como riesgo aceptado | Aceptada |
 | [D-12](#d-12-un-solo-punto-de-entrada) | Un solo punto de entrada | Aceptada |
 | [D-13](#d-13-diseño-institucional-sin-identidad-oficial) | Diseño institucional sin identidad oficial | Aceptada |
+| [D-14](#d-14-el-conteo-también-se-exporta) | El conteo también se exporta a Excel y PDF | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -91,3 +92,9 @@ El comedor tiene una sola entrada, donde el chef sirve la comida. Ahí está la 
 La interfaz usa un estilo institucional sencillo (Montserrat, verde institucional y acento dorado) definido en la [guía de diseño](diseno.md), sin logotipos, escudos ni nombres de instituciones.
 
 - **Motivo:** la identidad oficial pertenece al cliente; solo se incorpora si la proporciona y autoriza su uso.
+
+## D-14 El conteo también se exporta
+
+El reporte de conteo (RF-20) se exporta a Excel y PDF igual que el cotejo, con una fila final "Total" que suma la columna Total.
+
+- **Motivo:** RF-23 pide exportar los reportes en general; el plan v1.1 solo exportaba el cotejo y el detalle. El conteo por turno y área sirve, por ejemplo, para repartir el costo entre áreas fuera del sistema.

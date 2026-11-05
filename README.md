@@ -2,7 +2,7 @@
 
 Sistema para controlar el acceso al comedor de personal: valida en tiempo real si cada empleado tiene derecho al tiempo de comida en curso según su turno, impide consumos repetidos y conserva un registro inalterable que sirve para cotejar la factura del proveedor.
 
-> **Estado:** especificación y plan aprobados para iniciar la implementación. Aún no hay código; el trabajo empieza por la Tarea 1 del [plan](docs/plan.md).
+> **Estado:** en implementación. La Tarea 1 dejó la estructura del monorepo; el avance sigue el [plan](docs/plan.md).
 
 ## Cómo funciona
 
@@ -49,7 +49,7 @@ load/               Prueba de carga con k6
 docs/               SRS, plan, decisiones e imágenes
 ```
 
-Las carpetas `backend/`, `frontend/` y `load/` se crean en las tareas 1 y 15 del plan.
+Las carpetas `backend/` y `frontend/` se crearon en la Tarea 1; `load/` se crea en la Tarea 15 del plan.
 
 ## Requisitos de desarrollo
 
@@ -57,7 +57,7 @@ Las carpetas `backend/`, `frontend/` y `load/` se crean en las tareas 1 y 15 del
 | --- | --- |
 | .NET SDK | 8.0 LTS |
 | Node.js | 22 LTS |
-| Angular CLI | La estable vigente al ejecutar la Tarea 1 (se anota aquí) |
+| Angular CLI | 22.2.5 (Angular 22.2.4, Karma y Jasmine) |
 | Docker | Necesario para las pruebas de integración con SQL Server |
 | Git | 2.40 o superior |
 
@@ -70,6 +70,21 @@ Lee docs/srs.md y docs/plan.md y ejecuta el plan con subagent-driven-development
 ```
 
 Cada tarea sigue el mismo ciclo: escribir la prueba, comprobar que falla, implementar, comprobar que pasa y hacer commit. Las reglas del proyecto para quien programe están en [CLAUDE.md](CLAUDE.md).
+
+### Configuración local
+
+Los secretos no se guardan en el repositorio. La API se niega a iniciar (con un error que nombra la clave) si faltan `Jwt:Clave`, `Qr:ClaveFirma` o `ConnectionStrings:Comedor`. Desde `backend/src/Comedor.Api`:
+
+```bash
+dotnet user-secrets set "Jwt:Clave" "<mínimo 32 caracteres>"
+dotnet user-secrets set "Qr:ClaveFirma" "<mínimo 32 caracteres>"
+dotnet user-secrets set "ConnectionStrings:Comedor" "Server=localhost;Database=Comedor;Trusted_Connection=True;TrustServerCertificate=True"
+# Administrador inicial: solo se siembra si no hay usuarios
+dotnet user-secrets set "Semilla:Admin:Usuario" "<usuario>"
+dotnet user-secrets set "Semilla:Admin:Contrasena" "<contraseña>"
+```
+
+En producción se usan variables de entorno equivalentes (`Jwt__Clave`, `Qr__ClaveFirma`, `ConnectionStrings__Comedor`, `Semilla__Admin__Usuario`, `Semilla__Admin__Contrasena`). Al iniciar, la API aplica las migraciones.
 
 ### Convenciones
 
