@@ -1,0 +1,21 @@
+<header class="barra no-imprimir">
+  <div>
+    <p class="rotulo">Comedor de personal</p>
+    <h1 class="pantalla">Administración</h1>
+  </div>
+  <p class="rol">{{ auth.usuario() }} · {{ auth.rol() }}</p>
+</header>
+
+<div class="admin">
+  <nav class="lateral no-imprimir" aria-label="Administración">
+    @for (p of pestanas; track p.ruta) {
+      <a [routerLink]="p.ruta" routerLinkActive="activo" ariaCurrentWhenActive="page">{{ p.etiqueta }}</a>
+    }
+  </nav>
+  <main class="contenido">
+    <div class="no-imprimir">
+      <app-aviso-sincronizacion></app-aviso-sincronizacion>
+    </div>
+    <router-outlet></router-outlet>
+  </main>
+</div>

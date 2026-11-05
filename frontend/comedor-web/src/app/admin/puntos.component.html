@@ -1,0 +1,68 @@
+<div class="no-imprimir">
+  <h2>Puntos de entrada</h2>
+
+  <section class="tarjeta" aria-label="Punto">
+    <form (ngSubmit)="guardar()">
+      <div class="campos">
+        <div class="campo">
+          <label for="punto-id">Clave</label>
+          <input id="punto-id" name="id" [(ngModel)]="punto.id" [readOnly]="editando" required />
+        </div>
+        <div class="campo">
+          <label for="punto-nombre">Nombre</label>
+          <input id="punto-nombre" name="nombre" [(ngModel)]="punto.nombre" required />
+        </div>
+        <label class="casilla">
+          <input type="checkbox" name="activo" [(ngModel)]="punto.activo" />
+          Activo
+        </label>
+        <button type="submit" class="boton primario" [disabled]="guardando()">Guardar</button>
+        <button type="button" class="boton secundario" (click)="nuevo()">Nuevo</button>
+      </div>
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+    </form>
+  </section>
+
+  <section class="tarjeta" aria-label="Puntos configurados">
+    <div class="tabla-contenedor">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Clave</th>
+            <th scope="col">Nombre</th>
+            <th scope="col">Activo</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of puntos(); track p.id) {
+            <tr>
+              <td>{{ p.id }}</td>
+              <td>{{ p.nombre }}</td>
+              <td>{{ p.activo ? 'Sí' : 'No' }}</td>
+              <td class="acciones">
+                <button type="button" class="boton secundario chico" (click)="editar(p)">Editar</button>
+                <button type="button" class="boton secundario chico" (click)="verQr(p)">Imprimir QR</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+@if (qr(); as q) {
+  <section class="tarjeta vista-qr" aria-label="QR del punto">
+    <p class="vista-rotulo">Comedor de personal</p>
+    <h3>{{ q.punto.nombre }}</h3>
+    <p class="vista-clave">Punto {{ q.punto.id }}</p>
+    <qrcode [qrdata]="q.url" [width]="320" errorCorrectionLevel="M" [ariaLabel]="'Código QR del punto ' + q.punto.id"></qrcode>
+    <div class="acciones no-imprimir">
+      <button type="button" class="boton primario" (click)="imprimir()">Imprimir</button>
+      <button type="button" class="boton secundario" (click)="cerrarQr()">Cerrar</button>
+    </div>
+  </section>
+}

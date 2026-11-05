@@ -54,6 +54,9 @@ public class SincronizarPersonalTests
             return Task.CompletedTask;
         }
 
+        public Task<BitacoraSincronizacion?> UltimaExitosaAsync() =>
+            Task.FromResult(Filas.Where(f => f.Exito).OrderByDescending(f => f.Fecha).FirstOrDefault());
+
         public Task<IReadOnlyList<BitacoraSincronizacion>> UltimasAsync(int cantidad) =>
             Task.FromResult<IReadOnlyList<BitacoraSincronizacion>>(Filas.TakeLast(cantidad).Reverse().ToList());
     }

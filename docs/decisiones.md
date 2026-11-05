@@ -25,6 +25,8 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-19](#d-19-el-pase-no-muestra-el-área) | El pase no muestra el área del empleado (mejora futura) | Pospuesta |
 | [D-20](#d-20-la-pantalla-del-chef-no-muestra-foto) | La pantalla del chef no muestra foto (mejora futura) | Pospuesta |
 | [D-21](#d-21-qr-permanente-impreso) | QR permanente impreso, sin comprobar presencia | Aceptada, riesgo conocido |
+| [D-22](#d-22-estado-de-la-sincronización-para-el-aviso-de-rnf-05) | Estado de la sincronización para el aviso de RNF-05 | Aceptada |
+| [D-23](#d-23-detalles-del-frontend-de-reportes-y-administración) | Detalles del frontend de Reportes y Administración | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -161,3 +163,22 @@ El QR del punto es permanente y va impreso en un cartel en la entrada. Su funci�
 - **El token no caduca.** Sigue firmado (identifica el punto y no se puede falsificar) y solo vale si el punto está activo. El administrador lo obtiene en Administración > Puntos para imprimirlo.
 - **Riesgo aceptado:** el QR no comprueba que el empleado esté en el comedor; alguien con una foto del cartel o el enlace puede pedir su comida desde fuera. Cada empleado sigue limitado a un consumo por tiempo de comida, y una comida no recogida queda sin servir y no se paga (D-09). Para invalidar un QR filtrado se desactiva el punto o se cambia `Qr:ClaveFirma` y se reimprime.
 - **Futuro:** la identificación preferida es la huella con el sistema del cliente (D-05, RF-16); el QR queda como alternativa. La validación de derecho no cambia con el método de identificación.
+
+## D-22 Estado de la sincronización para el aviso de RNF-05
+
+Se agrega `GET /api/sincronizacion/estado` (roles Supervisor y Administrador), que devuelve `{ ultimaFallida, ultimaEjecucion, ultimaExitosa }`. Reportes y Administración lo consultan para mostrar "La última sincronización con RR. HH. falló; se usan los datos del {fecha}", donde {fecha} es la de la última sincronización exitosa (formato dd/MM/aaaa).
+
+- **Motivo:** el SRS (§8 y RNF-05) pide mostrar el aviso al supervisor y al administrador, pero la bitácora solo se leía con `GET /api/admin/sincronizacion`, que exige rol Administrador y no da la fecha de la última sincronización exitosa. Confirmado por el dueño del producto (Tarea 14).
+- **Detalles:** si nunca hubo una sincronización exitosa, la fecha se muestra como "—". Si la consulta del estado falla, no se muestra aviso, para no impedir el uso de la pantalla.
+
+## D-23 Detalles del frontend de Reportes y Administración
+
+Decisiones de implementación de la Tarea 14 donde el plan no dice nada:
+
+- **Nombres de archivo:** las descargas se guardan como `<reporte>-<desde>-<hasta>.<ext>` (por ejemplo `cotejo-2026-11-01-2026-11-15.xlsx`), como fija la prueba del plan; la API sugiere `<reporte>-<desde>_<hasta>` (D-18), pero el navegador usa el nombre que da el frontend.
+- **Reportes:** una sola pantalla con pestañas Cotejo de factura, Conteo y Detalle; Consultar y exportar se desactivan sin rango completo. El cotejo muestra los indicadores de servidas y de autorizadas sin servir; el indicador de rechazos de la guía de diseño queda fuera porque el cotejo no los incluye. El detalle se exporta solo a Excel (RF-23).
+- **Errores:** se muestra el texto que envía la API (`{ error }` o `title` en un 400); cualquier otro error muestra "Ocurrió un error; intenta de nuevo." (SRS §8).
+- **Administración:** pestañas con rutas `/admin/reglas`, `/admin/puntos`, `/admin/usuarios`, `/admin/sincronizacion` y `/admin/contingencia`. Eliminar una regla pide confirmación ("¿Eliminar la regla <turno> · <tiempo de comida>?"). La contraseña de un usuario solo se envía si se escribe. La contingencia confirma con "Registrado: <matrícula> · <fecha dd/MM/aaaa> · <tiempo de comida>", con los datos que devuelve la API (matrícula normalizada). Guardar y Eliminar se desactivan mientras la API responde (diseño §5). Al cambiar el rango o los filtros de un reporte se ocultan los resultados anteriores, para que lo visible coincida con lo que se exporta. La barra superior muestra usuario y rol (diseño §3); el usuario se guarda al iniciar sesión.
+- **Claves al editar:** al editar un punto o un usuario, su clave o nombre de usuario queda de solo lectura. **Motivo:** la API guarda por clave, así que cambiarla crearía otro registro y dejaría activo el anterior (en usuarios, una cuenta vieja con acceso). Para "renombrar" se da de alta el nuevo y se desactiva el anterior.
+- **Sincronización:** el botón muestra "Sincronizando…" mientras trabaja; el resultado dice "Sincronización correcta." o "La sincronización falló: <error>", seguido de altas, cambios, bajas y omitidos; la bitácora marca cada fila como "Correcta" o "Falló". Después de sincronizar, el aviso de RNF-05 se actualiza sin recargar la página.
+- **QR impreso (D-21):** la vista imprimible muestra "Comedor de personal", el nombre y la clave del punto y el QR; al imprimir se ocultan la barra, la navegación y el resto de la página.

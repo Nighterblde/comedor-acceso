@@ -15,4 +15,7 @@ public class BitacoraSincronizacionRepositorio(ComedorDbContext contexto) : IBit
 
     public async Task<IReadOnlyList<BitacoraSincronizacion>> UltimasAsync(int cantidad) =>
         await contexto.Bitacora.AsNoTracking().OrderByDescending(b => b.Fecha).Take(cantidad).ToListAsync();
+
+    public async Task<BitacoraSincronizacion?> UltimaExitosaAsync() =>
+        await contexto.Bitacora.AsNoTracking().Where(b => b.Exito).OrderByDescending(b => b.Fecha).FirstOrDefaultAsync();
 }

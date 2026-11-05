@@ -406,7 +406,7 @@ Comportamiento: la pantalla reúne dos componentes. A la izquierda, la captura m
 
 **Interfaces:**
 
-- Consume: rutas de las Tareas 9 y 10.
+- Consume: rutas de las Tareas 9 y 10, y `GET /api/sincronizacion/estado` (Supervisor y Administrador) para el aviso de RNF-05 ([D-22](decisiones.md#d-22-estado-de-la-sincronización-para-el-aviso-de-rnf-05)). Detalles de implementación en [D-23](decisiones.md#d-23-detalles-del-frontend-de-reportes-y-administración).
 - Produce: `ReportesService.conteo|cotejo|detalle(desde, hasta, filtros?)` y `descargar(ruta, nombreArchivo)` (blob → enlace temporal); `AdminService` con un método por ruta de la Tarea 10.
 
 Pantallas: Reportes con rango de fechas, tablas y botones Excel/PDF; Administración con pestañas Reglas, Puntos (cada punto con "Imprimir QR": pide `GET /api/puntos/{id}/qr` y muestra el QR de la `url` en una vista imprimible, con dependencia `angularx-qrcode`, [D-21](decisiones.md#d-21-qr-permanente-impreso)), Usuarios, Sincronización (botón "Sincronizar ahora" y bitácora) y Contingencia (formulario con referencia obligatoria). Si la última sincronización falló, Reportes y Administración muestran el aviso "La última sincronización con RR. HH. falló; se usan los datos del {fecha}" (RNF-05).

@@ -105,6 +105,7 @@ public static class ServiciosComedor
         servicios.AddScoped<MarcarServido>();
         servicios.AddScoped<ListarSolicitudes>();
         servicios.AddScoped<SincronizarPersonal>();
+        servicios.AddScoped<ConsultarEstadoSincronizacion>();
         servicios.AddScoped<GenerarReporte>();
         servicios.AddScoped<AdministrarReglas>();
         servicios.AddScoped<AdministrarPuntos>();

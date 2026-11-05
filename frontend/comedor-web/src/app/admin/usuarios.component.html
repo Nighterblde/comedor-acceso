@@ -1,0 +1,66 @@
+<h2>Usuarios del sistema</h2>
+
+<section class="tarjeta" aria-label="Usuario">
+  <form (ngSubmit)="guardar()">
+    <div class="campos">
+      <div class="campo">
+        <label for="usuario-nombre">Usuario</label>
+        <input id="usuario-nombre" name="usuario" [(ngModel)]="usuario.usuario" [readOnly]="editando" required autocomplete="off" />
+      </div>
+      <div class="campo">
+        <label for="usuario-rol">Rol</label>
+        <select id="usuario-rol" name="rol" [(ngModel)]="usuario.rol">
+          @for (r of roles; track r) {
+            <option [value]="r">{{ r }}</option>
+          }
+        </select>
+      </div>
+      <div class="campo">
+        <label for="usuario-contrasena">Contraseña</label>
+        <input
+          id="usuario-contrasena"
+          name="contrasena"
+          type="password"
+          [(ngModel)]="usuario.contrasena"
+          autocomplete="new-password"
+        />
+      </div>
+      <label class="casilla">
+        <input type="checkbox" name="activo" [(ngModel)]="usuario.activo" />
+        Activo
+      </label>
+      <button type="submit" class="boton primario" [disabled]="guardando()">Guardar</button>
+      <button type="button" class="boton secundario" (click)="nuevo()">Nuevo</button>
+    </div>
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+  </form>
+</section>
+
+<section class="tarjeta" aria-label="Usuarios registrados">
+  <div class="tabla-contenedor">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Usuario</th>
+          <th scope="col">Rol</th>
+          <th scope="col">Activo</th>
+          <th scope="col"><span class="sr-only">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of usuarios(); track u.usuario) {
+          <tr>
+            <td>{{ u.usuario }}</td>
+            <td>{{ u.rol }}</td>
+            <td>{{ u.activo ? 'Sí' : 'No' }}</td>
+            <td class="acciones">
+              <button type="button" class="boton secundario chico" (click)="editar(u)">Editar</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
