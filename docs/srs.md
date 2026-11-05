@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión | 1.2 |
+| Versión | 1.3 |
 | Fecha | 4 de noviembre de 2026 |
 | Estado | Borrador para revisión con el cliente |
 | Alcance | Subproyecto 1 de la plataforma del comedor |
@@ -16,6 +16,7 @@
 | 1.0 | Versión inicial aprobada para planeación. |
 | 1.1 | Un solo punto de entrada, donde el chef sirve la comida. Referencia a la guía de diseño. |
 | 1.2 | RF-23 precisa qué reportes se exportan y en qué formato (D-14). RF-26 precisa las reglas de la captura de contingencia (D-15). |
+| 1.3 | El QR del punto es permanente e impreso y no comprueba presencia; se elimina la caducidad del token (RF-07, RF-10, D-21). La pantalla del chef muestra el nombre sin foto; la foto queda como mejora futura (RF-29, D-20). |
 
 ## 1. Introducción
 
@@ -39,7 +40,7 @@ Este es el **subproyecto 1** de una plataforma mayor. Menús, inventarios, compr
 | Regla de derecho | Relación configurable turno → tiempos de comida → horario.                                                                     |
 | Consumo          | Registro de que un empleado recibió un tiempo de comida.                                                                       |
 | Rechazo          | Intento de acceso denegado, con su motivo.                                                                                     |
-| Punto de entrada | Pantalla en la entrada que muestra el QR rotativo y permite al encargado la captura manual.                                    |
+| Punto de entrada | Entrada del comedor: un QR impreso permanente y la pantalla del chef, que permite al encargado la captura manual.                                    |
 | Encargado        | Chef o encargado de la entrega: ve en la pantalla del punto cada solicitud autorizada, marca Servido y hace capturas manuales. |
 | Fuente RR. HH.   | Base de datos existente del cliente con empleados, turnos y contratos.                                                         |
 
@@ -53,9 +54,9 @@ Es un sistema nuevo e independiente que corre en un servidor dentro de la red de
 
 | Rol                 | Qué hace                                                                                                                                                                                                                |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Empleado (comensal) | Escanea con la cámara de su celular el QR rotativo de la entrada e inicia sesión con su ID y contraseña de la empresa; su solicitud llega a la pantalla del chef.                                                       |
+| Empleado (comensal) | Escanea con la cámara de su celular el QR impreso de la entrada e inicia sesión con su ID y contraseña de la empresa; su solicitud llega a la pantalla del chef.                                                       |
 | Encargado (chef)    | Ve en la pantalla del punto cada solicitud con foto, nombre y resultado; entrega la comida a los autorizados y marca Servido. No aprueba ni rechaza: el sistema decide. Captura la matrícula de quien no tenga celular. |
-| Punto (pantalla)    | Sesión de la pantalla de la entrada: muestra el QR rotativo y la lista de solicitudes; sesión de 30 días.                                                                                                               |
+| Punto (pantalla)    | Sesión de la pantalla de la entrada: muestra la lista de solicitudes y la captura manual; sesión de 30 días.                                                                                                               |
 | Supervisor          | Consulta reportes y rechazos; revisa el estado de la sincronización.                                                                                                                                                    |
 | Administrador       | Configura reglas de derecho, puntos de entrada y usuarios del sistema.                                                                                                                                                  |
 
@@ -101,7 +102,8 @@ Un comedor con un solo punto de entrada, donde el chef sirve la comida, y de 300
 
 - Servidor y red interna provistos por el cliente.
 
-- Una pantalla o tablet en la entrada, a la vista del chef, para el QR rotativo, la lista de solicitudes y la captura manual.
+- Una pantalla o tablet en la entrada, a la vista del chef, para la lista de solicitudes y la captura manual.
+- Un cartel impreso con el QR del punto, en la entrada.
 
 ### 2.7 Riesgos aceptados
 
@@ -124,10 +126,10 @@ Prioridad: **Alta** = indispensable para la v1; **Media** = deseable en la v1.
 | RF-27                          | Un empleado no tiene derecho si la fecha de servicio es día de descanso según su rol sincronizado; motivo "Hoy es tu día de descanso".                                                                                                                                                                           | Alta      |
 | RF-28                          | El sistema impide guardar dos reglas del mismo turno con horarios traslapados.                                                                                                                                                                                                                                   | Alta      |
 | **Entrada desde el celular**   |                                                                                                                                                                                                                                                                                                                  |           |
-| RF-07                          | Cada punto de entrada muestra en pantalla un QR que cambia cada 30 segundos y contiene un token firmado con el punto y la hora de emisión.                                                                                                                                                                       | Alta      |
+| RF-07                          | Cada punto de entrada tiene un QR permanente, impreso en un cartel, con un token firmado que identifica el punto. El administrador lo obtiene desde Administración para imprimirlo. El QR da acceso a la aplicación; no comprueba que el empleado esté en el comedor (D-21).                                                                                                                                                                       | Alta      |
 | RF-08                          | El empleado escanea el QR con la cámara de su celular; el QR abre la aplicación web con el token.                                                                                                                                                                                                                | Alta      |
 | RF-09                          | El empleado inicia sesión con su ID y contraseña de la empresa; la sesión se recuerda en el celular durante 30 días (configurable).                                                                                                                                                                              | Alta      |
-| RF-10                          | El servidor acepta un token de QR solo durante 60 segundos desde su emisión. Un token vencido no genera rechazo: el celular pide escanear de nuevo.                                                                                                                                                              | Alta      |
+| RF-10                          | El token del QR no caduca. El servidor solo acepta tokens con firma válida y de un punto activo; si no, el celular pide escanear de nuevo y no se registra rechazo.                                                                                                                                                              | Alta      |
 | RF-11                          | El celular muestra un pase a pantalla completa: Autorizado o Rechazado, foto, nombre, turno, tiempo de comida, hora, y una animación continua que distingue el pase vivo de una captura de pantalla.                                                                                                             | Alta      |
 | RF-12                          | Un rechazo muestra su motivo: no registrado, contrato vencido, día de descanso, fuera de horario, turno sin derecho a este tiempo o ya consumió.                                                                                                                                                                 | Alta      |
 | RF-13                          | El rechazo es definitivo; no hay excepciones manuales en la v1.                                                                                                                                                                                                                                                  | Alta      |
@@ -136,7 +138,7 @@ Prioridad: **Alta** = indispensable para la v1; **Media** = deseable en la v1.
 | RF-16                          | La identificación es independiente de la validación, de modo que se puedan agregar otros métodos (por ejemplo, huella) sin cambiar las reglas.                                                                                                                                                                   | Alta      |
 | RF-31                          | Etapa de registro previo: un enlace permite iniciar sesión y dejar el celular listo antes del arranque, sin registrar consumo.                                                                                                                                                                                   | Media     |
 | **Pantalla del chef**          |                                                                                                                                                                                                                                                                                                                  |           |
-| RF-29                          | La pantalla del punto muestra en tiempo real cada solicitud de ese punto: foto, nombre, turno, tiempo de comida y Autorizado o Rechazado con su motivo. Los autorizados quedan en la lista "Por servir".                                                                                                         | Alta      |
+| RF-29                          | La pantalla del punto muestra en tiempo real cada solicitud de ese punto: nombre, turno, tiempo de comida y Autorizado o Rechazado con su motivo. La foto queda como mejora futura (D-20). Los autorizados quedan en la lista "Por servir".                                                                                                         | Alta      |
 | RF-30                          | El chef marca Servido sobre un autorizado; no puede aprobar ni rechazar. Un consumo se sirve una sola vez.                                                                                                                                                                                                       | Alta      |
 | **Registro de consumos**       |                                                                                                                                                                                                                                                                                                                  |           |
 | RF-17                          | Cada consumo autorizado guarda empleado, fecha de servicio, tiempo de comida, fecha y hora exacta, punto de entrada, canal (celular, manual o contingencia) y el encargado cuando aplica.                                                                                                                        | Alta      |
@@ -199,7 +201,7 @@ Angular se basa en componentes; la separación MVC se aplica así:
 
 - **Controlador:** servicios Angular (pase.service.ts, punto.service.ts, reportes.service.ts, admin.service.ts, auth.service.ts) con la lógica de pantalla; son los únicos que llaman a la API.
 
-Cuatro módulos funcionales: **Pase** (celular del empleado: inicio de sesión y pase), **Punto** (pantalla del chef: QR rotativo, solicitudes por servir y captura manual), **Reportes** y **Administración**, más un módulo compartido de autenticación. La interfaz sigue la guía de diseño del repositorio ([docs/diseno.md](diseno.md)): estilo institucional sencillo, tipografía Montserrat, verde institucional con acento dorado, sin logotipos oficiales hasta que el cliente los proporcione.
+Cuatro módulos funcionales: **Pase** (celular del empleado: inicio de sesión y pase), **Punto** (pantalla del chef: solicitudes por servir y captura manual), **Reportes** y **Administración**, más un módulo compartido de autenticación. La interfaz sigue la guía de diseño del repositorio ([docs/diseno.md](diseno.md)): estilo institucional sencillo, tipografía Montserrat, verde institucional con acento dorado, sin logotipos oficiales hasta que el cliente los proporcione.
 
 ### 5.3 Base de datos
 
@@ -207,7 +209,7 @@ SQL Server, natural con .NET y probable en la infraestructura del cliente. Si in
 
 ## 6. Flujo de validación en la entrada
 
-Antes de las verificaciones, el servidor confirma que el token del QR es auténtico y tiene menos de 60 segundos (RF-10); si no, el celular pide escanear de nuevo y no se registra rechazo. En la captura manual este paso no aplica. Después, cada intento pasa por seis verificaciones en orden; la primera que falla define el motivo del rechazo. Todo resultado aparece al instante en la pantalla del chef; los autorizados quedan en "Por servir" hasta que el chef marca Servido.
+Antes de las verificaciones, el servidor confirma que el token del QR es auténtico y de un punto activo (RF-10); si no, el celular pide escanear de nuevo y no se registra rechazo. En la captura manual este paso no aplica. Después, cada intento pasa por seis verificaciones en orden; la primera que falla define el motivo del rechazo. Todo resultado aparece al instante en la pantalla del chef; los autorizados quedan en "Por servir" hasta que el chef marca Servido.
 
 ![Flujo de validación: seis verificaciones](assets/flujo-validacion.png)
 
@@ -215,7 +217,7 @@ flujo de validación · 6 verificaciones
 
 La verificación "¿ya consumió?" y el registro del consumo ocurren en una sola transacción con restricción única (empleado, fecha, tiempo de comida), de modo que dos intentos simultáneos (por ejemplo, celular y captura manual) no pueden registrar a la misma persona dos veces (RNF-03).
 
-**Secuencia técnica (celular):** la pantalla del punto pide GET /api/puntos/{id}/qr cada 30 s y dibuja el QR con la URL /pase?t=\<token\> → el celular abre esa URL; si no hay sesión, auth.service.ts llama POST /api/empleados/sesion (valida con IAutenticadorEmpresa y devuelve un JWT de empleado) → pase.service.ts llama POST /api/accesos/celular con el token → ValidarAcceso verifica el token, aplica las reglas y guarda el consumo o el rechazo → el celular muestra el pase.
+**Secuencia técnica (celular):** el administrador obtiene GET /api/puntos/{id}/qr una vez e imprime el QR con la URL /pase?t=\<token\> → el celular abre esa URL; si no hay sesión, auth.service.ts llama POST /api/empleados/sesion (valida con IAutenticadorEmpresa y devuelve un JWT de empleado) → pase.service.ts llama POST /api/accesos/celular con el token → ValidarAcceso verifica el token, aplica las reglas y guarda el consumo o el rechazo → el celular muestra el pase.
 
 **Secuencia técnica (manual):** el encargado teclea la matrícula en el punto → punto.service.ts llama POST /api/accesos/manual con JWT de encargado → mismo caso de uso, canal manual → el resultado aparece en la pantalla del punto.
 
@@ -229,7 +231,7 @@ Ocho entidades cubren la v1; Consumo, Entrega y Rechazo son de solo inserción.
 | Turno        | Clave, nombre (Matutino, Vespertino, Nocturno)                                                                                                                 | Catálogo; se alinea con los valores de la fuente RR. HH.                                                                               |
 | TiempoComida | Clave, nombre (Desayuno, Comida, Cena, Colación)                                                                                                               | Catálogo.                                                                                                                              |
 | ReglaDerecho | Turno, tiempo de comida, hora de inicio, hora de fin, pertenece a la jornada del día anterior (sí/no)                                                          | Configurable. Fin menor que inicio = cruza la medianoche. Sin traslapes dentro de un turno.                                            |
-| PuntoEntrada | Clave, nombre, activo                                                                                                                                          | Una pantalla de QR y solicitudes por punto.                                                                                            |
+| PuntoEntrada | Clave, nombre, activo                                                                                                                                          | Un QR impreso y una pantalla de solicitudes por punto.                                                                                            |
 | Consumo      | Id, matrícula, fecha de servicio, tiempo de comida, fecha y hora exacta, punto de entrada, canal (Celular, Manual, Contingencia), encargado (si aplica)        | Restricción única (matrícula, fecha de servicio, tiempo de comida). Sin actualización ni borrado.                                      |
 | Entrega      | Id, consumo (único), fecha y hora, chef                                                                                                                        | Una por consumo. Sin actualización ni borrado.                                                                                         |
 | Rechazo      | Id, matrícula, fecha y hora, fecha de servicio y tiempo de comida (si aplican), punto de entrada, canal, encargado (si aplica), motivo                         | Sin actualización ni borrado.                                                                                                          |
@@ -245,13 +247,13 @@ Ningún error puede producir un consumo duplicado ni perder uno registrado.
 | La fuente RR. HH. no responde durante la sincronización                                 | Se conserva la última copia; se registra el error en la bitácora y se muestra un aviso al supervisor y al administrador.                           |
 | La sincronización trae datos inválidos (matrícula vacía, turno desconocido)             | Se omite ese registro, se anota en la bitácora y la sincronización continúa con los demás.                                                         |
 | Dos intentos simultáneos del mismo empleado (dos celulares, o celular y captura manual) | La restricción única permite solo un consumo; el segundo recibe "Rechazado: ya consumió".                                                          |
-| Token de QR vencido, alterado o de un punto inactivo                                    | El celular muestra "Escanea de nuevo el código de la entrada"; no se registra rechazo.                                                             |
+| Token de QR alterado, firmado con otra clave o de un punto inactivo                                    | El celular muestra "Escanea de nuevo el código de la entrada"; no se registra rechazo.                                                             |
 | ID o contraseña de la empresa incorrectos                                               | El celular muestra "Credenciales incorrectas"; tras 5 intentos fallidos en 15 minutos se bloquea ese ID por 15 minutos.                            |
 | El servicio de autenticación de la empresa no responde                                  | El celular muestra "No se pudo verificar tu cuenta; acude con el encargado" y el chef usa la captura manual.                                       |
 | Empleado sin celular, sin batería o sin Wi-Fi                                           | El chef captura su matrícula en el punto (RF-15).                                                                                                  |
 | El chef presiona Servido dos veces seguidas                                             | La entrega es única por consumo; el segundo clic no crea otra y la pantalla lo muestra como ya servido.                                            |
 | Un autorizado nunca recoge su comida                                                    | Queda en "Por servir" hasta el fin del horario; luego sale de la lista y aparece en el reporte como autorizado sin servir.                         |
-| La pantalla del punto pierde conexión                                                   | Deja de mostrar QR y muestra "Sin conexión"; un QR que no se renueva caduca solo a los 60 segundos. Al reconectar, recupera la lista "Por servir". |
+| La pantalla del punto pierde conexión                                                   | Muestra "Sin conexión"; al reconectar, recupera la lista "Por servir". |
 | El servidor no está disponible                                                          | Procedimiento de contingencia: lista en papel firmada por el chef, capturada después por un administrador como consumos de canal Contingencia.     |
 | Error inesperado en la API                                                              | Se registra en bitácora técnica con fecha, endpoint y detalle; el usuario ve un mensaje genérico.                                                  |
 
@@ -277,7 +279,7 @@ La captura de contingencia agrega un requisito: **RF-26 (Media)** registrar cons
 
 - [ ] Al marcar Servido, sale de la lista y queda una entrega registrada; un segundo clic no crea otra.
 
-- [ ] Un QR fotografiado y escaneado más de 60 segundos después es rechazado con "Escanea de nuevo".
+- [ ] Un QR alterado, firmado con otra clave o de un punto inactivo pide "Escanea de nuevo" y no registra rechazo.
 
 - [ ] Cada uno de los seis motivos de rechazo aparece en el pase cuando corresponde.
 

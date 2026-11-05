@@ -8,7 +8,7 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-02](#d-02-aplicación-web-central-on-premise) | Aplicación web central on-premise | Aceptada |
 | [D-03](#d-03-c-por-capas-y-angular-con-separación-mvc) | C# por capas y Angular con separación MVC | Aceptada |
 | [D-04](#d-04-derecho-por-turno-fijo-y-días-laborales) | Derecho por turno fijo y días laborales, leídos de RR. HH. | Aceptada |
-| [D-05](#d-05-entrada-por-celular-con-qr-rotativo) | Entrada por celular con QR rotativo | Aceptada |
+| [D-05](#d-05-entrada-por-celular-con-qr-rotativo) | Entrada por celular con QR rotativo | Sustituida por D-21 |
 | [D-06](#d-06-el-chef-solo-marca-servido) | El chef solo marca Servido; no aprueba ni rechaza | Aceptada |
 | [D-07](#d-07-registros-de-solo-inserción) | Registros de solo inserción | Aceptada |
 | [D-08](#d-08-fecha-de-servicio-y-jornada-anterior) | Fecha de servicio y jornada anterior | Aceptada |
@@ -23,6 +23,8 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-17](#d-17-turnos-y-tiempos-de-comida-como-texto-libre) | Turnos y tiempos de comida como texto libre | Aceptada, revisable |
 | [D-18](#d-18-detalles-de-la-api-no-fijados-en-el-plan) | Detalles de la API no fijados en el plan | Aceptada |
 | [D-19](#d-19-el-pase-no-muestra-el-área) | El pase no muestra el área del empleado (mejora futura) | Pospuesta |
+| [D-20](#d-20-la-pantalla-del-chef-no-muestra-foto) | La pantalla del chef no muestra foto (mejora futura) | Pospuesta |
+| [D-21](#d-21-qr-permanente-impreso) | QR permanente impreso, sin comprobar presencia | Aceptada, riesgo conocido |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -46,6 +48,8 @@ Backend en ASP.NET Core sobre .NET 8 LTS con capas Dominio, Aplicación, Infraes
 Cada empleado tiene un turno fijo durante su contrato y un rol de días laborales y descansos; ambos se leen de la base de RR. HH. Sin derecho en días de descanso ni con contrato vencido.
 
 ## D-05 Entrada por celular con QR rotativo
+
+> **Sustituida por [D-21](#d-21-qr-permanente-impreso).** El QR ya no rota ni caduca.
 
 El punto muestra un QR que cambia cada 30 s; el token firmado es válido 60 s. El empleado lo escanea con su celular e inicia sesión con sus credenciales de la empresa.
 
@@ -143,3 +147,17 @@ El pase del celular muestra foto, nombre, matrícula, turno, tiempo de comida, r
 
 - **Motivo:** la respuesta de validación de la API no incluye el área y el pase cumple su función sin ella. El dueño del producto prefiere enfocarse en lo especificado.
 - **Si se retoma:** agregar `area` a `ResultadoAcceso` en la API (el dato ya está en Empleado) y mostrarla en la tarjeta del pase; después, quitar esta nota de la guía de diseño (§4).
+
+## D-20 La pantalla del chef no muestra foto
+
+Las tarjetas "Por servir" y los rechazos de la pantalla del chef muestran el nombre, el turno y el tiempo de comida, sin foto. La foto queda como **mejora futura**, sujeta a que RR. HH. la proporcione (SRS §11). El pase del celular sí la muestra cuando existe (RF-11).
+
+- **Motivo:** al chef solo le interesa a quién servir y si tiene derecho; el dueño del producto prefiere enfocarse en lo especificado.
+
+## D-21 QR permanente impreso
+
+El QR del punto es permanente y va impreso en un cartel en la entrada. Su función es dar acceso a la aplicación: el empleado lo escanea, inicia sesión si no la tiene (se recuerda 30 días) y el sistema valida su derecho y avisa a la pantalla del chef. Sustituye a D-05.
+
+- **El token no caduca.** Sigue firmado (identifica el punto y no se puede falsificar) y solo vale si el punto está activo. El administrador lo obtiene en Administración > Puntos para imprimirlo.
+- **Riesgo aceptado:** el QR no comprueba que el empleado esté en el comedor; alguien con una foto del cartel o el enlace puede pedir su comida desde fuera. Cada empleado sigue limitado a un consumo por tiempo de comida, y una comida no recogida queda sin servir y no se paga (D-09). Para invalidar un QR filtrado se desactiva el punto o se cambia `Qr:ClaveFirma` y se reimprime.
+- **Futuro:** la identificación preferida es la huella con el sistema del cliente (D-05, RF-16); el QR queda como alternativa. La validación de derecho no cambia con el método de identificación.
