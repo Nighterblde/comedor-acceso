@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Comedor.Api.Tareas;
 using Comedor.Application.Abstracciones;
 using Comedor.Application.Accesos;
+using Comedor.Application.Administracion;
 using Comedor.Application.Qr;
 using Comedor.Application.Reportes;
 using Comedor.Application.Sesion;
@@ -110,6 +111,10 @@ public static class ServiciosComedor
         servicios.AddScoped<ListarSolicitudes>();
         servicios.AddScoped<SincronizarPersonal>();
         servicios.AddScoped<GenerarReporte>();
+        servicios.AddScoped<AdministrarReglas>();
+        servicios.AddScoped<AdministrarPuntos>();
+        servicios.AddScoped<AdministrarUsuarios>();
+        servicios.AddScoped<RegistrarContingencia>();
 
         if (config.GetValue("Sincronizacion:Habilitada", true))
         {
