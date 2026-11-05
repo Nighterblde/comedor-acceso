@@ -59,6 +59,13 @@ export class ReportesComponent {
     this.error.set(null);
   }
 
+  /** Al cambiar el rango o los filtros se ocultan los resultados: lo visible debe coincidir con lo que se exporta. */
+  limpiarResultados(): void {
+    this.cotejo.set(null);
+    this.conteo.set(null);
+    this.detalle.set(null);
+  }
+
   consultar(): void {
     if (!this.rangoCompleto) {
       return;

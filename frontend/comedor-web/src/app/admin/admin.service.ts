@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   BitacoraSincronizacion,
+  ConsumoContingencia,
   Contingencia,
   PuntoEntrada,
   ReglaDerecho,
@@ -61,7 +62,7 @@ export class AdminService {
     return this.http.get<BitacoraSincronizacion[]>(`${this.base}/sincronizacion`);
   }
 
-  contingencia(datos: Contingencia): Observable<unknown> {
-    return this.http.post(`${this.base}/contingencia`, datos);
+  contingencia(datos: Contingencia): Observable<ConsumoContingencia> {
+    return this.http.post<ConsumoContingencia>(`${this.base}/contingencia`, datos);
   }
 }

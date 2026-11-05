@@ -42,6 +42,20 @@ describe('núcleo del frontend', () => {
     expect(auth.rol()).toBe('Encargado');
   });
 
+  it('login_guardaUsuario_yCerrarSesionLoBorra', () => {
+    const http = TestBed.inject(HttpTestingController);
+    const auth = TestBed.inject(AuthService);
+
+    auth.login(' chef ', 'secreta').subscribe();
+    http
+      .expectOne(`${environment.apiUrl}/api/auth/login`)
+      .flush({ token: 'tok-sistema', rol: 'Encargado', expiraEn: '2026-11-05T00:00:00' });
+
+    expect(auth.usuario()).toBe('chef');
+    auth.cerrarSesion();
+    expect(auth.usuario()).toBeNull();
+  });
+
   it('interceptor_usaTokenEmpleadoEnAccesoCelular', () => {
     const http = TestBed.inject(HttpTestingController);
     localStorage.setItem('comedor.token.empleado', 'tok-empleado');

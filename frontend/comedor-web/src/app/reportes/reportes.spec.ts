@@ -92,7 +92,7 @@ describe('módulo reportes', () => {
         providers: [
           { provide: ReportesService, useValue: servicio },
           { provide: SincronizacionService, useValue: sincronizacion },
-          { provide: AuthService, useValue: { rol: () => 'Supervisor' } },
+          { provide: AuthService, useValue: { rol: () => 'Supervisor', usuario: () => 'super' } },
         ],
       });
       const f = TestBed.createComponent(ReportesComponent);
@@ -131,6 +131,88 @@ describe('módulo reportes', () => {
         'cotejo-2026-11-01-2026-11-15.xlsx',
       );
     }));
+  });
+
+  describe('ReportesComponent, rango y detalle', () => {
+    function armar() {
+      const servicio = jasmine.createSpyObj<ReportesService>('ReportesService', [
+        'conteo',
+        'cotejo',
+        'detalle',
+        'descargar',
+      ]);
+      servicio.cotejo.and.returnValue(
+        of([{ fechaServicio: '2026-11-10', tiempoComida: 'Comida', servidas: 2, sinServir: 1 }]),
+      );
+      servicio.descargar.and.returnValue(of(undefined));
+      TestBed.configureTestingModule({
+        declarations: [ReportesComponent, AvisoSincronizacionComponent],
+        imports: [FormsModule],
+        providers: [
+          { provide: ReportesService, useValue: servicio },
+          { provide: SincronizacionService, useValue: { estado: signal(null), refrescar: () => undefined } },
+          { provide: AuthService, useValue: { rol: () => 'Supervisor', usuario: () => 'super' } },
+        ],
+      });
+      const f = TestBed.createComponent(ReportesComponent);
+      f.componentInstance.desde = '2026-11-01';
+      f.componentInstance.hasta = '2026-11-15';
+      f.detectChanges();
+      return { f, servicio };
+    }
+
+    function boton(f: { nativeElement: HTMLElement }, texto: string): HTMLButtonElement | undefined {
+      return Array.from(f.nativeElement.querySelectorAll('button')).find((b) =>
+        (b.textContent ?? '').includes(texto),
+      ) as HTMLButtonElement | undefined;
+    }
+
+    it('cambiarRango_ocultaResultadosAnteriores', fakeAsync(() => {
+      const { f } = armar();
+      boton(f, 'Consultar')!.click();
+      tick();
+      f.detectChanges();
+      expect(f.nativeElement.querySelector('tr.total')).not.toBeNull();
+
+      const desde = f.nativeElement.querySelector('#rep-desde') as HTMLInputElement;
+      desde.value = '2026-11-02';
+      desde.dispatchEvent(new Event('input'));
+      tick();
+      f.detectChanges();
+
+      expect(f.nativeElement.querySelector('tr.total')).toBeNull();
+    }));
+
+    it('exportarDetalle_incluyeFiltros', fakeAsync(() => {
+      const { f, servicio } = armar();
+      boton(f, 'Detalle')!.click();
+      f.componentInstance.filtros = { canal: 'Manual', motivo: 'YaConsumio' };
+      f.detectChanges();
+      boton(f, 'Excel')!.click();
+      tick();
+
+      expect(servicio.descargar).toHaveBeenCalledOnceWith(
+        'detalle.xlsx?desde=2026-11-01&hasta=2026-11-15&canal=Manual&motivo=YaConsumio',
+        'detalle-2026-11-01-2026-11-15.xlsx',
+      );
+    }));
+
+    it('detalle_sinBotonPdf', () => {
+      const { f } = armar();
+      expect(boton(f, 'PDF')).toBeDefined();
+
+      boton(f, 'Detalle')!.click();
+      f.detectChanges();
+
+      expect(boton(f, 'PDF')).toBeUndefined();
+    });
+
+    it('barra_muestraUsuarioYRol', () => {
+      const { f } = armar();
+      const barra = (f.nativeElement.querySelector('header') as HTMLElement).textContent ?? '';
+      expect(barra).toContain('super');
+      expect(barra).toContain('Supervisor');
+    });
   });
 
   describe('SincronizacionService', () => {

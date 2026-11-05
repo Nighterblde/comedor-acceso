@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { textoDeError } from '../compartido/errores';
-import { Contingencia } from '../modelos/administracion.model';
+import { ConsumoContingencia, Contingencia } from '../modelos/administracion.model';
 import { AdminService } from './admin.service';
 
 /** Captura de la lista en papel como consumos de canal Contingencia (RF-26, D-15). */
@@ -12,7 +12,7 @@ import { AdminService } from './admin.service';
 })
 export class ContingenciaComponent {
   readonly error = signal<string | null>(null);
-  readonly registrado = signal<Contingencia | null>(null);
+  readonly registrado = signal<ConsumoContingencia | null>(null);
   readonly enviando = signal(false);
   datos: Contingencia = { matricula: '', fechaServicio: '', tiempoComida: '', referenciaLista: '' };
 
@@ -21,6 +21,12 @@ export class ContingenciaComponent {
   /** Todos los campos son obligatorios, incluida la referencia a la lista en papel. */
   get completo(): boolean {
     return Object.values(this.datos).every((v) => v.trim() !== '');
+  }
+
+  /** aaaa-MM-dd → dd/MM/aaaa sin pasar por Date, para no correr el día por la zona horaria. */
+  fechaLegible(fecha: string): string {
+    const [a, m, d] = fecha.split('-');
+    return d && m && a ? `${d}/${m}/${a}` : fecha;
   }
 
   registrar(): void {
@@ -37,8 +43,8 @@ export class ContingenciaComponent {
     this.registrado.set(null);
     this.enviando.set(true);
     this.admin.contingencia(cuerpo).subscribe({
-      next: () => {
-        this.registrado.set(cuerpo);
+      next: (guardado) => {
+        this.registrado.set(guardado);
         this.datos = { ...this.datos, matricula: '' };
         this.enviando.set(false);
       },

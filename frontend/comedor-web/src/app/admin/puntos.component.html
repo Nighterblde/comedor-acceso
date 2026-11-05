@@ -16,7 +16,7 @@
           <input type="checkbox" name="activo" [(ngModel)]="punto.activo" />
           Activo
         </label>
-        <button type="submit" class="boton primario">Guardar</button>
+        <button type="submit" class="boton primario" [disabled]="guardando()">Guardar</button>
         <button type="button" class="boton secundario" (click)="nuevo()">Nuevo</button>
       </div>
       @if (error()) {

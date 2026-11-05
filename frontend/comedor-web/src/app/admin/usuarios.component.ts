@@ -18,6 +18,8 @@ export class UsuariosComponent implements OnInit {
   readonly roles = ['Punto', 'Encargado', 'Supervisor', 'Administrador'];
   readonly usuarios = signal<UsuarioSistema[]>([]);
   readonly error = signal<string | null>(null);
+  /** Desactiva Guardar y Eliminar mientras la API responde, para evitar dobles envíos (diseño §5). */
+  readonly guardando = signal(false);
   usuario: UsuarioEdicion = usuarioVacio();
   /** Al editar, el usuario no cambia: cambiarlo crearía otra cuenta y dejaría activa la anterior (D-23). */
   editando = false;
@@ -41,16 +43,24 @@ export class UsuariosComponent implements OnInit {
   }
 
   guardar(): void {
+    if (this.guardando()) {
+      return;
+    }
     this.error.set(null);
+    this.guardando.set(true);
     const { contrasena, ...datos } = this.usuario;
     const cuerpo: UsuarioEdicion = contrasena ? { ...datos, contrasena } : datos;
     this.admin.guardarUsuario(cuerpo).subscribe({
       next: () => {
+        this.guardando.set(false);
         this.usuario = usuarioVacio();
         this.editando = false;
         this.cargar();
       },
-      error: (e) => this.error.set(textoDeError(e)),
+      error: (e) => {
+        this.error.set(textoDeError(e));
+        this.guardando.set(false);
+      },
     });
   }
 

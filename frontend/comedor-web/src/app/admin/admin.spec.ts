@@ -4,7 +4,7 @@ import { signal, Type } from '@angular/core';
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { QRCodeComponent } from 'angularx-qrcode';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { SincronizacionService } from '../compartido/sincronizacion.service';
 import { environment } from '../../environments/environment';
 import { AdminService } from './admin.service';
@@ -205,6 +205,50 @@ describe('módulo admin', () => {
     }));
   });
 
+  describe('doble envío', () => {
+    it('reglas_guardarDosVeces_unSoloEnvio', fakeAsync(() => {
+      const servicio = servicioFalso();
+      const pendiente = new Subject<void>();
+      servicio.guardarRegla.and.returnValue(pendiente);
+      const f = crear(ReglasComponent, servicio);
+      const form = f.nativeElement.querySelector('form') as HTMLFormElement;
+      form.dispatchEvent(new Event('submit'));
+      f.detectChanges();
+      form.dispatchEvent(new Event('submit'));
+      f.detectChanges();
+
+      expect(servicio.guardarRegla).toHaveBeenCalledTimes(1);
+      expect((f.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBeTrue();
+      pendiente.next();
+      pendiente.complete();
+      tick();
+      f.detectChanges();
+      expect((f.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBeFalse();
+    }));
+
+    it('puntos_guardarDosVeces_unSoloEnvio', fakeAsync(() => {
+      const servicio = servicioFalso();
+      servicio.guardarPunto.and.returnValue(new Subject<void>());
+      const f = crear(PuntosComponent, servicio);
+      const form = f.nativeElement.querySelector('form') as HTMLFormElement;
+      form.dispatchEvent(new Event('submit'));
+      form.dispatchEvent(new Event('submit'));
+
+      expect(servicio.guardarPunto).toHaveBeenCalledTimes(1);
+    }));
+
+    it('usuarios_guardarDosVeces_unSoloEnvio', fakeAsync(() => {
+      const servicio = servicioFalso();
+      servicio.guardarUsuario.and.returnValue(new Subject<void>());
+      const f = crear(UsuariosComponent, servicio);
+      const form = f.nativeElement.querySelector('form') as HTMLFormElement;
+      form.dispatchEvent(new Event('submit'));
+      form.dispatchEvent(new Event('submit'));
+
+      expect(servicio.guardarUsuario).toHaveBeenCalledTimes(1);
+    }));
+  });
+
   describe('contingencia', () => {
     function llenar(f: ComponentFixture<ContingenciaComponent>, referencia: string) {
       escribir(f, '#cont-matricula', 'E1001');
@@ -223,6 +267,24 @@ describe('módulo admin', () => {
 
       expect(servicio.contingencia).not.toHaveBeenCalled();
       expect((f.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBeTrue();
+    }));
+
+    it('contingencia_exito_muestraLoGuardadoPorLaApi', fakeAsync(() => {
+      const servicio = servicioFalso();
+      servicio.contingencia.and.returnValue(
+        of({ id: 'c1', matricula: 'E1001', fechaServicio: '2026-11-10', tiempoComida: 'Comida' }),
+      );
+      const f = crear(ContingenciaComponent, servicio);
+      tick();
+      escribir(f, '#cont-matricula', 'e1001');
+      escribir(f, '#cont-fecha', '2026-11-10');
+      escribir(f, '#cont-tiempo', 'Comida');
+      escribir(f, '#cont-referencia', 'Lista 7');
+      (f.nativeElement.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+      tick();
+      f.detectChanges();
+
+      expect(f.nativeElement.textContent).toContain('Registrado: E1001 · 10/11/2026 · Comida');
     }));
 
     it('contingencia_409_muestraYaConsumiste', fakeAsync(() => {

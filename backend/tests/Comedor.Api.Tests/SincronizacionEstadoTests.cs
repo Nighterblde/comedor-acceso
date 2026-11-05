@@ -53,6 +53,33 @@ public class SincronizacionEstadoTests(SqlServerFixture sql)
     }
 
     [Fact]
+    public async Task Estado_Administrador200()
+    {
+        using var fabrica = new ComedorApiFactory(sql);
+        await fabrica.SembrarAsync();
+        var admin = await ClienteAsync(fabrica, Roles.Administrador);
+
+        var r = await admin.GetAsync("/api/sincronizacion/estado");
+
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        Assert.False((await r.Content.ReadFromJsonAsync<Estado>())!.UltimaFallida);
+    }
+
+    [Theory]
+    [InlineData(Roles.Punto)]
+    [InlineData(Roles.Empleado)]
+    public async Task Estado_RolSinAcceso403(string rol)
+    {
+        using var fabrica = new ComedorApiFactory(sql);
+        await fabrica.SembrarAsync();
+        var token = fabrica.Services.GetRequiredService<IEmisorJwt>().Emitir("x-" + rol, rol, TimeSpan.FromHours(1));
+        var c = fabrica.CreateClient();
+        c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await c.GetAsync("/api/sincronizacion/estado")).StatusCode);
+    }
+
+    [Fact]
     public async Task Estado_SinToken401_YRolEncargado403()
     {
         using var fabrica = new ComedorApiFactory(sql);

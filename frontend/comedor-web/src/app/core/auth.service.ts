@@ -8,6 +8,7 @@ import { borrar, guardar, leer } from './almacen';
 const CLAVE_TOKEN_SISTEMA = 'comedor.token.sistema';
 const CLAVE_TOKEN_EMPLEADO = 'comedor.token.empleado';
 const CLAVE_ROL = 'comedor.rol';
+const CLAVE_USUARIO = 'comedor.usuario';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -20,6 +21,7 @@ export class AuthService {
         tap((r) => {
           guardar(CLAVE_TOKEN_SISTEMA, r.token);
           guardar(CLAVE_ROL, r.rol);
+          guardar(CLAVE_USUARIO, usuario.trim());
         }),
         map(() => undefined),
       );
@@ -46,6 +48,11 @@ export class AuthService {
     return leer(CLAVE_ROL);
   }
 
+  /** Usuario del sistema con sesión, para la barra superior (diseño §3). */
+  usuario(): string | null {
+    return leer(CLAVE_USUARIO);
+  }
+
   cerrarSesionEmpleado(): void {
     borrar(CLAVE_TOKEN_EMPLEADO);
   }
@@ -54,5 +61,6 @@ export class AuthService {
     borrar(CLAVE_TOKEN_SISTEMA);
     borrar(CLAVE_TOKEN_EMPLEADO);
     borrar(CLAVE_ROL);
+    borrar(CLAVE_USUARIO);
   }
 }

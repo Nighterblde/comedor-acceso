@@ -3,7 +3,7 @@
     <p class="rotulo">Comedor de personal</p>
     <h1 class="pantalla">Reportes</h1>
   </div>
-  <p class="rol">{{ auth.rol() }}</p>
+  <p class="rol">{{ auth.usuario() }} · {{ auth.rol() }}</p>
 </header>
 
 <main class="contenido">
@@ -27,25 +27,25 @@
     <div class="campos">
       <div class="campo">
         <label for="rep-desde">Desde</label>
-        <input id="rep-desde" type="date" [(ngModel)]="desde" required />
+        <input id="rep-desde" type="date" [(ngModel)]="desde" (ngModelChange)="limpiarResultados()" required />
       </div>
       <div class="campo">
         <label for="rep-hasta">Hasta</label>
-        <input id="rep-hasta" type="date" [(ngModel)]="hasta" required />
+        <input id="rep-hasta" type="date" [(ngModel)]="hasta" (ngModelChange)="limpiarResultados()" required />
       </div>
 
       @if (tipo === 'detalle') {
         <div class="campo">
           <label for="rep-matricula">Matrícula</label>
-          <input id="rep-matricula" [(ngModel)]="filtros.matricula" />
+          <input id="rep-matricula" [(ngModel)]="filtros.matricula" (ngModelChange)="limpiarResultados()" />
         </div>
         <div class="campo">
           <label for="rep-punto">Punto</label>
-          <input id="rep-punto" [(ngModel)]="filtros.puntoId" />
+          <input id="rep-punto" [(ngModel)]="filtros.puntoId" (ngModelChange)="limpiarResultados()" />
         </div>
         <div class="campo">
           <label for="rep-canal">Canal</label>
-          <select id="rep-canal" [(ngModel)]="filtros.canal">
+          <select id="rep-canal" [(ngModel)]="filtros.canal" (ngModelChange)="limpiarResultados()">
             <option [ngValue]="undefined">Todos</option>
             @for (c of canales; track c) {
               <option [ngValue]="c">{{ c }}</option>
@@ -54,7 +54,7 @@
         </div>
         <div class="campo">
           <label for="rep-motivo">Motivo</label>
-          <select id="rep-motivo" [(ngModel)]="filtros.motivo">
+          <select id="rep-motivo" [(ngModel)]="filtros.motivo" (ngModelChange)="limpiarResultados()">
             <option [ngValue]="undefined">Todos</option>
             @for (m of motivos; track m.valor) {
               <option [ngValue]="m.valor">{{ m.texto }}</option>

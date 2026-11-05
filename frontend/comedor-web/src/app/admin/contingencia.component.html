@@ -23,7 +23,7 @@
     </div>
     @if (registrado(); as r) {
       <p class="exito" role="status">
-        Registrado: {{ r.matricula }} · {{ r.fechaServicio }} · {{ r.tiempoComida }}
+        Registrado: {{ r.matricula }} · {{ fechaLegible(r.fechaServicio) }} · {{ r.tiempoComida }}
       </p>
     }
     @if (error()) {

@@ -17,6 +17,8 @@ function puntoVacio(): PuntoEntrada {
 export class PuntosComponent implements OnInit {
   readonly puntos = signal<PuntoEntrada[]>([]);
   readonly error = signal<string | null>(null);
+  /** Desactiva Guardar y Eliminar mientras la API responde, para evitar dobles envíos (diseño §5). */
+  readonly guardando = signal(false);
   readonly qr = signal<{ punto: PuntoEntrada; url: string } | null>(null);
   punto: PuntoEntrada = puntoVacio();
   /** Al editar, la clave no cambia: cambiarla crearía otro punto en lugar de renombrar (D-23). */
@@ -41,14 +43,22 @@ export class PuntosComponent implements OnInit {
   }
 
   guardar(): void {
+    if (this.guardando()) {
+      return;
+    }
     this.error.set(null);
+    this.guardando.set(true);
     this.admin.guardarPunto(this.punto).subscribe({
       next: () => {
+        this.guardando.set(false);
         this.punto = puntoVacio();
         this.editando = false;
         this.cargar();
       },
-      error: (e) => this.error.set(textoDeError(e)),
+      error: (e) => {
+        this.error.set(textoDeError(e));
+        this.guardando.set(false);
+      },
     });
   }
 

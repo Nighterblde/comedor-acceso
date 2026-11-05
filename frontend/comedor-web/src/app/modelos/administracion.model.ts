@@ -39,6 +39,14 @@ export interface BitacoraSincronizacion extends ResultadoSincronizacion {
   fecha: string;
 }
 
+/** Consumo de contingencia como lo guardó la API (matrícula normalizada). */
+export interface ConsumoContingencia {
+  id: string;
+  matricula: string;
+  fechaServicio: string;
+  tiempoComida: string;
+}
+
 /** Fecha de servicio en formato aaaa-MM-dd. */
 export interface Contingencia {
   matricula: string;

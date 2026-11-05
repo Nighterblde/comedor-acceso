@@ -23,7 +23,7 @@
         <input type="checkbox" name="jornadaAnterior" [(ngModel)]="regla.perteneceAJornadaAnterior" />
         Pertenece a la jornada del día anterior
       </label>
-      <button type="submit" class="boton primario">Guardar</button>
+      <button type="submit" class="boton primario" [disabled]="guardando()">Guardar</button>
       <button type="button" class="boton secundario" (click)="nueva()">Nueva</button>
     </div>
     @if (error()) {
@@ -55,7 +55,7 @@
             <td>{{ r.perteneceAJornadaAnterior ? 'Sí' : 'No' }}</td>
             <td class="acciones">
               <button type="button" class="boton secundario chico" (click)="editar(r)">Editar</button>
-              <button type="button" class="boton secundario chico" (click)="eliminar(r)">Eliminar</button>
+              <button type="button" class="boton secundario chico" [disabled]="guardando()" (click)="eliminar(r)">Eliminar</button>
             </td>
           </tr>
         }
