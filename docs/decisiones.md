@@ -18,6 +18,10 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-12](#d-12-un-solo-punto-de-entrada) | Un solo punto de entrada | Aceptada |
 | [D-13](#d-13-diseño-institucional-sin-identidad-oficial) | Diseño institucional sin identidad oficial | Aceptada |
 | [D-14](#d-14-el-conteo-también-se-exporta) | El conteo también se exporta a Excel y PDF | Aceptada |
+| [D-15](#d-15-reglas-de-la-captura-de-contingencia) | Reglas de la captura de contingencia | Aceptada |
+| [D-16](#d-16-sin-protección-del-último-administrador) | Sin protección del último administrador activo | Aceptada, riesgo conocido |
+| [D-17](#d-17-turnos-y-tiempos-de-comida-como-texto-libre) | Turnos y tiempos de comida como texto libre | Aceptada, revisable |
+| [D-18](#d-18-detalles-de-la-api-no-fijados-en-el-plan) | Detalles de la API no fijados en el plan | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -98,3 +102,35 @@ La interfaz usa un estilo institucional sencillo (Montserrat, verde instituciona
 El reporte de conteo (RF-20) se exporta a Excel y PDF igual que el cotejo, con una fila final "Total" que suma la columna Total.
 
 - **Motivo:** RF-23 pide exportar los reportes en general; el plan v1.1 solo exportaba el cotejo y el detalle. El conteo por turno y área sirve, por ejemplo, para repartir el costo entre áreas fuera del sistema.
+
+## D-15 Reglas de la captura de contingencia
+
+El administrador captura la lista en papel como consumos de canal Contingencia (RF-26).
+
+- Solo aplica la restricción única (matrícula, fecha de servicio, tiempo de comida); no se revisan turno, horario ni día de descanso, porque la comida ya se sirvió.
+- La matrícula, normalizada, debe existir como empleado sincronizado; si no, se rechaza con "No registrado". **Motivo:** la lista se escribe a mano y un error de dedo dejaría un consumo de alguien inexistente. Confirmado por el dueño del producto.
+- La referencia a la lista y el tiempo de comida son obligatorios.
+- El consumo queda en el punto de entrada activo (D-12), con la fecha y hora de la captura y el administrador como autor.
+- Un duplicado responde 409 con "Ya consumiste este tiempo de comida".
+
+## D-16 Sin protección del último administrador
+
+Un administrador puede desactivar o cambiar de rol a cualquier usuario, incluido el último administrador activo. No se agrega una regla que lo impida.
+
+- **Riesgo conocido:** si se queda sin administradores activos, nadie puede administrar reglas, usuarios, sincronización ni contingencia. El administrador semilla solo se crea cuando no hay ningún usuario, así que la recuperación es una corrección directa en la base de datos.
+- **Motivo:** el dueño del producto considera que en la práctica no se desactivarán administradores.
+
+## D-17 Turnos y tiempos de comida como texto libre
+
+Turno y tiempo de comida se guardan como texto, sin catálogo, y se comparan distinguiendo mayúsculas y minúsculas.
+
+- **Consecuencia:** "matutino" y "Matutino" serían turnos distintos y el chequeo de traslape no los compararía. Los nombres deben coincidir con los que entrega RR. HH.
+- **Revisable:** si se confirma la lista de turnos con el cliente (SRS §11), conviene un catálogo.
+
+## D-18 Detalles de la API no fijados en el plan
+
+Decisiones de implementación de las Tareas 9 a 11, tomadas con la lectura mínima del plan:
+
+- **Reportes:** Turno, Área y Nombre salen del empleado unido por matrícula; si no existe, "Sin dato" (y nombre vacío). En el detalle, Resultado es "Autorizado" o "Rechazado" y Motivo es el texto exacto del rechazo; los rechazos sin fecha de servicio se filtran por la fecha en que ocurrieron. Fechas faltantes, inválidas o `desde > hasta` responden 400. Los archivos se llaman `<reporte>-<desde>_<hasta>.<ext>` y sus celdas de texto se guardan como texto literal.
+- **Administración:** `DELETE /api/admin/reglas?turno=&tiempoComida=` (404 si no existe). Al editar una regla, el traslape no se compara contra ella misma. Los errores 400 y 409 responden `{ "error": "<texto>" }`. El rol de un usuario debe ser uno de los cuatro del sistema; la contraseña es obligatoria al crear y opcional al editar. La baja de puntos y usuarios es `activo = false`.
+- **Frontend:** se conservan los nombres generados por Angular 22 (`app-module.ts`, `app-routing-module.ts`). Si falta el rol, el guard redirige a `/login?returnUrl=<ruta>` y, tras iniciar sesión, se vuelve a esa ruta; entrando directo a `/login` no hay página de inicio por rol.

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión | 1.1 |
+| Versión | 1.2 |
 | Fecha | 4 de noviembre de 2026 |
 | Estado | Borrador para revisión con el cliente |
 | Alcance | Subproyecto 1 de la plataforma del comedor |
@@ -15,6 +15,7 @@
 | --- | --- |
 | 1.0 | Versión inicial aprobada para planeación. |
 | 1.1 | Un solo punto de entrada, donde el chef sirve la comida. Referencia a la guía de diseño. |
+| 1.2 | RF-23 precisa qué reportes se exportan y en qué formato (D-14). RF-26 precisa las reglas de la captura de contingencia (D-15). |
 
 ## 1. Introducción
 
@@ -146,7 +147,7 @@ Prioridad: **Alta** = indispensable para la v1; **Media** = deseable en la v1.
 | RF-20                          | Conteo de consumos por fecha de servicio, tiempo de comida, turno y área, en un rango de fechas.                                                                                                                                                                                                                 | Alta      |
 | RF-21                          | Reporte para cotejar la factura del proveedor: comidas **servidas** por fecha de servicio y tiempo de comida en el periodo facturado, y aparte las autorizadas sin servir.                                                                                                                                       | Alta      |
 | RF-22                          | Detalle de consumos y rechazos filtrable por empleado, fecha, punto, canal y motivo.                                                                                                                                                                                                                             | Media     |
-| RF-23                          | Exportación de reportes a Excel y PDF.                                                                                                                                                                                                                                                                           | Alta      |
+| RF-23                          | Exportación de reportes: conteo y cotejo a Excel y PDF; detalle a Excel. Cada exportación de conteo y cotejo termina con una fila "Total".                                                                                                                                                                                                                                                                           | Alta      |
 | **Administración y seguridad** |                                                                                                                                                                                                                                                                                                                  |           |
 | RF-24                          | Los usuarios del sistema (punto, encargado, supervisor, administrador) inician sesión con usuario y contraseña propios; acceso por rol con JWT. Sesión de 12 horas, salvo el rol Punto: 30 días.                                                                                                                 | Alta      |
 | RF-25                          | Alta, baja y edición de puntos de entrada y usuarios del sistema.                                                                                                                                                                                                                                                | Alta      |
@@ -254,7 +255,7 @@ Ningún error puede producir un consumo duplicado ni perder uno registrado.
 | El servidor no está disponible                                                          | Procedimiento de contingencia: lista en papel firmada por el chef, capturada después por un administrador como consumos de canal Contingencia.     |
 | Error inesperado en la API                                                              | Se registra en bitácora técnica con fecha, endpoint y detalle; el usuario ve un mensaje genérico.                                                  |
 
-La captura de contingencia agrega un requisito: **RF-26 (Media)** registrar consumos de canal Contingencia con autor y referencia a la lista en papel, sujetos a la misma restricción única.
+La captura de contingencia agrega un requisito: **RF-26 (Media)** registrar consumos de canal Contingencia con autor y referencia a la lista en papel, sujetos a la misma restricción única. Solo puede capturarlos un administrador. No se aplican las reglas de derecho (la comida ya se sirvió), pero la matrícula debe existir como empleado sincronizado; si no, se rechaza con "No registrado". Un consumo repetido se rechaza con "Ya consumiste este tiempo de comida" ([D-15](decisiones.md#d-15-reglas-de-la-captura-de-contingencia)).
 
 ## 9. Pruebas y criterios de aceptación
 

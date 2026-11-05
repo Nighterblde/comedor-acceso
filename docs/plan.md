@@ -4,9 +4,9 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión | 1.1 |
+| Versión | 1.2 |
 | Fecha | 4 de noviembre de 2026 |
-| Implementa | [SRS v1.1](srs.md) |
+| Implementa | [SRS v1.2](srs.md) |
 | Diseño | [Guía de diseño](diseno.md) |
 | Tareas | 16 (1 a 15, con la 8 dividida en 8a y 8b) |
 
@@ -310,7 +310,8 @@ La matrícula del canal celular sale del `sub` del JWT, nunca del cuerpo. El usu
 - `record FilaConteo(DateOnly FechaServicio, string TiempoComida, string Turno, string Area, int Total)`; `record FilaCotejo(DateOnly FechaServicio, string TiempoComida, int Servidas, int SinServir)`; `record FilaDetalle(DateTime FechaHora, string Matricula, string Nombre, string TiempoComida, string PuntoId, Canal Canal, string Resultado, string? Motivo, bool Servido)`.
 - `GenerarReporte`: `ConteoAsync(DateOnly desde, DateOnly hasta)`, `CotejoFacturaAsync(DateOnly desde, DateOnly hasta)`, `DetalleAsync(DateOnly desde, DateOnly hasta, string? matricula, string? puntoId, Canal? canal, MotivoRechazo? motivo)`; rangos inclusivos sobre la fecha de servicio. Los consumos de canal Contingencia cuentan como servidos.
 - `IExportador { byte[] CotejoExcel(IReadOnlyList<FilaCotejo> filas, DateOnly desde, DateOnly hasta); byte[] CotejoPdf(...); byte[] DetalleExcel(IReadOnlyList<FilaDetalle> filas); byte[] ConteoExcel(IReadOnlyList<FilaConteo> filas, DateOnly desde, DateOnly hasta); byte[] ConteoPdf(...); }`; la última fila del cotejo es "Total" con las sumas de Servidas y SinServir; la del conteo es "Total" con la suma de Total ([D-14](decisiones.md#d-14-el-conteo-también-se-exporta)).
-- Rutas (roles Supervisor y Administrador): `GET /api/reportes/conteo`, `/cotejo`, `/detalle`, `/cotejo.xlsx`, `/cotejo.pdf`, `/detalle.xlsx`, `/conteo.xlsx`, `/conteo.pdf`, con `?desde=yyyy-MM-dd&hasta=yyyy-MM-dd`.
+- Rutas (roles Supervisor y Administrador): `GET /api/reportes/conteo`, `/cotejo`, `/detalle`, `/cotejo.xlsx`, `/cotejo.pdf`, `/detalle.xlsx`, `/conteo.xlsx`, `/conteo.pdf`, con `?desde=yyyy-MM-dd&hasta=yyyy-MM-dd`; fechas faltantes, inválidas o `desde > hasta` → 400.
+- Las consultas viven en `Infrastructure` detrás de `Abstracciones/IConsultaReportes.cs`, porque `Application` no ve el `DbContext`. Turno, Área y Nombre salen del empleado unido por matrícula ("Sin dato" si no existe). Más detalles en [D-18](decisiones.md#d-18-detalles-de-la-api-no-fijados-en-el-plan).
 
 * [ ] **Paso 1: escribir las pruebas que fallan:** sembrar el 2026-11-10 tres consumos servidos (2 Comida, 1 Cena), un consumo Comida sin servir, un consumo N-Cena a las 00:15 del 2026-11-11 servido (fecha de servicio 2026-11-10) y un rechazo. `Cotejo_AgrupaPorFechaServicio` (2026-11-10: Comida 2 servidas y 1 sin servir; Cena 2 servidas); `Cotejo_ExcluyeRechazos`; `Cotejo_ContingenciaCuentaComoServida`; `Conteo_AgrupaPorTurnoYArea`; `CotejoExcel_ReleidoConClosedXML_TotalServidasEs4`; `CotejoPdf_EmpiezaConFirmaPdf` (primeros bytes `%PDF`); `Detalle_FiltraPorCanal`; `Reportes_ConRolEncargado_403`.
 * [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Api.Tests --filter ReportesTests` → FALLA.
@@ -325,10 +326,11 @@ La matrícula del canal celular sale del `sub` del JWT, nunca del cuerpo. El usu
 **Interfaces (produce), rutas con rol Administrador:**
 
 - `GET|PUT|DELETE /api/admin/reglas` (`{turno, tiempoComida, inicio, fin, perteneceAJornadaAnterior}` con horas `HH:mm`); `AdministrarReglas.GuardarAsync` rechaza `inicio == fin` con `ArgumentException("El inicio y el fin no pueden ser iguales")` y una regla que se traslapa con otra del mismo turno con `ArgumentException("Se traslapa con {tiempoComida} de {inicio} a {fin}")`; la API responde 400 con ese texto.
-- `GET|PUT /api/admin/puntos` (`{id, nombre, activo}`).
-- `GET|PUT /api/admin/usuarios` (`{usuario, rol, activo, contrasena?}`); la contraseña se guarda con `PasswordHasher<UsuarioSistema>` y nunca se devuelve.
+- `DELETE /api/admin/reglas?turno=&tiempoComida=`; 404 si la regla no existe. Al editar una regla, el traslape no se compara contra ella misma. Los errores 400 y 409 de administración responden `{ "error": "<texto>" }`.
+- `GET|PUT /api/admin/puntos` (`{id, nombre, activo}`); la baja es `activo = false`.
+- `GET|PUT /api/admin/usuarios` (`{usuario, rol, activo, contrasena?}`); la contraseña se guarda con `PasswordHasher<UsuarioSistema>` y nunca se devuelve. El rol debe ser `Punto`, `Encargado`, `Supervisor` o `Administrador` (400 si no); la contraseña es obligatoria al crear y opcional al editar. No se protege al último administrador activo ([D-16](decisiones.md#d-16-sin-protección-del-último-administrador)).
 - `POST /api/admin/sincronizacion` → `ResultadoSincronizacion`; `GET /api/admin/sincronizacion` → últimas 20 filas de bitácora.
-- `POST /api/admin/contingencia` `{matricula, fechaServicio, tiempoComida, referenciaLista}` → `RegistrarContingencia.EjecutarAsync` crea un Consumo canal Contingencia con el administrador como autor y la referencia; un duplicado devuelve 409 con "Ya consumiste este tiempo de comida".
+- `POST /api/admin/contingencia` `{matricula, fechaServicio, tiempoComida, referenciaLista}` → `RegistrarContingencia.EjecutarAsync` crea un Consumo canal Contingencia con el administrador como autor y la referencia; un duplicado devuelve 409 con "Ya consumiste este tiempo de comida". Sin reglas de derecho; matrícula inexistente → 400 "No registrado"; referencia y tiempo de comida obligatorios; punto = el punto activo; hora = la de captura ([D-15](decisiones.md#d-15-reglas-de-la-captura-de-contingencia)).
 
 * [ ] **Paso 1: escribir las pruebas que fallan:** `Regla_InicioIgualFin_Lanza`; `Regla_TraslapadaEnMismoTurno_Lanza`; `Regla_CruceMedianoche_SeGuarda`; `Regla_JornadaAnterior_SeGuarda`; `Usuario_ContrasenaNoSeDevuelve`; `Usuario_LoginConContrasenaNueva_Funciona`; `Contingencia_RegistraCanalContingencia`; `Contingencia_Duplicado_409`; `Admin_ConRolSupervisor_403`.
 * [ ] **Paso 2:** `dotnet test backend/Comedor.sln --filter "FullyQualifiedName~Administracion|FullyQualifiedName~AdminTests"` → FALLA.
@@ -348,7 +350,8 @@ Comando de prueba del frontend en todas las tareas siguientes, desde `frontend/c
 - `almacen.ts`: `leer(clave): string | null`, `guardar(clave, valor)`, `borrar(clave)`, cada una envuelta en try/catch.
 - `AuthService`: `login(usuario, contrasena): Observable<void>` (guarda `comedor.token.sistema` y `comedor.rol`), `iniciarSesionEmpleado(id, contrasena): Observable<void>` (guarda `comedor.token.empleado`), `tokenSistema()`, `tokenEmpleado()`, `rol()`, `cerrarSesion()`.
 - `AuthInterceptor`: agrega `Authorization: Bearer` con el token del empleado en rutas `/api/accesos/celular` y con el del sistema en el resto de `/api/*` salvo login y sesión.
-- `rolGuard(roles: string[])`: redirige a `/login` si el rol no está.
+- `rolGuard(roles: string[])`: redirige a `/login?returnUrl=<ruta>` si el rol no está; tras iniciar sesión, `LoginComponent` vuelve a `returnUrl`. Sin `returnUrl` se queda en `/login` (no hay página de inicio por rol).
+- Los módulos Pase, Punto, Reportes y Administración se crean vacíos para que la carga diferida compile; las Tareas 12 a 14 los llenan. Se conservan los nombres generados por Angular 22: `app-module.ts` y `app-routing-module.ts` ([D-18](decisiones.md#d-18-detalles-de-la-api-no-fijados-en-el-plan)).
 - Rutas: `/login`, `/pase` y /registro (módulo Pase, sin guard), `/punto/:id` (Punto, Encargado), `/reportes` (Supervisor, Administrador), `/admin` (Administrador), con carga diferida por módulo.
 
 * [ ] **Paso 1: escribir las pruebas que fallan** (`HttpTestingController`): `login_guardaTokenYRol`; `interceptor_usaTokenEmpleadoEnAccesoCelular`; `interceptor_usaTokenSistemaEnReportes`; `interceptor_noAgregaTokenEnLogin`; `almacen_noLanzaSiLocalStorageFalla`; `rolGuard_redirigeSinRol`.
