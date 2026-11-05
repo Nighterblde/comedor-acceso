@@ -6,7 +6,7 @@
 | --- | --- |
 | Versión | 1.3 |
 | Fecha | 4 de noviembre de 2026 |
-| Implementa | [SRS v1.3](srs.md) |
+| Implementa | [SRS v1.4](srs.md) |
 | Diseño | [Guía de diseño](diseno.md) |
 | Tareas | 16 (1 a 15, con la 8 dividida en 8a y 8b) |
 
