@@ -1,0 +1,183 @@
+// Estilos comunes de las pantallas de escritorio (Reportes y Administración), según docs/diseno.md §3.
+
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  color: #fff;
+  background: var(--color-institucional-900);
+  border-bottom: 4px solid var(--color-dorado);
+}
+
+.rotulo {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-dorado-claro);
+}
+
+.pantalla {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.rol {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-dorado-claro);
+}
+
+.contenido {
+  padding: 24px;
+  max-width: 1200px;
+}
+
+h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+  color: var(--color-institucional-900);
+}
+
+.tarjeta {
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--color-superficie);
+}
+
+.campos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-texto-secundario);
+  }
+
+  input,
+  select {
+    min-height: 44px;
+    padding: 0 12px;
+    font: inherit;
+    border: 1px solid var(--color-borde-campo);
+    border-radius: var(--radio-control);
+    background: var(--color-superficie);
+  }
+
+  input:focus-visible,
+  select:focus-visible {
+    outline: var(--foco);
+  }
+}
+
+.casilla {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.boton {
+  min-height: var(--alto-boton);
+  padding: 0 20px;
+  font: inherit;
+  font-weight: 600;
+  border-radius: var(--radio-control);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--foco);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.primario {
+  border: none;
+  color: #fff;
+  background: var(--color-institucional-700);
+}
+
+.secundario {
+  border: 1px solid var(--color-institucional-700);
+  color: var(--color-institucional-700);
+  background: var(--color-superficie);
+}
+
+.chico {
+  min-height: 44px;
+  padding: 0 14px;
+}
+
+.error {
+  margin: 12px 0 0;
+  color: var(--color-rechazado);
+  font-weight: 600;
+}
+
+.exito {
+  margin: 12px 0 0;
+  color: var(--color-autorizado);
+  font-weight: 600;
+}
+
+.tabla-contenedor {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+th {
+  padding: 10px 12px;
+  text-align: left;
+  background: var(--color-encabezado-tabla);
+  color: var(--color-texto-secundario);
+}
+
+td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--color-borde);
+}
+
+.numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+tr.total td {
+  border-top: 2px solid var(--color-institucional-900);
+  font-weight: 700;
+}
+
+.acciones {
+  display: flex;
+  gap: 8px;
+}
+
+@media print {
+  .no-imprimir {
+    display: none !important;
+  }
+}

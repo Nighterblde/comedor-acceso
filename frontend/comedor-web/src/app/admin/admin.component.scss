@@ -1,0 +1,45 @@
+@use '../compartido/pantalla';
+
+.admin {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+
+.lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 24px 12px;
+
+  a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: var(--radio-control);
+    color: var(--color-texto);
+    font-weight: 600;
+    text-decoration: none;
+
+    &.activo {
+      background: var(--color-chip-verde);
+      color: var(--color-institucional-900);
+    }
+
+    &:focus-visible {
+      outline: var(--foco);
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  .admin {
+    grid-template-columns: 1fr;
+  }
+
+  .lateral {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+}

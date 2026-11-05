@@ -19,3 +19,30 @@ export interface UsuarioSistema {
   rol: string;
   activo: boolean;
 }
+
+/** Alta o edición de un usuario; la contraseña es obligatoria al crear y opcional al editar. */
+export interface UsuarioEdicion extends UsuarioSistema {
+  contrasena?: string;
+}
+
+export interface ResultadoSincronizacion {
+  exito: boolean;
+  altas: number;
+  cambios: number;
+  bajas: number;
+  omitidos: number;
+  error: string | null;
+}
+
+export interface BitacoraSincronizacion extends ResultadoSincronizacion {
+  id: string;
+  fecha: string;
+}
+
+/** Fecha de servicio en formato aaaa-MM-dd. */
+export interface Contingencia {
+  matricula: string;
+  fechaServicio: string;
+  tiempoComida: string;
+  referenciaLista: string;
+}

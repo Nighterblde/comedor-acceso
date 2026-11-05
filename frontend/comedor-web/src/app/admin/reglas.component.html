@@ -1,0 +1,65 @@
+<h2>Reglas de derecho</h2>
+
+<section class="tarjeta" aria-label="Regla">
+  <form (ngSubmit)="guardar()">
+    <div class="campos">
+      <div class="campo">
+        <label for="regla-turno">Turno</label>
+        <input id="regla-turno" name="turno" [(ngModel)]="regla.turno" required />
+      </div>
+      <div class="campo">
+        <label for="regla-tiempo">Tiempo de comida</label>
+        <input id="regla-tiempo" name="tiempoComida" [(ngModel)]="regla.tiempoComida" required />
+      </div>
+      <div class="campo">
+        <label for="regla-inicio">Inicio</label>
+        <input id="regla-inicio" name="inicio" type="time" [(ngModel)]="regla.inicio" required />
+      </div>
+      <div class="campo">
+        <label for="regla-fin">Fin</label>
+        <input id="regla-fin" name="fin" type="time" [(ngModel)]="regla.fin" required />
+      </div>
+      <label class="casilla">
+        <input type="checkbox" name="jornadaAnterior" [(ngModel)]="regla.perteneceAJornadaAnterior" />
+        Pertenece a la jornada del día anterior
+      </label>
+      <button type="submit" class="boton primario">Guardar</button>
+      <button type="button" class="boton secundario" (click)="nueva()">Nueva</button>
+    </div>
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+  </form>
+</section>
+
+<section class="tarjeta" aria-label="Reglas configuradas">
+  <div class="tabla-contenedor">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Turno</th>
+          <th scope="col">Tiempo de comida</th>
+          <th scope="col">Inicio</th>
+          <th scope="col">Fin</th>
+          <th scope="col">Jornada anterior</th>
+          <th scope="col"><span class="sr-only">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of reglas(); track r.turno + '|' + r.tiempoComida) {
+          <tr>
+            <td>{{ r.turno }}</td>
+            <td>{{ r.tiempoComida }}</td>
+            <td>{{ r.inicio }}</td>
+            <td>{{ r.fin }}</td>
+            <td>{{ r.perteneceAJornadaAnterior ? 'Sí' : 'No' }}</td>
+            <td class="acciones">
+              <button type="button" class="boton secundario chico" (click)="editar(r)">Editar</button>
+              <button type="button" class="boton secundario chico" (click)="eliminar(r)">Eliminar</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

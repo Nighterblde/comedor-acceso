@@ -1,0 +1,33 @@
+<h2>Captura de contingencia</h2>
+
+<section class="tarjeta" aria-label="Consumo de contingencia">
+  <form (ngSubmit)="registrar()">
+    <div class="campos">
+      <div class="campo">
+        <label for="cont-matricula">Matrícula</label>
+        <input id="cont-matricula" name="matricula" [(ngModel)]="datos.matricula" required autocomplete="off" />
+      </div>
+      <div class="campo">
+        <label for="cont-fecha">Fecha de servicio</label>
+        <input id="cont-fecha" name="fechaServicio" type="date" [(ngModel)]="datos.fechaServicio" required />
+      </div>
+      <div class="campo">
+        <label for="cont-tiempo">Tiempo de comida</label>
+        <input id="cont-tiempo" name="tiempoComida" [(ngModel)]="datos.tiempoComida" required />
+      </div>
+      <div class="campo">
+        <label for="cont-referencia">Referencia de la lista en papel</label>
+        <input id="cont-referencia" name="referenciaLista" [(ngModel)]="datos.referenciaLista" required />
+      </div>
+      <button type="submit" class="boton primario" [disabled]="!completo || enviando()">Registrar</button>
+    </div>
+    @if (registrado(); as r) {
+      <p class="exito" role="status">
+        Registrado: {{ r.matricula }} · {{ r.fechaServicio }} · {{ r.tiempoComida }}
+      </p>
+    }
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+  </form>
+</section>

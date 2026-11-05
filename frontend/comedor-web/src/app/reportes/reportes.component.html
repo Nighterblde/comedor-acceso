@@ -1,0 +1,189 @@
+<header class="barra">
+  <div>
+    <p class="rotulo">Comedor de personal</p>
+    <h1 class="pantalla">Reportes</h1>
+  </div>
+  <p class="rol">{{ auth.rol() }}</p>
+</header>
+
+<main class="contenido">
+  <app-aviso-sincronizacion></app-aviso-sincronizacion>
+
+  <nav class="pestanas" aria-label="Tipo de reporte">
+    @for (t of tipos; track t.valor) {
+      <button
+        type="button"
+        class="pestana"
+        [class.activa]="tipo === t.valor"
+        [attr.aria-pressed]="tipo === t.valor"
+        (click)="cambiarTipo(t.valor)"
+      >
+        {{ t.etiqueta }}
+      </button>
+    }
+  </nav>
+
+  <section class="tarjeta" aria-label="Filtros">
+    <div class="campos">
+      <div class="campo">
+        <label for="rep-desde">Desde</label>
+        <input id="rep-desde" type="date" [(ngModel)]="desde" required />
+      </div>
+      <div class="campo">
+        <label for="rep-hasta">Hasta</label>
+        <input id="rep-hasta" type="date" [(ngModel)]="hasta" required />
+      </div>
+
+      @if (tipo === 'detalle') {
+        <div class="campo">
+          <label for="rep-matricula">Matrícula</label>
+          <input id="rep-matricula" [(ngModel)]="filtros.matricula" />
+        </div>
+        <div class="campo">
+          <label for="rep-punto">Punto</label>
+          <input id="rep-punto" [(ngModel)]="filtros.puntoId" />
+        </div>
+        <div class="campo">
+          <label for="rep-canal">Canal</label>
+          <select id="rep-canal" [(ngModel)]="filtros.canal">
+            <option [ngValue]="undefined">Todos</option>
+            @for (c of canales; track c) {
+              <option [ngValue]="c">{{ c }}</option>
+            }
+          </select>
+        </div>
+        <div class="campo">
+          <label for="rep-motivo">Motivo</label>
+          <select id="rep-motivo" [(ngModel)]="filtros.motivo">
+            <option [ngValue]="undefined">Todos</option>
+            @for (m of motivos; track m.valor) {
+              <option [ngValue]="m.valor">{{ m.texto }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <button type="button" class="boton primario" [disabled]="!rangoCompleto || cargando()" (click)="consultar()">
+        Consultar
+      </button>
+      <button type="button" class="boton secundario" [disabled]="!rangoCompleto" (click)="exportar('xlsx')">
+        Exportar Excel
+      </button>
+      @if (puedeExportarPdf) {
+        <button type="button" class="boton secundario" [disabled]="!rangoCompleto" (click)="exportar('pdf')">
+          Exportar PDF
+        </button>
+      }
+    </div>
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+  </section>
+
+  @if (tipo === 'cotejo' && cotejo(); as filas) {
+    @let total = totalCotejo(filas);
+    <section class="tarjeta" aria-label="Cotejo de factura">
+      <div class="indicadores">
+        <p><span class="cifra">{{ total.servidas }}</span> servidas</p>
+        <p><span class="cifra">{{ total.sinServir }}</span> autorizadas sin servir</p>
+      </div>
+      <div class="tabla-contenedor">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Fecha de servicio</th>
+              <th scope="col">Tiempo de comida</th>
+              <th scope="col" class="numero">Servidas</th>
+              <th scope="col" class="numero">Sin servir</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of filas; track $index) {
+              <tr>
+                <td>{{ f.fechaServicio }}</td>
+                <td>{{ f.tiempoComida }}</td>
+                <td class="numero">{{ f.servidas }}</td>
+                <td class="numero">{{ f.sinServir }}</td>
+              </tr>
+            }
+            <tr class="total">
+              <td colspan="2">Total</td>
+              <td class="numero">{{ total.servidas }}</td>
+              <td class="numero">{{ total.sinServir }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  @if (tipo === 'conteo' && conteo(); as filas) {
+    <section class="tarjeta" aria-label="Conteo">
+      <div class="tabla-contenedor">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Fecha de servicio</th>
+              <th scope="col">Tiempo de comida</th>
+              <th scope="col">Turno</th>
+              <th scope="col">Área</th>
+              <th scope="col" class="numero">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of filas; track $index) {
+              <tr>
+                <td>{{ f.fechaServicio }}</td>
+                <td>{{ f.tiempoComida }}</td>
+                <td>{{ f.turno }}</td>
+                <td>{{ f.area }}</td>
+                <td class="numero">{{ f.total }}</td>
+              </tr>
+            }
+            <tr class="total">
+              <td colspan="4">Total</td>
+              <td class="numero">{{ totalConteo(filas) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  @if (tipo === 'detalle' && detalle(); as filas) {
+    <section class="tarjeta" aria-label="Detalle">
+      <div class="tabla-contenedor">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Fecha y hora</th>
+              <th scope="col">Matrícula</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Tiempo de comida</th>
+              <th scope="col">Punto</th>
+              <th scope="col">Canal</th>
+              <th scope="col">Resultado</th>
+              <th scope="col">Motivo</th>
+              <th scope="col">Servido</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of filas; track $index) {
+              <tr>
+                <td>{{ f.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ f.matricula }}</td>
+                <td>{{ f.nombre }}</td>
+                <td>{{ f.tiempoComida }}</td>
+                <td>{{ f.puntoId }}</td>
+                <td>{{ f.canal }}</td>
+                <td>{{ f.resultado }}</td>
+                <td>{{ f.motivo }}</td>
+                <td>{{ f.servido ? 'Sí' : 'No' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</main>

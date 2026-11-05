@@ -1,0 +1,47 @@
+<h2>Sincronización con RR. HH.</h2>
+
+<section class="tarjeta" aria-label="Sincronizar">
+  <button type="button" class="boton primario" [disabled]="sincronizando()" (click)="sincronizar()">
+    {{ sincronizando() ? 'Sincronizando…' : 'Sincronizar ahora' }}
+  </button>
+  @if (resultado(); as r) {
+    <p class="resultado" [class.exito]="r.exito" [class.error]="!r.exito" role="status">
+      {{ r.exito ? 'Sincronización correcta.' : 'La sincronización falló: ' + r.error }}
+      Altas: {{ r.altas }} · Cambios: {{ r.cambios }} · Bajas: {{ r.bajas }} · Omitidos: {{ r.omitidos }}
+    </p>
+  }
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+</section>
+
+<section class="tarjeta" aria-label="Bitácora">
+  <div class="tabla-contenedor">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Fecha</th>
+          <th scope="col">Resultado</th>
+          <th scope="col" class="numero">Altas</th>
+          <th scope="col" class="numero">Cambios</th>
+          <th scope="col" class="numero">Bajas</th>
+          <th scope="col" class="numero">Omitidos</th>
+          <th scope="col">Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (b of bitacora(); track b.id) {
+          <tr>
+            <td>{{ b.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ b.exito ? 'Correcta' : 'Falló' }}</td>
+            <td class="numero">{{ b.altas }}</td>
+            <td class="numero">{{ b.cambios }}</td>
+            <td class="numero">{{ b.bajas }}</td>
+            <td class="numero">{{ b.omitidos }}</td>
+            <td>{{ b.error }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
