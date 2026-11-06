@@ -126,6 +126,8 @@ public static class ServiciosComedor
         servicios.AddScoped<IniciarSesionSistema>();
         servicios.AddScoped<MarcarServido>();
         servicios.AddScoped<ListarSolicitudes>();
+        servicios.AddScoped<ConsultarFila>();
+        servicios.AddScoped<ConsultarMiTurno>();
         servicios.AddScoped<SincronizarPersonal>();
         servicios.AddScoped<ConsultarEstadoSincronizacion>();
         servicios.AddScoped<GenerarReporte>();

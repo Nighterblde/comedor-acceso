@@ -11,7 +11,7 @@ public record SolicitudAccesoManual(string? Matricula, string? PuntoId);
 
 [ApiController]
 [Route("api/accesos")]
-public class AccesosController(ValidarAcceso validar) : ControllerBase
+public class AccesosController(ValidarAcceso validar, ConsultarMiTurno miTurno) : ControllerBase
 {
     [HttpPost("celular")]
     [Authorize(Roles = Roles.Empleado)]
@@ -47,5 +47,18 @@ public class AccesosController(ValidarAcceso validar) : ControllerBase
         }
 
         return Ok(await validar.ManualAsync(solicitud.Matricula, solicitud.PuntoId, encargado));
+    }
+
+    [HttpGet("mi-turno")]
+    [Authorize(Roles = Roles.Empleado)]
+    public async Task<ActionResult<MiTurno>> MiTurno()
+    {
+        var matricula = User.FindFirst("sub")?.Value;
+        if (string.IsNullOrWhiteSpace(matricula))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await miTurno.EjecutarAsync(matricula));
     }
 }

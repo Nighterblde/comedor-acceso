@@ -15,16 +15,11 @@ public class ListarSolicitudes(IAccesoRepositorio accesos, IReglaRepositorio reg
         var ahora = reloj.Ahora();
         var filas = await accesos.SolicitudesAsync(puntoId, desde ?? ahora - VentanaPorDefecto);
         var todas = await reglas.TodasAsync();
-        var hora = TimeOnly.FromDateTime(ahora);
-        var enCurso = todas
-            .Where(r => r.Contiene(hora))
-            .Select(r => (r.TiempoComida, Fecha: r.FechaServicio(ahora)))
-            .ToHashSet();
 
         return filas
             .Where(f => !f.Autorizado || f.Servido
                 || (f.TiempoComida is not null && f.FechaServicio is not null
-                    && enCurso.Contains((f.TiempoComida, f.FechaServicio.Value))))
+                    && HorarioEnCurso.Contiene(todas, ahora, f.TiempoComida, f.FechaServicio.Value)))
             .OrderByDescending(f => f.FechaHora)
             .ToList();
     }
