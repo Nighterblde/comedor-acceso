@@ -429,3 +429,16 @@ Plan v2, tarea 6. Detalles que el plan no fijaba; no cambian lo que hace el sist
 - **Personal:** `/panel/personal` existe con un marcador mínimo hasta que la tarea 8 cree la pantalla de importación.
 
 **Estado:** vigente.
+
+## D-49 Detalles de la fuente de RR. HH. en SQL Server o Excel (tarea 8 del plan v2)
+
+Plan v2, tarea 8. Detalles que el plan no fijaba; no cambian lo que hace el sistema (RF-36, D-42, D-28).
+
+- **Días laborales vacíos:** un texto vacío, un elemento vacío ("L,,M") o una letra desconocida lanzan `FormatException`. En el Excel y en la vista esa fila se omite.
+- **Fila omitida:** la fuente solo devuelve `EmpleadoFuente`, así que una fila con días o fechas ilegibles se entrega con la matrícula leída y el turno vacío (fuera del catálogo). `SincronizarPersonal` la cuenta como omitida y deja al empleado existente como estaba (D-28), sin duplicar reglas. Las filas totalmente en blanco del Excel se ignoran y no cuentan como omitidas. Una columna obligatoria que falta en los encabezados hace fallar la lectura (queda en la bitácora como fallida).
+- **Importación segura:** el archivo no es de confianza. Se exige extensión `.xlsx`, que empiece con los bytes `PK` (formato ZIP) y un máximo de 5 MB; si no, 400 "Sube un archivo .xlsx de hasta 5 MB". Nunca se usa el nombre del cliente: el destino es siempre `Fuente:RutaExcel`.
+- **Reemplazo atómico:** el archivo se guarda como temporal junto al destino, se sincroniza con él y solo si la sincronización tiene éxito reemplaza al anterior (`File.Move` con sobrescritura). Un Excel dañado o sin las columnas no destruye el último válido; la respuesta es 200 con `exito: false` y el error, igual que la sincronización manual. Las importaciones se serializan con un candado.
+- **Ubicación:** `ImportarPersonal` vive en `Infrastructure/Sincronizacion`, porque `Application` no puede referenciar `FuenteRRHHExcel` (ClosedXML). Reutiliza `SincronizarPersonal` sin cambios.
+- **Configuración:** `Fuente:Tipo` (Simulada por defecto, SqlServer, Excel); un valor desconocido impide iniciar con un mensaje claro. `Fuente:Cadena` es obligatoria con SqlServer y solo viene de user-secrets o variables de entorno; `Fuente:RutaExcel` expande variables de entorno. La vista se valida con `^[A-Za-z0-9_.\[\]]+$` antes de concatenarla; solo se ejecuta un SELECT.
+
+**Estado:** vigente.

@@ -1,0 +1,38 @@
+<h2>Personal</h2>
+
+<section class="tarjeta" aria-label="Importar personal">
+  <p>
+    Descarga la plantilla, llénala con el personal y súbela. La importación sincroniza al momento con las mismas reglas
+    que la sincronización nocturna.
+  </p>
+  <p>
+    <button type="button" class="boton secundario" (click)="descargarPlantilla()">Descargar plantilla</button>
+  </p>
+  <form (submit)="$event.preventDefault(); importar()">
+    <div class="campos">
+      <div class="campo">
+        <label for="personal-archivo">Archivo de Excel (.xlsx, hasta 5 MB)</label>
+        <input
+          id="personal-archivo"
+          type="file"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          (change)="elegir($event)"
+        />
+      </div>
+      <button type="submit" class="boton primario" [disabled]="!archivo() || importando()">
+        {{ importando() ? 'Importando…' : 'Importar' }}
+      </button>
+    </div>
+  </form>
+  <div role="status">
+    @if (resultado(); as r) {
+      <p class="resultado" [class.exito]="r.exito" [class.error]="!r.exito">
+        {{ r.exito ? 'Importación correcta.' : 'La importación falló: ' + r.error }}
+        Altas: {{ r.altas }} · Cambios: {{ r.cambios }} · Bajas: {{ r.bajas }} · Omitidos: {{ r.omitidos }}
+      </p>
+    }
+  </div>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+</section>

@@ -30,6 +30,9 @@ public sealed class ComedorApiFactory : WebApplicationFactory<Program>
 
     private readonly string _cadena;
 
+    /// <summary>Si se asigna, se usa como <c>Fuente:RutaExcel</c> (carpeta temporal de la prueba).</summary>
+    public string? RutaExcel { get; init; }
+
     /// <summary>Reloj de las pruebas; arranca un martes dentro del horario de comida.</summary>
     public RelojFijo Reloj { get; } = new(new DateTime(2026, 11, 10, 13, 30, 0));
 
@@ -53,6 +56,11 @@ public sealed class ComedorApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Semilla:Admin:Contrasena", AdminContrasena);
         builder.UseSetting("Sincronizacion:Habilitada", "false");
         builder.UseSetting("Autenticacion:Simulada:Usuarios:" + EmpleadoMatricula, EmpleadoContrasena);
+        if (RutaExcel is not null)
+        {
+            builder.UseSetting("Fuente:RutaExcel", RutaExcel);
+        }
+
         builder.UseSetting("App:UrlPublica", "http://localhost:4200/");
         builder.ConfigureTestServices(s => s.Replace(ServiceDescriptor.Singleton<IReloj>(Reloj)));
 
