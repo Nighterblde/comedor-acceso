@@ -272,3 +272,11 @@ Tarea 15. Estado: aplicada. Resultados en [aceptacion.md](aceptacion.md).
 - **Mezcla de validaciones:** el plan no la fija. Una de cada diez validaciones es captura manual, para medir `{name:manual}`. La fase sostenida usa 1,000 empleados distintos (1,000 consumos, RNF-02). En la fase pico vuelven los primeros 300 empleados y se espera que todos sean rechazados por "ya consumió". Si se quisiera un pico con consumos nuevos, harían falta 1,300 empleados simulados.
 - **Alcance de la medición:** API, SQL Server y k6 en el mismo equipo. Lo que agregan la red y el celular se confirma en el entorno del cliente (pasos en aceptacion.md).
 - **Runtime:** el equipo de prueba solo tiene .NET 10, así que la API corrió con `DOTNET_ROLL_FORWARD=Major`. Si el servidor del cliente usa .NET 8, la carga se repite ahí.
+
+## D-32 Teclado del número de empleado en el celular
+
+Tarea 15 (prueba manual del dueño del producto). Estado: aplicada.
+
+- **Decisión:** el campo "Número de empleado" del inicio de sesión en el celular abre el teclado de texto, no el numérico. Se quitó `inputmode="numeric"`, que se había agregado en la Tarea 12 sin que el SRS ni la guía de diseño lo pidieran.
+- **Motivo:** el formato real de la matrícula en la fuente de RR. HH. sigue pendiente con el cliente (SRS §11), y las matrículas de prueba llevan letras (`E1001`). Con el teclado numérico no se podían escribir desde el celular.
+- **Revisable:** si el cliente confirma que las matrículas son solo números, se puede volver al teclado numérico.
