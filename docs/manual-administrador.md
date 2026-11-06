@@ -31,7 +31,7 @@ En **Administración > Reglas** defines **quién tiene derecho a comer y cuándo
 
 ## Puntos y QR
 
-En **Administración > Puntos** se crean los puntos de entrada y se imprime su QR (**Imprimir QR**). Si la computadora cambia de dirección en la red, hay que reimprimir el QR desde aquí.
+En **Administración > Puntos** se crean los puntos de entrada y se imprime su QR (**Imprimir QR**). Si la computadora cambia de dirección en la red, los QR impresos dejan de funcionar para los empleados. Pide a informática una de dos soluciones (ver "Si la dirección cambió" en la guía de instalación): actualizar la dirección del QR con `configurar.ps1 -ActualizarIp` y **entonces** reimprimir el QR desde aquí, o reservar en el router la dirección anterior (así el QR impreso sigue sirviendo). Reimprimir el QR sin haber actualizado la dirección no arregla nada.
 
 ## Usuarios
 
@@ -42,13 +42,15 @@ En **Administración > Usuarios** das de alta a quienes usan el sistema, con su 
 
 Los empleados que comen **no** se crean aquí: entran con su ID y contraseña de la empresa.
 
+**Cambia la contraseña inicial del administrador:** la que se eligió al instalar quedó escrita en un archivo de la computadora. Entra a **Administración > Usuarios**, pulsa **Editar** en tu usuario y escribe una contraseña nueva que solo tú conozcas.
+
 ## Importar personal
 
 Aquí se actualiza la lista de quién trabaja en la empresa.
 
 1. Entra a **Administración > Personal**.
 2. Pulsa **Descargar plantilla**. Es un Excel con las columnas que el sistema espera; no cambies los encabezados.
-3. Llénalo con el personal vigente (una fila por persona) y guárdalo como `.xlsx` de hasta 5 MB.
+3. Llénalo con el personal vigente (una fila por persona) y guárdalo como `.xlsx` de hasta 5 MB. Escribe las matrículas **como texto** (la columna de la plantilla ya viene así): si Excel las toma como número, pierde los ceros de la izquierda (`00123` queda como `123`) y la persona no se reconoce.
 4. Elige el archivo y pulsa **Importar**.
 5. El sistema lo revisa al momento y muestra: Altas, Cambios, Bajas y Omitidos (filas con datos ilegibles).
 

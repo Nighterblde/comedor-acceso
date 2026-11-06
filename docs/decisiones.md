@@ -47,6 +47,14 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-43](#d-43-dirección-e-identidad-profesionales) | Dirección e identidad profesionales | Aceptada |
 | [D-44](#d-44-detalles-de-la-sesión-por-rol-tarea-2-del-plan-v2) | Detalles de la sesión por rol (tarea 2 del plan v2) | Aceptada |
 | [D-45](#d-45-detalles-de-la-fila-y-el-turno-tarea-3-del-plan-v2) | Detalles de la fila y el turno (tarea 3 del plan v2) | Aceptada |
+| [D-46](#d-46-detalles-de-la-pantalla-del-chef-tarea-4-del-plan-v2) | Detalles de la pantalla del chef (tarea 4 del plan v2) | Aceptada |
+| [D-47](#d-47-detalles-del-turno-en-el-celular-tarea-5-del-plan-v2) | Detalles del turno en el celular (tarea 5 del plan v2) | Aceptada |
+| [D-48](#d-48-detalles-del-panel-único-tarea-6-del-plan-v2) | Detalles del panel único (tarea 6 del plan v2) | Aceptada |
+| [D-49](#d-49-detalles-de-la-fuente-de-rr-hh-en-sql-server-o-excel-tarea-8-del-plan-v2) | Detalles de la fuente de RR. HH. en SQL Server o Excel (tarea 8 del plan v2) | Aceptada |
+| [D-50](#d-50-detalles-del-ejecutable-único-tarea-9-del-plan-v2) | Detalles del ejecutable único (tarea 9 del plan v2) | Aceptada |
+| [D-51](#d-51-detalles-del-instalador-y-los-respaldos-tarea-10-del-plan-v2) | Detalles del instalador y los respaldos (tarea 10 del plan v2) | Aceptada |
+| [D-52](#d-52-detalles-de-la-identidad-y-la-dirección-limpia-tarea-11-del-plan-v2) | Detalles de la identidad y la dirección limpia (tarea 11 del plan v2) | Aceptada |
+| [D-53](#d-53-rehacer-la-dirección-del-qr-tras-un-cambio-de-ip-tarea-12-del-plan-v2) | Rehacer la dirección del QR tras un cambio de IP (tarea 12 del plan v2) | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -470,6 +478,7 @@ Plan v2, tarea 10. Detalles que el plan no fijaba; no cambian lo que hace el sis
 - **Servicio y accesos directos:** el servicio `Comedor` se crea con `sc.exe` (inicio automático retrasado `delayed-auto`, `LocalSystem`, reinicio ante fallas a los 5 s, 5 s y 30 s) y depende de `MSSQL$SQLEXPRESS`, porque la API migra la base antes de reportar al administrador de servicios y, tras reiniciar, SQL Server podría no estar listo. El instalador arranca con `sc start` y espera hasta 3 minutos a que quede en ejecución (la primera migración puede pasar de 30 s); si no lo logra, no falla: avisa y remite a `verificar.ps1`. Ambos accesos directos abren Microsoft Edge (`{commonpf32}\Microsoft\Edge\Application\msedge.exe`), el de la pantalla del chef con `--kiosk ... --edge-kiosk-type=fullscreen`; la dirección omite `:puerto` cuando es el 80 (D-43). Se crean en el escritorio de todos los usuarios.
 - **Desinstalación:** detiene y borra el servicio, borra la regla de firewall y la tarea de respaldo, y los accesos directos; conserva la base y `%ProgramData%\Comedor` (configuración, `personal.xlsx` y respaldos).
 - **Configuración incompleta:** `configurar.ps1` borra `appsettings.Local.json` si falla al crearlo o restringirlo, sale con código 1 y borra el archivo temporal de la contraseña; un archivo de 0 bytes cuenta como inexistente (también para el asistente). `verificar.ps1` sin permisos de administrador solo pide abrir PowerShell como administrador y sale con 1.
+- **SQL Server preexistente:** el servicio corre como `LocalSystem` con autenticación integrada. Si la instancia `SQLEXPRESS` ya existía (el instalador no la reinstala), `NT AUTHORITY\SYSTEM` debe ser `sysadmin` en ella, o la base `Comedor` debe crearse antes y `SYSTEM` ser `db_owner`; de lo contrario la migración falla y el servicio se reinicia en bucle. Está documentado en `docs/instalacion.md`.
 - **Ubicación de los archivos:** todos viven en `instalador/` (incluido `publicar.ps1`). Las carpetas `publicacion/` y `salida/` están en `.gitignore`.
 - **Sin verificar en máquina:** el instalador no se compiló ni se ejecutó al escribirlo; la lista de comprobación está pendiente en `docs/aceptacion.md`, "Instalación v2".
 
@@ -484,5 +493,19 @@ Plan v2, tarea 11. Detalles que el plan no fijaba; no cambian lo que hace el sis
 - **Títulos:** una `TitleStrategy` propia arma «{sección} · Comedor de personal»; las secciones del panel se llaman «Panel · {nombre}» (por ejemplo «Panel · Cotejo de factura · Comedor de personal»). Sin título de ruta, solo «Comedor de personal».
 - **Token del QR:** al leerlo, `history.replaceState` deja la dirección en `/pase` y el token se guarda en memoria y en `sessionStorage` (`comedor.pase.token`, solo de la pestaña actual). Una recarga de `/pase` vuelve a validar con él; en otra visita (sin token ni valor guardado) se pide escanear de nuevo. El inicio de sesión del empleado ocurre dentro de la misma pantalla, por lo que no usa `returnUrl` y conserva el token.
 - **Prueba de `index.html`:** `angular.json` declara `loader: { ".html": "text" }` en la compilación para poder importar `src/index.html` como texto en las pruebas de Jasmine.
+
+**Estado:** vigente.
+
+## D-53 Rehacer la dirección del QR tras un cambio de IP (tarea 12 del plan v2)
+
+Plan v2, correcciones tras la revisión final de la rama. No cambia lo que hace el sistema (RF-35, D-39, D-51); cierra un hueco de la operación.
+
+- **Problema:** `PuntosController` arma la URL del QR con `App:UrlPublica`, que `configurar.ps1` escribe una sola vez y nunca vuelve a tocar. Tras un cambio de IP, reimprimir el QR desde el panel seguía dando la IP vieja: los empleados no podían entrar, mientras el panel y la TV (que usan `localhost`) seguían funcionando.
+- **`configurar.ps1 -ActualizarIp`:** solo con ese parámetro lee el `appsettings.Local.json` existente, cambia únicamente `App:UrlPublica` (misma elección de IP y de puerto que en la instalación; el puerto sale de `Comedor:Puerto`) y conserva todo lo demás. Escribe en un archivo temporal ya restringido a SYSTEM y Administradores y lo reemplaza con `File.Replace`; si falla, borra el temporal y deja la configuración anterior. Luego reinicia el servicio `Comedor` si existe y avisa el resultado. No imprime claves ni contraseñas. Sin el parámetro, el comportamiento no cambia: un archivo existente no se toca.
+- **`verificar.ps1`:** conserva el mensaje «La IP cambió: reimprime el QR desde Panel > Puntos» y la IP nueva, y agrega la IP con la que se hizo el QR actual (el host de `App:UrlPublica`) y los dos caminos: (a) `configurar.ps1 -ActualizarIp` y reimprimir el QR, o (b) reservar de nuevo en el router la IP anterior. Mantiene el código de salida distinto de cero.
+- **Guías:** `instalacion.md` y `manual-administrador.md` explican los dos caminos y qué IP reservar en cada uno (la nueva en el camino A, la anterior en el B); se corrigió la frase que mandaba a reservar «la dirección que ya tiene».
+- **Límite conocido:** la IP elegida usa la regla de D-51 (interfaz con puerta de enlace predeterminada); con una VPN o un adaptador virtual podría elegirse otra. Por eso `verificar.ps1` y la guía nombran la IP que el QR realmente usa.
+- **Sin verificar en máquina:** los scripts solo se comprobaron con `ParseFile` (0 errores); la prueba real está en `docs/aceptacion.md`, "Instalación v2", filas 19 y 25.
+- **Otras correcciones de la misma pasada** (no cambian el SRS): (1) la TV libera la entrada si `POST /servido` no responde en 10 s (`timeout` de 10 000 ms, más largo que el bloqueo de 1 500 ms; el error sigue el camino de cualquier error); (2) la fila, `ListarSolicitudes` y el turno del celular solo cuentan a quien tiene una regla de su **mismo turno** (comparación exacta, D-17) cuya ventana contiene la hora (`HorarioEnCurso`), para que un empleado de otro turno no reaparezca en la fila ni se le registre una entrega de más; (3) la plantilla de personal da formato de texto a la columna `Matricula` y la lectura del Excel convierte las celdas numéricas enteras a su entero con cultura invariante (sin decimales ni notación científica), para que `00123` y los números largos coincidan con el ID de la empresa.
 
 **Estado:** vigente.
