@@ -315,7 +315,7 @@ begin
 end;
 
 { Crea o actualiza el servicio y lo arranca. Devuelve False solo si no se pudo crear; si tarda en arrancar,
-  avisa pero no falla la instalaciÃ³n (la primera migraciÃ³n de la base puede pasar de 30 s). }
+  avisa pero no falla la instalación (la primera migración de la base puede pasar de 30 s). }
 function CrearYArrancarServicio: Boolean;
 var
   Codigo, Intentos: Integer;
@@ -323,8 +323,8 @@ var
 begin
   Exe := ExpandConstant('{app}\Comedor.Api.exe');
   Sc := ExpandConstant('{sys}\sc.exe');
-  WizardForm.StatusLabel.Caption := 'Creando el servicio de Windowsâ€¦';
-  { Inicio automÃ¡tico retrasado (arranca despuÃ©s de los servicios bÃ¡sicos). Si ya existe (actualizaciÃ³n), se actualiza. }
+  WizardForm.StatusLabel.Caption := 'Creando el servicio de Windows…';
+  { Inicio automático retrasado (arranca después de los servicios básicos). Si ya existe (actualización), se actualiza. }
   if Exec(Sc, 'query ' + ServicioNombre, '', SW_HIDE, ewWaitUntilTerminated, Codigo) and (Codigo = 0) then
     Exec(Sc, 'config ' + ServicioNombre + ' binPath= "\"' + Exe + '\"" start= delayed-auto obj= LocalSystem', '', SW_HIDE, ewWaitUntilTerminated, Codigo)
   else
@@ -333,18 +333,18 @@ begin
   Result := (Codigo = 0);
   if not Result then
   begin
-    MsgBox('No se pudo crear el servicio "Comedor". Ejecuta instalador\verificar.ps1 (en la carpeta de instalaciÃ³n) como administrador o revisa el Visor de eventos.',
+    MsgBox('No se pudo crear el servicio "Comedor". Ejecuta instalador\verificar.ps1 (en la carpeta de instalación) como administrador o revisa el Visor de eventos.',
       mbCriticalError, MB_OK);
     Exit;
   end;
   Exec(Sc, 'description ' + ServicioNombre + ' "Control de acceso al comedor de personal"', '', SW_HIDE, ewWaitUntilTerminated, Codigo);
-  { El servicio depende de SQL Server: despuÃ©s de reiniciar, Windows lo arranca cuando la base ya estÃ¡ lista. }
+  { El servicio depende de SQL Server: después de reiniciar, Windows lo arranca cuando la base ya está lista. }
   Exec(Sc, 'config ' + ServicioNombre + ' depend= MSSQL$SQLEXPRESS', '', SW_HIDE, ewWaitUntilTerminated, Codigo);
-  { Reinicio ante fallas: 5 s, 5 s y 30 s; el contador se reinicia tras un dÃ­a sin fallas. }
+  { Reinicio ante fallas: 5 s, 5 s y 30 s; el contador se reinicia tras un día sin fallas. }
   Exec(Sc, 'failure ' + ServicioNombre + ' reset= 86400 actions= restart/5000/restart/5000/restart/30000', '', SW_HIDE, ewWaitUntilTerminated, Codigo);
 
-  { sc start vuelve de inmediato; se espera hasta 3 minutos a que quede en ejecuciÃ³n (primera migraciÃ³n de la base). }
-  WizardForm.StatusLabel.Caption := 'Arrancando el sistema (la primera vez puede tardar un par de minutos)â€¦';
+  { sc start vuelve de inmediato; se espera hasta 3 minutos a que quede en ejecución (primera migración de la base). }
+  WizardForm.StatusLabel.Caption := 'Arrancando el sistema (la primera vez puede tardar un par de minutos)…';
   Exec(Sc, 'start ' + ServicioNombre, '', SW_HIDE, ewWaitUntilTerminated, Codigo);
   Intentos := 0;
   while (Intentos < 90) and (not ServicioEnEjecucion) do
@@ -353,7 +353,7 @@ begin
     Intentos := Intentos + 1;
   end;
   if not ServicioEnEjecucion then
-    MsgBox('El sistema se instalÃ³, pero el servicio "Comedor" todavÃ­a no estÃ¡ en ejecuciÃ³n. Espera unos minutos y ejecuta instalador\verificar.ps1 como administrador (en la carpeta de instalaciÃ³n) para comprobarlo.',
+    MsgBox('El sistema se instaló, pero el servicio "Comedor" todavía no está en ejecución. Espera unos minutos y ejecuta instalador\verificar.ps1 como administrador (en la carpeta de instalación) para comprobarlo.',
       mbInformation, MB_OK);
 end;
 procedure CurStepChanged(CurStep: TSetupStep);
