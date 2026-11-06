@@ -123,7 +123,7 @@ Hay que hacerlo en una máquina virtual con Windows 10 u 11 limpia, sin .NET ni 
 | --- | --- | --- | --- |
 | 1 | Con la VM limpia, correr `verificar.ps1` | Todo en rojo, sin errores del script, código de salida distinto de 0 | [ ] |
 | 2 | `publicar.ps1` en la PC de desarrollo | Genera `salida\InstalarComedor.exe` sin errores; si falta `iscc`, avisa con un mensaje claro | [ ] |
-| 3 | Confirmar el enlace de descarga de SQL Server 2022 Express y los argumentos silenciosos (`#define UrlSqlExpress` en `comedor.iss`) | Se descarga el instalador web de Microsoft y la instalación en silencio termina; la instancia `SQLEXPRESS` existe | [ ] |
+| 3 | Confirmar la descarga y la instalación de SQL Server Express (paquete en inglés, D-55) en un Windows con idioma español (México); el primer intento falló por el idioma del paquete | Se descarga el instalador web de Microsoft y la instalación en silencio termina; la instancia `SQLEXPRESS` existe | [ ] |
 | 4 | Instalar con `InstalarComedor.exe` (administrador `admin1`, contraseña de 8 o más caracteres, puerto 80) | El asistente rechaza contraseñas de menos de 8 caracteres; instala en `C:\Program Files\Comedor`; crea los dos accesos directos | [ ] |
 | 5 | Con el puerto 80 ocupado (por ejemplo, otro programa escuchando) abrir el asistente | Avisa y propone 8080; los accesos directos y el QR llevan `:8080` | [ ] |
 | 6 | `verificar.ps1` tras instalar | Todo en verde: servicio, `/api/salud` 200, regla de firewall, tarea de respaldo, IP del QR | [ ] |

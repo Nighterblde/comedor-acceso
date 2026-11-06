@@ -56,6 +56,7 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-52](#d-52-detalles-de-la-identidad-y-la-dirección-limpia-tarea-11-del-plan-v2) | Detalles de la identidad y la dirección limpia (tarea 11 del plan v2) | Aceptada |
 | [D-53](#d-53-rehacer-la-dirección-del-qr-tras-un-cambio-de-ip-tarea-12-del-plan-v2) | Rehacer la dirección del QR tras un cambio de IP (tarea 12 del plan v2) | Aceptada |
 | [D-54](#d-54-cerrar-sesión-del-empleado-en-el-celular) | Cerrar sesión del empleado en el celular | Aceptada |
+| [D-55](#d-55-sql-server-express-paquete-en-inglés-y-versión-2025) | SQL Server Express: paquete en inglés y versión 2025 | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -352,7 +353,7 @@ Plan v2. Confirmado por el dueño del producto.
 
 Plan v2. La empresa no tiene técnicos; instala el dueño del producto.
 
-- **Decisión:** `InstalarComedor.exe` (Inno Setup) instala SQL Server 2022 Express si falta, la aplicación como servicio de Windows que arranca sola con el equipo, la regla de firewall para la red local, un respaldo diario y dos accesos directos: Pantalla del chef (navegador a pantalla completa) y Panel del comedor.
+- **Decisión:** `InstalarComedor.exe` (Inno Setup) instala SQL Server Express si falta (2025 desde D-55; el texto original decía 2022), la aplicación como servicio de Windows que arranca sola con el equipo, la regla de firewall para la red local, un respaldo diario y dos accesos directos: Pantalla del chef (navegador a pantalla completa) y Panel del comedor.
 - **Un solo proceso:** la API también publica el frontend, en un solo puerto (80, o 8080 si el 80 está ocupado; D-43). Se publica autocontenida, así que la PC no necesita .NET.
 - **Base de datos:** SQL Server Express. Es gratuito, es el motor que ya usa el sistema (no hay que reescribir ni volver a probar) y es lo más probable para leer la base de empleados de la empresa. La base del comedor queda separada de la de RR. HH., que solo se lee (RF-03).
 - **Configuración y secretos:** el instalador genera las claves al azar en `%ProgramData%\Comedor\appsettings.Local.json`, legible solo para el sistema y los administradores del equipo.
@@ -475,7 +476,7 @@ Plan v2, tarea 10. Detalles que el plan no fijaba; no cambian lo que hace el sis
 - **Claves:** 48 caracteres alfanuméricos de `System.Security.Cryptography.RandomNumberGenerator`, con descarte de valores para no sesgar el reparto. El archivo se crea vacío, se restringe (`icacls /inheritance:r`, SYSTEM y Administradores por SID) y solo entonces se escribe.
 - **IP del QR:** la de la interfaz activa con puerta de enlace predeterminada (la primera si hay varias); sin ninguna, la primera IPv4 que no sea local ni 169.254.x.x, con una advertencia; sin red, el script falla con un mensaje claro.
 - **Respaldo:** `respaldar.ps1` usa `System.Data.SqlClient` (viene con Windows PowerShell 5.1), no `sqlcmd`, porque con solo SQL Server Express instalado no hay herramientas de línea de comandos. El `.bak` (con `CHECKSUM`) lo escribe el servicio de SQL Server en `%ProgramData%\Comedor\Respaldos`; esa carpeta queda restringida a SYSTEM, Administradores y `NT SERVICE\MSSQL$SQLEXPRESS`, porque el respaldo contiene datos del personal. Borra los `Comedor-*.bak` de más de 30 días y registra en `%ProgramData%\Comedor\respaldos.log`; ante un error sale con código 1.
-- **SQL Server Express:** se descarga el instalador web oficial de SQL Server 2022 Express (enlace `https://go.microsoft.com/fwlink/p/?linkid=2216019`, **no verificado** desde el repositorio; confirmar en una PC limpia) y antes de ejecutarlo el instalador comprueba que tenga firma válida de Microsoft. Se pasan los argumentos del plan. Si la instancia `SQLEXPRESS` ya existe, no se instala nada.
+- **SQL Server Express:** se descarga el instalador web oficial de SQL Server Express (enlace `https://go.microsoft.com/fwlink/p/?linkid=2216019`, que hoy lleva a la versión 2025) y, con él, el paquete en inglés; ambos se ejecutan solo si tienen firma válida de Microsoft. Ver D-55 para el procedimiento corregido tras la primera prueba real. Si la instancia `SQLEXPRESS` ya existe, no se instala nada.
 - **Servicio y accesos directos:** el servicio `Comedor` se crea con `sc.exe` (inicio automático retrasado `delayed-auto`, `LocalSystem`, reinicio ante fallas a los 5 s, 5 s y 30 s) y depende de `MSSQL$SQLEXPRESS`, porque la API migra la base antes de reportar al administrador de servicios y, tras reiniciar, SQL Server podría no estar listo. El instalador arranca con `sc start` y espera hasta 3 minutos a que quede en ejecución (la primera migración puede pasar de 30 s); si no lo logra, no falla: avisa y remite a `verificar.ps1`. Ambos accesos directos abren Microsoft Edge (`{commonpf32}\Microsoft\Edge\Application\msedge.exe`), el de la pantalla del chef con `--kiosk ... --edge-kiosk-type=fullscreen`; la dirección omite `:puerto` cuando es el 80 (D-43). Se crean en el escritorio de todos los usuarios.
 - **Desinstalación:** detiene y borra el servicio, borra la regla de firewall y la tarea de respaldo, y los accesos directos; conserva la base y `%ProgramData%\Comedor` (configuración, `personal.xlsx` y respaldos).
 - **Configuración incompleta:** `configurar.ps1` borra `appsettings.Local.json` si falla al crearlo o restringirlo, sale con código 1 y borra el archivo temporal de la contraseña; un archivo de 0 bytes cuenta como inexistente (también para el asistente). `verificar.ps1` sin permisos de administrador solo pide abrir PowerShell como administrador y sale con 1.
@@ -519,5 +520,17 @@ Pedido por el dueño del producto durante las pruebas locales del plan v2, porqu
 - **Se conserva el código del QR de la visita:** no es un dato de la cuenta, así que otra cuenta puede iniciar sesión sin volver a escanear.
 - **Qué no hace:** no deshace ni anula el consumo ya registrado (RF-19: los registros son de solo inserción). Si el empleado cierra sesión y vuelve a entrar con la misma cuenta, la nueva validación se rechaza como «ya consumió» (RF-14).
 - **Solo frontend:** no hay endpoint nuevo; la sesión del empleado es un JWT sin estado en el servidor y se descarta en el celular.
+
+**Estado:** vigente.
+
+## D-55 SQL Server Express: paquete en inglés y versión 2025
+
+Corrección del instalador (D-39, D-51) tras su primera prueba real, en una PC con Windows en español (México).
+
+- **Problema:** el instalador web de Microsoft eligió el paquete en español de España (`Express_ESN`) y SQL Server rechazó la instalación («el medio no admite el idioma del sistema operativo», código -2067529714). El script solo había ejecutado la verificación previa, que termina con código 0, y mostró «No se pudo instalar SQL Server Express (código 0)». Además, los archivos ya se habían copiado a `C:Program FilesComedor`, así que quedó una instalación a medias.
+- **Decisión:** (1) se usa el instalador web en modo de descarga con el paquete Core **en inglés** (`/Action=Download /MediaType=Core /Language=en-US /Quiet`) y se ejecuta `SQLEXPR_x64_ENU.exe` con los argumentos de instalación de D-39; el paquete en inglés funciona con cualquier idioma de Windows; (2) ambos archivos se ejecutan solo con firma válida de Microsoft; (3) la descarga y la instalación de SQL ocurren **antes** de copiar archivos, así que un fallo no deja una instalación a medias.
+- **Versión:** el enlace de Microsoft ya entrega SQL Server **2025** Express y no hay un enlace estable de Express 2022 (el que apareció era la edición Developer, que no es de uso libre en producción). Se acepta 2025 Express, el motor con el que se probaron las migraciones en desarrollo; reemplaza el «2022» de D-39.
+- **Verificado:** la descarga (714 MB, firma válida de Microsoft) y que `comedor.iss` compila. **Sin verificar:** la instalación completa con estos argumentos; hay que repetir la prueba (`docs/aceptacion.md`, "Instalación v2", fila 3).
+- **Límite:** durante la descarga y la instalación (varios minutos) la ventana del instalador puede parecer detenida; el texto de la página lo avisa.
 
 **Estado:** vigente.
