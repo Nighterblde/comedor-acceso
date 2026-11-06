@@ -264,4 +264,52 @@ public class AccesosApiTests(SqlServerFixture sql)
         var db = scope.ServiceProvider.GetRequiredService<ComedorDbContext>();
         Assert.Equal(1, await db.Consumos.CountAsync(c => c.Matricula == ComedorApiFactory.EmpleadoMatricula));
     }
+
+    private sealed record FilaRespuesta(Solicitud? Actual, Solicitud[] Siguientes, int Total);
+
+    private sealed record TurnoRespuesta(string Estado, int? Posicion);
+
+    [Fact]
+    public async Task Fila_ConRolEmpleado_403()
+    {
+        using var fabrica = await CrearFabricaAsync();
+        var cliente = ConToken(fabrica, await TokenEmpleadoAsync(fabrica));
+
+        var r = await cliente.GetAsync($"/api/puntos/{ComedorApiFactory.PuntoId}/fila");
+
+        Assert.Equal(HttpStatusCode.Forbidden, r.StatusCode);
+    }
+
+    [Fact]
+    public async Task MiTurno_SinToken_401()
+    {
+        using var fabrica = await CrearFabricaAsync();
+
+        var r = await fabrica.CreateClient().GetAsync("/api/accesos/mi-turno");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, r.StatusCode);
+    }
+
+    [Fact]
+    public async Task Fila_Y_MiTurno_TrasEscanear_YTrasServir()
+    {
+        using var fabrica = await CrearFabricaAsync();
+        var chef = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Chef));
+        var empleado = ConToken(fabrica, await TokenEmpleadoAsync(fabrica));
+        Assert.Equal("SinTurno", (await empleado.GetFromJsonAsync<TurnoRespuesta>("/api/accesos/mi-turno"))!.Estado);
+        await empleado.PostAsJsonAsync("/api/accesos/celular", new { tokenQr = await TokenQrAsync(chef) });
+
+        var fila = (await chef.GetFromJsonAsync<FilaRespuesta>($"/api/puntos/{ComedorApiFactory.PuntoId}/fila"))!;
+        var turno = (await empleado.GetFromJsonAsync<TurnoRespuesta>("/api/accesos/mi-turno"))!;
+
+        Assert.Equal(ComedorApiFactory.EmpleadoMatricula, fila.Actual!.Matricula);
+        Assert.Equal(1, fila.Total);
+        Assert.Equal(new TurnoRespuesta("Sirviendo", 1), turno);
+
+        await chef.PostAsync($"/api/consumos/{fila.Actual.ConsumoId}/servido", null);
+
+        var despues = (await chef.GetFromJsonAsync<FilaRespuesta>($"/api/puntos/{ComedorApiFactory.PuntoId}/fila"))!;
+        Assert.Null(despues.Actual);
+        Assert.Equal("Servido", (await empleado.GetFromJsonAsync<TurnoRespuesta>("/api/accesos/mi-turno"))!.Estado);
+    }
 }

@@ -46,6 +46,7 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-42](#d-42-fuente-de-rr-hh-en-sql-server-o-excel) | Fuente de RR. HH. en SQL Server o Excel | Aceptada |
 | [D-43](#d-43-dirección-e-identidad-profesionales) | Dirección e identidad profesionales | Aceptada |
 | [D-44](#d-44-detalles-de-la-sesión-por-rol-tarea-2-del-plan-v2) | Detalles de la sesión por rol (tarea 2 del plan v2) | Aceptada |
+| [D-45](#d-45-detalles-de-la-fila-y-el-turno-tarea-3-del-plan-v2) | Detalles de la fila y el turno (tarea 3 del plan v2) | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -389,3 +390,11 @@ Plan v2, tarea 2. Detalles que el plan no fijaba; no cambian lo que hace el sist
 - **Revocación:** solo los tokens de Chef y Administrador consultan `UsuariosSistema` en cada petición; los de Empleado no.
 - **Hora de fin de sesión:** el frontend guarda `expiraEn` (`comedor.expira`) y la muestra en hora local como "Sesión hasta las hh:mm" en la barra superior de Administración y de Reportes, que hoy usa el administrador; se mueve al panel en la tarea 6.
 - **Aviso por 401:** la sesión terminada se avisa con el estado de navegación del enrutador (no con un parámetro en la URL), de modo que la dirección queda `/login?returnUrl=<ruta>`.
+
+## D-45 Detalles de la fila y el turno (tarea 3 del plan v2)
+
+Plan v2, tarea 3. Detalles que el plan no fijaba; no cambian lo que hace el sistema (RF-29, D-35).
+
+- **Ventana de la fila:** se consultan las últimas 12 horas del punto y se filtra por el horario en curso; un autorizado sin servir de un tiempo de comida anterior no aparece.
+- **Turno del empleado:** `ConsultarMiTurno` recorre los puntos de entrada (`IPuntoRepositorio.TodosAsync`) con `SolicitudesAsync`, sin agregar métodos al repositorio de accesos. Toma el consumo autorizado más reciente de la matrícula en el horario en curso (si hay en varios puntos, el de hora mayor) y calcula la posición en la fila de ese punto.
+- **Primero de la fila:** `Sirviendo` con `Posicion = 1`; los demás, `EnFila` con su lugar; servido, `Servido` sin posición; sin consumo en el horario en curso, `SinTurno`.

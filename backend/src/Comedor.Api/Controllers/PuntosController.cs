@@ -14,6 +14,7 @@ public record RespuestaQr(string Token, string Url);
 public class PuntosController(
     EmitirTokenQr emitir,
     ListarSolicitudes listar,
+    ConsultarFila fila,
     IConfiguration config) : ControllerBase
 {
     [HttpGet("{id}/qr")]
@@ -44,4 +45,9 @@ public class PuntosController(
     [Authorize(Roles = Roles.TodosDelSistema)]
     public async Task<ActionResult<IReadOnlyList<SolicitudPunto>>> Solicitudes(string id, [FromQuery] DateTime? desde) =>
         Ok(await listar.EjecutarAsync(id, desde));
+
+    [HttpGet("{id}/fila")]
+    [Authorize(Roles = Roles.TodosDelSistema)]
+    public async Task<ActionResult<FilaServicio>> Fila(string id) =>
+        Ok(await fila.EjecutarAsync(id));
 }
