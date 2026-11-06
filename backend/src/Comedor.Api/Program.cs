@@ -28,6 +28,7 @@ app.UseExceptionHandler(salida => salida.Run(async contexto =>
     }, options: null, contentType: "application/problem+json");
 }));
 app.UseCors();
+app.UseSoloRedLocal();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
