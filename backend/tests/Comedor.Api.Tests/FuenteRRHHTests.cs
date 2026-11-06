@@ -100,6 +100,36 @@ public sealed class FuenteRRHHExcelTests : IDisposable
     }
 
     [Fact]
+    public async Task Excel_MatriculaNumerica_SeLeeComoEnteroSinFormato()
+    {
+        var ruta = Crear(h =>
+        {
+            LlenarFila(h, 2, "x");
+            h.Cell(2, 1).Value = 1001;
+            LlenarFila(h, 3, "x");
+            h.Cell(3, 1).Value = 123456789012345L;
+            LlenarFila(h, 4, "x");
+            h.Cell(4, 1).Style.NumberFormat.Format = "@";
+            h.Cell(4, 1).Value = " 00123 ";
+        });
+
+        var filas = await new FuenteRRHHExcel(ruta).ObtenerEmpleadosAsync();
+
+        Assert.Equal(["1001", "123456789012345", "00123"], filas.Select(f => f.Matricula));
+    }
+
+    private static void LlenarFila(IXLWorksheet h, int fila, string matricula)
+    {
+        h.Cell(fila, 1).Value = matricula;
+        h.Cell(fila, 2).Value = "Ana";
+        h.Cell(fila, 3).Value = "Area";
+        h.Cell(fila, 4).Value = "Matutino";
+        h.Cell(fila, 5).Value = "L,M";
+        h.Cell(fila, 6).Value = new DateTime(2026, 1, 1);
+        h.Cell(fila, 7).Value = new DateTime(2026, 12, 31);
+    }
+
+    [Fact]
     public async Task Excel_FilaConFechaInvalida_SeOmite()
     {
         var ruta = Crear(h =>

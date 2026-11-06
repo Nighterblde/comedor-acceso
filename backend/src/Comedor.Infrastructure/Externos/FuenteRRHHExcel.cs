@@ -41,7 +41,7 @@ public sealed class FuenteRRHHExcel(string ruta) : IFuentePersonalRRHH
         {
             var fila = r;
             string Texto(string columna) =>
-                columnas.TryGetValue(columna, out var c) ? hoja.Cell(fila, c).GetFormattedString().Trim() : string.Empty;
+                columnas.TryGetValue(columna, out var c) ? Celda(hoja.Cell(fila, c)) : string.Empty;
 
             if (Columnas.All(n => Texto(n).Length == 0))
             {
@@ -69,6 +69,21 @@ public sealed class FuenteRRHHExcel(string ruta) : IFuentePersonalRRHH
         }
 
         return Task.FromResult<IReadOnlyList<EmpleadoFuente>>(filas);
+    }
+
+    /// <summary>
+    /// Texto de la celda. Un número entero (p. ej. una matrícula capturada sin formato de texto) se lee como entero,
+    /// con cultura invariante, sin decimales ni notación científica.
+    /// </summary>
+    private static string Celda(IXLCell celda)
+    {
+        if (celda.DataType == XLDataType.Number && celda.TryGetValue<double>(out var numero)
+            && numero == Math.Floor(numero) && Math.Abs(numero) < 1e15)
+        {
+            return ((long)numero).ToString(CultureInfo.InvariantCulture);
+        }
+
+        return celda.GetFormattedString().Trim();
     }
 
     private static DateOnly Fecha(IXLCell celda)
