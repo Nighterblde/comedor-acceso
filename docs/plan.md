@@ -372,7 +372,7 @@ Comando de prueba del frontend en todas las tareas siguientes, desde `frontend/c
 - Consume: `AuthService.iniciarSesionEmpleado`, `tokenEmpleado()` (Tarea 11); `POST /api/accesos/celular` (Tarea 8).
 - Produce: `PaseService.validar(tokenQr: string): Observable<ResultadoAcceso>`.
 
-Flujo: `/pase?t=<token>` → sin token de empleado muestra `login-empleado` (ID y contraseña; errores "Credenciales incorrectas", "Cuenta bloqueada por 15 minutos", "No se pudo verificar tu cuenta; acude con el encargado") → con token llama a `validar` → muestra el pase a pantalla completa: verde y "AUTORIZADO" con "Pasa con el chef", o rojo y "RECHAZADO" con el motivo; foto, nombre, turno, tiempo de comida, un reloj con segundos que avanza y un borde con animación CSS continua. `EscanearDeNuevo` muestra el texto exacto sin pase. Un 401 en `validar` borra el token de empleado y vuelve al login conservando `t`.
+Flujo: `/pase?t=<token>` → sin token de empleado muestra `login-empleado` (ID con teclado de texto, porque la matrícula puede llevar letras ([D-32](decisiones.md#d-32-teclado-del-número-de-empleado-en-el-celular)), y contraseña; errores "Credenciales incorrectas", "Cuenta bloqueada por 15 minutos", "No se pudo verificar tu cuenta; acude con el encargado") → con token llama a `validar` → muestra el pase a pantalla completa: verde y "AUTORIZADO" con "Pasa con el chef", o rojo y "RECHAZADO" con el motivo; foto, nombre, turno, tiempo de comida, un reloj con segundos que avanza y un borde con animación CSS continua. `EscanearDeNuevo` muestra el texto exacto sin pase. Un 401 en `validar` borra el token de empleado y vuelve al login conservando `t`.
 
 Registro previo (`/registro`): el mismo `login-empleado`; al iniciar sesión muestra "Listo. El día que abra el comedor solo escanea el código de la entrada" y no llama a `validar`.
 
@@ -413,11 +413,11 @@ Comportamiento: la pantalla reúne dos componentes. A la izquierda, la captura m
 
 Pantallas: Reportes con rango de fechas, tablas y botones Excel/PDF; Administración con pestañas Reglas, Puntos (cada punto con "Imprimir QR": pide `GET /api/puntos/{id}/qr` y muestra el QR de la `url` en una vista imprimible, con dependencia `angularx-qrcode`, [D-21](decisiones.md#d-21-qr-permanente-impreso)), Usuarios, Sincronización (botón "Sincronizar ahora" y bitácora) y Contingencia (formulario con referencia obligatoria). Si la última sincronización falló, Reportes y Administración muestran el aviso "La última sincronización con RR. HH. falló; se usan los datos del {fecha}" (RNF-05).
 
-- [ ] **Paso 1: escribir las pruebas que fallan:** `cotejo_enviaRangoComoQuery`; `descargar_creaArchivoConNombre` (`cotejo-2026-11-01-2026-11-15.xlsx`); `regla_inicioIgualFin_muestraError`; `contingencia_sinReferencia_noEnvia`; `contingencia_409_muestraYaConsumiste`; `puntos_imprimirQr_muestraCodigoDelPunto`; `sincronizar_muestraResultado`, ultimaSincronizacionFallida\_muestraAviso.
-- [ ] **Paso 2:** comando con `--include=src/app/{reportes,admin}/**` → FALLA.
-- [ ] **Paso 3:** implementar servicios y componentes.
-- [ ] **Paso 4:** `npx ng test --watch=false --browsers=ChromeHeadless` → PASA todo el frontend.
-- [ ] **Paso 5:** `git commit -m "feat: reportes y administración en el frontend"`
+- [x] **Paso 1: escribir las pruebas que fallan:** `cotejo_enviaRangoComoQuery`; `descargar_creaArchivoConNombre` (`cotejo-2026-11-01-2026-11-15.xlsx`); `regla_inicioIgualFin_muestraError`; `contingencia_sinReferencia_noEnvia`; `contingencia_409_muestraYaConsumiste`; `puntos_imprimirQr_muestraCodigoDelPunto`; `sincronizar_muestraResultado`, ultimaSincronizacionFallida\_muestraAviso.
+- [x] **Paso 2:** comando con `--include=src/app/{reportes,admin}/**` → FALLA.
+- [x] **Paso 3:** implementar servicios y componentes.
+- [x] **Paso 4:** `npx ng test --watch=false --browsers=ChromeHeadless` → PASA todo el frontend.
+- [x] **Paso 5:** `git commit -m "feat: reportes y administración en el frontend"`
 
 ## Tarea 15: Prueba de carga y aceptación
 

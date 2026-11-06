@@ -279,4 +279,4 @@ Tarea 15 (prueba manual del dueño del producto). Estado: aplicada.
 
 - **Decisión:** el campo "Número de empleado" del inicio de sesión en el celular abre el teclado de texto, no el numérico. Se quitó `inputmode="numeric"`, que se había agregado en la Tarea 12 sin que el SRS ni la guía de diseño lo pidieran.
 - **Motivo:** el formato real de la matrícula en la fuente de RR. HH. sigue pendiente con el cliente (SRS §11), y las matrículas de prueba llevan letras (`E1001`). Con el teclado numérico no se podían escribir desde el celular.
-- **Revisable:** si el cliente confirma que las matrículas son solo números, se puede volver al teclado numérico.
+- **Revisable:** si el cliente confirma que las matrículas son solo números, se puede volver al teclado numérico. El formato de la matrícula se agregó a los pendientes con el cliente (SRS 1.5, sección 11).
