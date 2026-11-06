@@ -130,6 +130,10 @@ Hay que hacerlo en una máquina virtual con Windows 10 u 11 limpia, sin .NET ni 
 | 7 | `appsettings.Local.json` | Existe en `C:\ProgramData\Comedor`; solo SYSTEM y Administradores lo leen (`icacls`); claves de 48 caracteres; `Fuente:Tipo` = `Excel`; la dirección no lleva `:puerto` con el 80 | [ ] |
 | 8 | Reiniciar Windows y volver a correr `verificar.ps1` | Todo en verde sin abrir ningún programa; el servicio arrancó solo | [ ] |
 | 9 | Matar el proceso `Comedor.Api.exe` | El servicio se reinicia solo en unos segundos | [ ] |
+| 9a | Reiniciar Windows con SQL Server arrancando lento (o detener `MSSQL$SQLEXPRESS` y reiniciar solo `Comedor`) | El servicio `Comedor` espera a SQL Server (dependencia) y queda en ejecución sin intervención; el inicio es automático retrasado | [ ] |
+| 9b | Instalación en PC limpia con primera migración lenta (más de 30 s) | El asistente espera hasta 3 minutos; si no arranca, avisa y remite a `verificar.ps1` sin fallar | [ ] |
+| 9c | Interrumpir `configurar.ps1` tras crear el archivo (simular error de `icacls`) y volver a instalar | No queda `appsettings.Local.json` vacío; el asistente vuelve a pedir usuario, contraseña y puerto | [ ] |
+| 9d | `verificar.ps1` desde PowerShell sin elevar | Dice "Abre PowerShell como administrador y vuelve a ejecutar" y sale con código 1 | [ ] |
 | 10 | Panel del comedor: iniciar sesión con el administrador, crear un punto, **Imprimir QR** | Se imprime el QR con la dirección de la PC | [ ] |
 | 11 | Pantalla del chef (acceso directo) | Abre a pantalla completa en Edge y llega a la pantalla del chef o a su inicio de sesión | [ ] |
 | 12 | Importar el Excel de personal desde **Administración > Personal** | Altas correctas; la sincronización de las 02:00 no desactiva al personal importado | [ ] |

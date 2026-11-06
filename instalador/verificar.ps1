@@ -14,6 +14,14 @@ param()
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Continue'
 
+# Sin permisos de administrador no se puede leer la configuración ni el firewall: se avisa y no se muestran falsos rojos.
+$esAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+    [Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $esAdmin) {
+    Write-Host 'Abre PowerShell como administrador y vuelve a ejecutar' -ForegroundColor Yellow
+    exit 1
+}
+
 $carpetaDatos = Join-Path $env:ProgramData 'Comedor'
 $archivoConfig = Join-Path $carpetaDatos 'appsettings.Local.json'
 $script:fallas = 0

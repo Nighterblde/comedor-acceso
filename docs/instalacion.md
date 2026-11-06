@@ -53,7 +53,9 @@ Haz esta lista cuando termines de instalar, después de reiniciar la computadora
 
 **Con la computadora:**
 
-1. Haz clic derecho sobre `verificar.ps1` (carpeta `C:\Program Files\Comedor\instalador`) y elige **Ejecutar con PowerShell** como administrador.
+1. Abre PowerShell como administrador: pulsa **Inicio**, escribe `PowerShell`, haz clic derecho en el resultado y elige **Ejecutar como administrador**. Luego escribe esta línea y pulsa Enter:
+   `powershell -ExecutionPolicy Bypass -File "C:\Program Files\Comedor\instalador\verificar.ps1"`
+   Si dice "Abre PowerShell como administrador y vuelve a ejecutar", no abriste la ventana con permisos de administrador.
 2. Debe mostrar en **verde**:
    - [ ] El servicio "Comedor" está en ejecución.
    - [ ] El sistema responde.

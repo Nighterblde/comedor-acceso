@@ -29,6 +29,13 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# El archivo temporal con la contraseña se borra siempre, también si el script falla (código de salida 1).
+trap {
+    if ($ArchivoContrasena) { Remove-Item -LiteralPath $ArchivoContrasena -Force -ErrorAction SilentlyContinue }
+    [Console]::Error.WriteLine($_.Exception.Message)
+    exit 1
+}
+
 $carpetaDatos = Join-Path $env:ProgramData 'Comedor'
 $archivoConfig = Join-Path $carpetaDatos 'appsettings.Local.json'
 $carpetaRespaldos = Join-Path $carpetaDatos 'Respaldos'
@@ -80,7 +87,7 @@ function RestringirAAdministradores([string]$ruta, [bool]$esCarpeta = $false) {
 New-Item -ItemType Directory -Force -Path $carpetaDatos | Out-Null
 
 # --- 1. Archivo de configuración (solo si no existe) ---
-if (Test-Path -LiteralPath $archivoConfig) {
+if ((Test-Path -LiteralPath $archivoConfig) -and ((Get-Item -LiteralPath $archivoConfig).Length -gt 0)) {
     Write-Host 'La configuración ya existe: no se modifica.'
     try {
         $existente = Get-Content -LiteralPath $archivoConfig -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -122,9 +129,16 @@ else {
     $json = $config | ConvertTo-Json -Depth 5
 
     # Se crea vacío, se restringe y recién entonces se escribe el contenido: los secretos nunca están en un archivo abierto a todos.
-    [System.IO.File]::WriteAllText($archivoConfig, '', (New-Object System.Text.UTF8Encoding($false)))
-    RestringirAAdministradores $archivoConfig
-    [System.IO.File]::WriteAllText($archivoConfig, $json, (New-Object System.Text.UTF8Encoding($false)))
+    # Si algo falla a medias se borra el archivo parcial: uno vacío haría creer a la siguiente ejecución que ya hay configuración.
+    try {
+        [System.IO.File]::WriteAllText($archivoConfig, '', (New-Object System.Text.UTF8Encoding($false)))
+        RestringirAAdministradores $archivoConfig
+        [System.IO.File]::WriteAllText($archivoConfig, $json, (New-Object System.Text.UTF8Encoding($false)))
+    }
+    catch {
+        Remove-Item -LiteralPath $archivoConfig -Force -ErrorAction SilentlyContinue
+        throw 'No se pudo crear el archivo de configuración; se borró el archivo incompleto. Vuelve a ejecutar el instalador como administrador.'
+    }
     $AdminContrasena = $null
     $json = $null
     Write-Host "Configuración creada en $archivoConfig (dirección del QR: $urlPublica)."
