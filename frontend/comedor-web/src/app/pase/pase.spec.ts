@@ -54,11 +54,19 @@ describe('módulo Pase', () => {
 
   const texto = (f: ComponentFixture<PaseComponent>): string => f.nativeElement.textContent ?? '';
 
-  beforeEach(() => localStorage.clear());
+  let reemplazar: jasmine.Spy;
+
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    // No se cambia la dirección real de la página de pruebas.
+    reemplazar = spyOn(history, 'replaceState');
+  });
 
   afterEach(() => {
     http.verify();
     localStorage.clear();
+    sessionStorage.clear();
   });
 
   it('sinSesion_muestraLogin', () => {
@@ -202,6 +210,40 @@ describe('módulo Pase', () => {
     expect(texto(f)).not.toContain('Matrícula');
     expect(f.nativeElement.querySelector('.chip')).toBeNull();
     expect(f.nativeElement.querySelector('.avatar')).toBeNull();
+  });
+
+  it('pase_quitaTokenDeLaDireccion', () => {
+    localStorage.setItem('comedor.token.empleado', 'jwt');
+    crear('abc.def');
+
+    expect(reemplazar).toHaveBeenCalledTimes(1);
+    const url = reemplazar.calls.mostRecent().args[2] as string;
+    expect(url).not.toContain('abc.def');
+    expect(url).not.toContain('t=');
+    http.expectOne(URL_CELULAR).flush(resultado({}));
+  });
+
+  it('pase_recargaConTokenEnSesion_validaDeNuevo', () => {
+    localStorage.setItem('comedor.token.empleado', 'jwt');
+    const primera = crear('abc.def');
+    http.expectOne(URL_CELULAR).flush(resultado({}));
+    primera.destroy();
+    TestBed.resetTestingModule();
+
+    // Recarga de /pase: ya no viene t en la dirección, pero sí en sessionStorage.
+    crear(null);
+    const req = http.expectOne(URL_CELULAR);
+    expect(req.request.body).toEqual({ tokenQr: 'abc.def' });
+    req.flush(resultado({}));
+  });
+
+  it('pase_sinTokenNiSesionGuardada_pideEscanear', () => {
+    localStorage.setItem('comedor.token.empleado', 'jwt');
+    const f = crear(null);
+
+    expect(texto(f)).toContain(TEXTO_ESCANEAR);
+    expect(reemplazar).not.toHaveBeenCalled();
+    http.expectNone(URL_CELULAR);
   });
 
   it('login_conCamposVacios_noEnviaYDeshabilitaEntrar', () => {

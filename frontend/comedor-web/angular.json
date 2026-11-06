@@ -42,6 +42,7 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "loader": { ".html": "text" },
             "assets": [
               {
                 "glob": "**/*",

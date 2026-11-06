@@ -50,7 +50,7 @@ Todas las combinaciones de texto usadas cumplen contraste 4.5:1 o más. Autoriza
 
 ### 2.2 Tipografía
 
-Familia: **Montserrat** (Google Fonts, pesos 400, 500, 600, 700 y 800), con respaldo `system-ui, sans-serif`.
+Familia: **Montserrat** (pesos 400, 500, 600, 700 y 800), servida por la propia aplicación desde `/fuentes/` (licencia SIL OFL en `OFL.txt`; sin Google Fonts, así que se ve igual sin internet), con respaldo `system-ui, sans-serif`.
 
 | Estilo | Tamaño / peso | Uso |
 | --- | --- | --- |
