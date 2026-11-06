@@ -10,7 +10,7 @@ public record UsuarioVista(string Usuario, string Rol, bool Activo);
 public class AdministrarUsuarios(IUsuarioSistemaRepositorio usuarios, IHasherContrasena hasher)
 {
     private static readonly string[] RolesValidos =
-        [Roles.Punto, Roles.Encargado, Roles.Supervisor, Roles.Administrador];
+        [Roles.Chef, Roles.Administrador];
 
     public async Task<IReadOnlyList<UsuarioVista>> ListarAsync() =>
         (await usuarios.TodosAsync()).Select(u => new UsuarioVista(u.Usuario, u.Rol, u.Activo)).ToList();

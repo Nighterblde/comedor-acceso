@@ -79,7 +79,7 @@ public class ReportesTests(SqlServerFixture sql)
     public async Task Cotejo_AgrupaPorFechaServicio()
     {
         using var fabrica = await CrearFabricaSembradaAsync();
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
 
         var filas = (await c.GetFromJsonAsync<FilaCotejo[]>($"/api/reportes/cotejo?{Rango}"))!;
 
@@ -116,7 +116,7 @@ public class ReportesTests(SqlServerFixture sql)
                     ComedorApiFactory.PuntoId, Canal.Contingencia, "enc", "folio-1"));
         }
 
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
 
         var filas = (await c.GetFromJsonAsync<FilaCotejo[]>("/api/reportes/cotejo?desde=2026-11-12&hasta=2026-11-12"))!;
 
@@ -129,7 +129,7 @@ public class ReportesTests(SqlServerFixture sql)
     public async Task Conteo_AgrupaPorTurnoYArea()
     {
         using var fabrica = await CrearFabricaSembradaAsync();
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
 
         var filas = (await c.GetFromJsonAsync<FilaConteo[]>($"/api/reportes/conteo?{Rango}"))!;
 
@@ -144,7 +144,7 @@ public class ReportesTests(SqlServerFixture sql)
     public async Task CotejoExcel_ReleidoConClosedXML_TotalServidasEs4()
     {
         using var fabrica = await CrearFabricaSembradaAsync();
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
 
         var r = await c.GetAsync($"/api/reportes/cotejo.xlsx?{Rango}");
 
@@ -162,7 +162,7 @@ public class ReportesTests(SqlServerFixture sql)
     public async Task CotejoPdf_EmpiezaConFirmaPdf()
     {
         using var fabrica = await CrearFabricaSembradaAsync();
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
 
         var r = await c.GetAsync($"/api/reportes/cotejo.pdf?{Rango}");
 
@@ -176,7 +176,7 @@ public class ReportesTests(SqlServerFixture sql)
     public async Task ConteoExcel_ReleidoConClosedXML_TotalEs5()
     {
         using var fabrica = await CrearFabricaSembradaAsync();
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
 
         var r = await c.GetAsync($"/api/reportes/conteo.xlsx?{Rango}");
 
@@ -211,7 +211,7 @@ public class ReportesTests(SqlServerFixture sql)
     public async Task Detalle_FiltraPorCanal()
     {
         using var fabrica = await CrearFabricaSembradaAsync();
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
 
         var todas = (await c.GetFromJsonAsync<DetalleJson[]>($"/api/reportes/detalle?{Rango}"))!;
         var manual = (await c.GetFromJsonAsync<DetalleJson[]>($"/api/reportes/detalle?{Rango}&canal=Manual"))!;
@@ -234,7 +234,7 @@ public class ReportesTests(SqlServerFixture sql)
     public async Task DetalleExcel_DevuelveArchivo()
     {
         using var fabrica = await CrearFabricaSembradaAsync();
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
 
         var r = await c.GetAsync($"/api/reportes/detalle.xlsx?{Rango}");
 
@@ -257,7 +257,7 @@ public class ReportesTests(SqlServerFixture sql)
                 ComedorApiFactory.PuntoId, Canal.Manual, null, MotivoRechazo.NoRegistrado));
         }
 
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
 
         var r = await c.GetAsync($"/api/reportes/detalle.xlsx?{Rango}&motivo=NoRegistrado");
 
@@ -282,17 +282,17 @@ public class ReportesTests(SqlServerFixture sql)
     public async Task Reportes_FechasInvalidas_400()
     {
         using var fabrica = await CrearFabricaSembradaAsync();
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
 
         Assert.Equal(HttpStatusCode.BadRequest, (await c.GetAsync("/api/reportes/cotejo?desde=hoy&hasta=2026-11-10")).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await c.GetAsync("/api/reportes/conteo")).StatusCode);
     }
 
     [Fact]
-    public async Task Reportes_ConRolEncargado_403()
+    public async Task Reportes_ConRolChef_403()
     {
         using var fabrica = await CrearFabricaSembradaAsync();
-        var c = await ClienteAsync(fabrica, Roles.Encargado);
+        var c = await ClienteAsync(fabrica, Roles.Chef);
 
         Assert.Equal(HttpStatusCode.Forbidden, (await c.GetAsync($"/api/reportes/cotejo?{Rango}")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await c.GetAsync($"/api/reportes/detalle.xlsx?{Rango}")).StatusCode);

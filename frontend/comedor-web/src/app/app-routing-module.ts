@@ -6,12 +6,12 @@ const routes: Routes = [
   { path: 'login', loadChildren: () => import('./login/login.module').then((m) => m.LoginModule) },
   {
     path: 'punto/:id',
-    canActivate: [rolGuard(['Punto', 'Encargado'])],
+    canActivate: [rolGuard(['Chef', 'Administrador'])],
     loadChildren: () => import('./punto/punto.module').then((m) => m.PuntoModule),
   },
   {
     path: 'reportes',
-    canActivate: [rolGuard(['Supervisor', 'Administrador'])],
+    canActivate: [rolGuard(['Administrador'])],
     loadChildren: () => import('./reportes/reportes.module').then((m) => m.ReportesModule),
   },
   {

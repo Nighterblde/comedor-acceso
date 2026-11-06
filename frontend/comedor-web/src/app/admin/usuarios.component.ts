@@ -4,7 +4,7 @@ import { UsuarioEdicion, UsuarioSistema } from '../modelos/administracion.model'
 import { AdminService } from './admin.service';
 
 function usuarioVacio(): UsuarioEdicion {
-  return { usuario: '', rol: 'Encargado', activo: true, contrasena: '' };
+  return { usuario: '', rol: 'Chef', activo: true, contrasena: '' };
 }
 
 /** Alta, edición y baja de usuarios del sistema; la contraseña nunca se muestra. */
@@ -15,7 +15,7 @@ function usuarioVacio(): UsuarioEdicion {
   styleUrl: './admin-pestana.scss',
 })
 export class UsuariosComponent implements OnInit {
-  readonly roles = ['Punto', 'Encargado', 'Supervisor', 'Administrador'];
+  readonly roles = ['Chef', 'Administrador'];
   readonly usuarios = signal<UsuarioSistema[]>([]);
   readonly error = signal<string | null>(null);
   /** Desactiva Guardar y Eliminar mientras la API responde, para evitar dobles envíos (diseño §5). */

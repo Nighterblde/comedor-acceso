@@ -189,9 +189,23 @@ describe('módulo admin', () => {
       expect((f.nativeElement.querySelector('#punto-id') as HTMLInputElement).readOnly).toBeTrue();
     }));
 
+    it('usuarios_soloOfreceChefYAdministrador', fakeAsync(() => {
+      const servicio = servicioFalso();
+      servicio.usuarios.and.returnValue(of([]));
+      const f = crear(UsuariosComponent, servicio);
+      tick();
+      f.detectChanges();
+
+      const opciones = Array.from(
+        (f.nativeElement.querySelector('#usuario-rol') as HTMLSelectElement).options,
+      ).map((o) => o.value);
+
+      expect(opciones).toEqual(['Chef', 'Administrador']);
+    }));
+
     it('usuarios_editar_usuarioNoEditable', fakeAsync(() => {
       const servicio = servicioFalso();
-      servicio.usuarios.and.returnValue(of([{ usuario: 'chef1', rol: 'Encargado', activo: true }]));
+      servicio.usuarios.and.returnValue(of([{ usuario: 'chef1', rol: 'Chef', activo: true }]));
       const f = crear(UsuariosComponent, servicio);
       tick();
       f.detectChanges();

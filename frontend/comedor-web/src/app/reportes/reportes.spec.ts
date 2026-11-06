@@ -92,7 +92,7 @@ describe('módulo reportes', () => {
         providers: [
           { provide: ReportesService, useValue: servicio },
           { provide: SincronizacionService, useValue: sincronizacion },
-          { provide: AuthService, useValue: { rol: () => 'Supervisor', usuario: () => 'super' } },
+          { provide: AuthService, useValue: { rol: () => 'Administrador', usuario: () => 'super' } },
         ],
       });
       const f = TestBed.createComponent(ReportesComponent);
@@ -151,7 +151,7 @@ describe('módulo reportes', () => {
         providers: [
           { provide: ReportesService, useValue: servicio },
           { provide: SincronizacionService, useValue: { estado: signal(null), refrescar: () => undefined } },
-          { provide: AuthService, useValue: { rol: () => 'Supervisor', usuario: () => 'super' } },
+          { provide: AuthService, useValue: { rol: () => 'Administrador', usuario: () => 'super' } },
         ],
       });
       const f = TestBed.createComponent(ReportesComponent);
@@ -211,7 +211,7 @@ describe('módulo reportes', () => {
       const { f } = armar();
       const barra = (f.nativeElement.querySelector('header') as HTMLElement).textContent ?? '';
       expect(barra).toContain('super');
-      expect(barra).toContain('Supervisor');
+      expect(barra).toContain('Administrador');
     });
   });
 

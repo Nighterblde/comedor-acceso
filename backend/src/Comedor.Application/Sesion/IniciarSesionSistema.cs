@@ -39,7 +39,7 @@ public class IniciarSesionSistema(
             return Fallo;
         }
 
-        var vigencia = u!.Rol == Roles.Punto
+        var vigencia = u!.Rol == Roles.Chef
             ? TimeSpan.FromDays(opciones.DiasPunto)
             : TimeSpan.FromHours(opciones.HorasSistema);
         var token = emisor.Emitir(u!.Usuario, u.Rol, vigencia);

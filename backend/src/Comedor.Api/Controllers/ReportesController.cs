@@ -2,6 +2,7 @@ using System.Globalization;
 using Comedor.Application.Abstracciones;
 using Comedor.Application.Reportes;
 using Comedor.Domain.Accesos;
+using Comedor.Application.Usuarios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,7 @@ namespace Comedor.Api.Controllers;
 
 [ApiController]
 [Route("api/reportes")]
-[Authorize(Roles = "Supervisor,Administrador")]
+[Authorize(Roles = Roles.Administrador)]
 public class ReportesController(GenerarReporte reportes, IExportador exportador) : ControllerBase
 {
     private const string TipoExcel = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";

@@ -31,11 +31,11 @@ public class AdminTests(SqlServerFixture sql)
     }
 
     [Fact]
-    public async Task Admin_ConRolSupervisor_403()
+    public async Task Admin_ConRolChef_403()
     {
         using var fabrica = new ComedorApiFactory(sql);
         await fabrica.SembrarAsync();
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Chef);
 
         Assert.Equal(HttpStatusCode.Forbidden, (await c.GetAsync("/api/admin/reglas")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await c.GetAsync("/api/admin/usuarios")).StatusCode);
@@ -83,7 +83,7 @@ public class AdminTests(SqlServerFixture sql)
         var c = await ClienteAsync(fabrica, Roles.Administrador);
 
         var alta = await c.PutAsJsonAsync("/api/admin/usuarios",
-            new { usuario = "chef1", rol = "Encargado", activo = true, contrasena = "Secreta-123-xyz" });
+            new { usuario = "chef1", rol = "Chef", activo = true, contrasena = "Secreta-123-xyz" });
         var cuerpo = await c.GetStringAsync("/api/admin/usuarios");
 
         Assert.Equal(HttpStatusCode.OK, alta.StatusCode);
@@ -94,19 +94,44 @@ public class AdminTests(SqlServerFixture sql)
     }
 
     [Fact]
+    public async Task Usuario_RolSupervisor_400()
+    {
+        using var fabrica = new ComedorApiFactory(sql);
+        var c = await ClienteAsync(fabrica, "Administrador");
+
+        var r = await c.PutAsJsonAsync("/api/admin/usuarios",
+            new { usuario = "viejo", rol = "Supervisor", activo = true, contrasena = "Secreta-123-xyz" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+    }
+
+    [Fact]
+    public async Task Usuario_RolChef_SeGuarda()
+    {
+        using var fabrica = new ComedorApiFactory(sql);
+        var c = await ClienteAsync(fabrica, "Administrador");
+
+        var r = await c.PutAsJsonAsync("/api/admin/usuarios",
+            new { usuario = "chef2", rol = "Chef", activo = true, contrasena = "Secreta-123-xyz" });
+
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        Assert.Contains("\"rol\":\"Chef\"", await c.GetStringAsync("/api/admin/usuarios"));
+    }
+
+    [Fact]
     public async Task Usuario_LoginConContrasenaNueva_Funciona()
     {
         using var fabrica = new ComedorApiFactory(sql);
         var c = await ClienteAsync(fabrica, Roles.Administrador);
         await c.PutAsJsonAsync("/api/admin/usuarios",
-            new { usuario = "chef1", rol = "Encargado", activo = true, contrasena = "Primera-123-xyz" });
+            new { usuario = "chef1", rol = "Chef", activo = true, contrasena = "Primera-123-xyz" });
 
         var sinContrasena = await c.PutAsJsonAsync("/api/admin/usuarios",
-            new { usuario = "chef1", rol = "Supervisor", activo = true });
+            new { usuario = "chef1", rol = "Administrador", activo = true });
         var login1 = await fabrica.CreateClient().PostAsJsonAsync("/api/auth/login",
             new { usuario = "chef1", contrasena = "Primera-123-xyz" });
         await c.PutAsJsonAsync("/api/admin/usuarios",
-            new { usuario = "chef1", rol = "Supervisor", activo = true, contrasena = "Segunda-123-xyz" });
+            new { usuario = "chef1", rol = "Administrador", activo = true, contrasena = "Segunda-123-xyz" });
         var loginNueva = await fabrica.CreateClient().PostAsJsonAsync("/api/auth/login",
             new { usuario = "chef1", contrasena = "Segunda-123-xyz" });
         var loginVieja = await fabrica.CreateClient().PostAsJsonAsync("/api/auth/login",
@@ -126,7 +151,7 @@ public class AdminTests(SqlServerFixture sql)
 
         var rol = await c.PutAsJsonAsync("/api/admin/usuarios",
             new { usuario = "x", rol = "Empleado", activo = true, contrasena = "Clave-123-xyz" });
-        var sinClave = await c.PutAsJsonAsync("/api/admin/usuarios", new { usuario = "y", rol = "Punto", activo = true });
+        var sinClave = await c.PutAsJsonAsync("/api/admin/usuarios", new { usuario = "y", rol = "Chef", activo = true });
 
         Assert.Equal(HttpStatusCode.BadRequest, rol.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, sinClave.StatusCode);

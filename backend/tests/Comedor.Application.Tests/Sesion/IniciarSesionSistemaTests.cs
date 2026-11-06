@@ -33,7 +33,7 @@ public class IniciarSesionSistemaTests
     [Fact]
     public async Task UsuarioInactivo_IgualVerificaContrasena()
     {
-        var inactivo = new UsuarioSistema { Usuario = "u", HashContrasena = "h", Rol = Roles.Encargado, Activo = false };
+        var inactivo = new UsuarioSistema { Usuario = "u", HashContrasena = "h", Rol = Roles.Chef, Activo = false };
         var (caso, hasher) = Crear(inactivo);
 
         var r = await caso.EjecutarAsync("u", "x");

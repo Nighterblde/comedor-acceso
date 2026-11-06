@@ -1,4 +1,5 @@
 using Comedor.Application.Accesos;
+using Comedor.Application.Usuarios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,7 @@ namespace Comedor.Api.Controllers;
 public class ConsumosController(MarcarServido marcarServido) : ControllerBase
 {
     [HttpPost("{id:guid}/servido")]
-    [Authorize(Roles = "Punto,Encargado")]
+    [Authorize(Roles = Roles.TodosDelSistema)]
     public async Task<IActionResult> Servido(Guid id)
     {
         var usuario = User.FindFirst("sub")?.Value;
