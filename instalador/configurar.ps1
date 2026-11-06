@@ -9,6 +9,11 @@
   - Crea la regla de firewall "Comedor" (TCP, solo la red local) y la tarea programada "Comedor - Respaldo"
     (diaria, 03:00, como SYSTEM). Ambas se recrean siempre, así que el script se puede repetir.
   Nunca escribe en pantalla ni en bitácoras la contraseña ni las claves.
+  Con -ActualizarIp (solo con ese parámetro) cambia únicamente App:UrlPublica en el archivo existente,
+  con la IP actual del equipo, y reinicia el servicio "Comedor" (D-53). El resto de la configuración
+  (claves, administrador, etc.) queda intacto. Después hay que reimprimir el QR desde Panel > Puntos.
+.PARAMETER ActualizarIp
+  Rehace la dirección del QR (App:UrlPublica) con la IP actual del equipo, sin tocar nada más.
 .PARAMETER Puerto
   Puerto TCP de la aplicación. En una actualización se usa el que ya está en el archivo de configuración.
 .PARAMETER AdminUsuario
@@ -24,7 +29,8 @@ param(
     [int]$Puerto = 80,
     [string]$AdminUsuario = '',
     [string]$AdminContrasena = '',
-    [string]$ArchivoContrasena = ''
+    [string]$ArchivoContrasena = '',
+    [switch]$ActualizarIp
 )
 
 $ErrorActionPreference = 'Stop'
@@ -85,6 +91,63 @@ function RestringirAAdministradores([string]$ruta, [bool]$esCarpeta = $false) {
 }
 
 New-Item -ItemType Directory -Force -Path $carpetaDatos | Out-Null
+
+# --- 0. Solo con -ActualizarIp: cambia únicamente App:UrlPublica y reinicia el servicio (D-53) ---
+if ($ActualizarIp) {
+    if (-not (Test-Path -LiteralPath $archivoConfig) -or ((Get-Item -LiteralPath $archivoConfig).Length -eq 0)) {
+        throw 'No hay configuración que actualizar. Ejecuta el instalador primero.'
+    }
+    $existente = Get-Content -LiteralPath $archivoConfig -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($existente.PSObject.Properties.Name -contains 'Comedor' -and $existente.Comedor.Puerto) {
+        $Puerto = [int]$existente.Comedor.Puerto
+    }
+    $ip = IpLocal
+    $urlPublica = if ($Puerto -eq 80) { "http://$ip" } else { "http://${ip}:$Puerto" }
+
+    if ($existente.PSObject.Properties.Name -notcontains 'App') {
+        $existente | Add-Member -NotePropertyName 'App' -NotePropertyValue ([pscustomobject]@{ UrlPublica = $urlPublica })
+    }
+    elseif ($existente.App.PSObject.Properties.Name -contains 'UrlPublica') {
+        $existente.App.UrlPublica = $urlPublica
+    }
+    else {
+        $existente.App | Add-Member -NotePropertyName 'UrlPublica' -NotePropertyValue $urlPublica
+    }
+    $json = $existente | ConvertTo-Json -Depth 10
+
+    # Escritura segura: archivo temporal ya restringido a SYSTEM y Administradores, y luego reemplazo del original.
+    $temporal = $archivoConfig + '.nuevo'
+    try {
+        [System.IO.File]::WriteAllText($temporal, '', (New-Object System.Text.UTF8Encoding($false)))
+        RestringirAAdministradores $temporal
+        [System.IO.File]::WriteAllText($temporal, $json, (New-Object System.Text.UTF8Encoding($false)))
+        [System.IO.File]::Replace($temporal, $archivoConfig, $null)
+        RestringirAAdministradores $archivoConfig
+    }
+    catch {
+        Remove-Item -LiteralPath $temporal -Force -ErrorAction SilentlyContinue
+        throw 'No se pudo actualizar la dirección. La configuración anterior quedó como estaba.'
+    }
+    $json = $null
+    $existente = $null
+    Write-Host "Dirección del QR actualizada a $urlPublica."
+
+    $servicio = Get-Service -Name 'Comedor' -ErrorAction SilentlyContinue
+    if ($null -eq $servicio) {
+        Write-Warning 'El servicio "Comedor" no está instalado; no hay nada que reiniciar.'
+    }
+    else {
+        try {
+            Restart-Service -Name 'Comedor' -Force -ErrorAction Stop
+            Write-Host 'Servicio "Comedor" reiniciado.'
+        }
+        catch {
+            Write-Warning 'No se pudo reiniciar el servicio "Comedor". Reinícialo desde Servicios de Windows.'
+        }
+    }
+    Write-Host 'Ahora reimprime el QR desde Panel > Puntos.'
+    exit 0
+}
 
 # --- 1. Archivo de configuración (solo si no existe) ---
 if ((Test-Path -LiteralPath $archivoConfig) -and ((Get-Item -LiteralPath $archivoConfig).Length -gt 0)) {
