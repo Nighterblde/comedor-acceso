@@ -4,22 +4,23 @@
 
 | Campo | Valor |
 | --- | --- |
-| Fecha | 4 de noviembre de 2026 |
-| Estado | Borrador para revisión con el cliente |
+| Fecha | 6 de noviembre de 2026 |
+| Estado | Implementado; pendiente la confirmación en el entorno del cliente |
 | Alcance | Subproyecto 1 de la plataforma del comedor |
-| Documentos asociados | [Plan de implementación](plan.md) · [Guía de diseño](diseno.md) · [Decisiones](decisiones.md) |
+| Documentos asociados | [Plan de implementación](plan.md) · [Guía de diseño](diseno.md) · [Decisiones](decisiones.md) · [Carga y aceptación](aceptacion.md) |
 | Fuente editable | Documento colaborativo en Claude (este archivo es una exportación) |
 
-**Versión 1.5.** Las decisiones D-NN se detallan en el [registro de decisiones](decisiones.md).
+**Versión 1.6.** Las decisiones D-NN se detallan en el [registro de decisiones](decisiones.md).
 
-| Versión | Cambios                                                                                                                                                                                                                    |
-|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1.0     | Versión inicial aprobada para planeación.                                                                                                                                                                                  |
-| 1.1     | Un solo punto de entrada, donde el chef sirve la comida. Referencia a la guía de diseño.                                                                                                                                   |
-| 1.2     | RF-23 precisa qué reportes se exportan y en qué formato (D-14). RF-26 precisa las reglas de la captura de contingencia (D-15).                                                                                             |
-| 1.3     | El QR del punto es permanente e impreso y no comprueba presencia; se elimina la caducidad del token (RF-07, RF-10, D-21). La pantalla del chef muestra el nombre sin foto; la foto queda como mejora futura (RF-29, D-20). |
-| 1.4     | Riesgos aceptados D-16 y D-21 en 2.7. Turno y tiempo de comida como texto libre (D-17). Mejoras futuras D-19 y D-20 en 10. Se corrigen dos menciones de foto en la pantalla del chef (2.2 y 9.2).                          |
-| 1.5     | La matrícula puede llevar letras y números; el celular abre el teclado de texto (D-32). Se agrega el formato de la matrícula a los pendientes con el cliente (11).                                                         |
+| Versión | Cambios                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.0     | Versión inicial aprobada para planeación.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 1.1     | Un solo punto de entrada, donde el chef sirve la comida. Referencia a la guía de diseño.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 1.2     | RF-23 precisa qué reportes se exportan y en qué formato (D-14). RF-26 precisa las reglas de la captura de contingencia (D-15).                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 1.3     | El QR del punto es permanente e impreso y no comprueba presencia; se elimina la caducidad del token (RF-07, RF-10, D-21). La pantalla del chef muestra el nombre sin foto; la foto queda como mejora futura (RF-29, D-20).                                                                                                                                                                                                                                                                                                                                             |
+| 1.4     | Riesgos aceptados D-16 y D-21 en 2.7. Turno y tiempo de comida como texto libre (D-17). Mejoras futuras D-19 y D-20 en 10. Se corrigen dos menciones de foto en la pantalla del chef (2.2 y 9.2).                                                                                                                                                                                                                                                                                                                                                                      |
+| 1.5     | La matrícula puede llevar letras y números; el celular abre el teclado de texto (D-32). Se agrega el formato de la matrícula a los pendientes con el cliente (11).                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 1.6     | RNF-05: el aviso de sincronización fallida muestra la fecha de la última sincronización exitosa (D-22). RF-25: la clave de un punto y el nombre de un usuario no se editan (D-23). §7: el empleado no guarda la fecha de última sincronización (D-28). §8: reglas de filas inválidas en la sincronización (D-28). §2.7: riesgos del control de intentos en memoria (D-27) y de la protección de solo inserción en la aplicación (D-25). §11: lista vacía de RR. HH. (D-28) y HTTPS sin forzar (D-29). §9.2: resultado de la prueba de carga y de la aceptación (D-31). |
 
 ## 1. Introducción
 
@@ -115,6 +116,10 @@ Un comedor con un solo punto de entrada, donde el chef sirve la comida, y de 300
 
 - **Sin protección del último administrador (D-16):** un administrador puede desactivar a cualquier usuario, incluido el último administrador activo. Si ocurre, la recuperación es una corrección directa en la base de datos.
 
+- **Bloqueo por intentos en memoria (D-27):** el conteo de intentos fallidos se reinicia si la API se reinicia, y en una ráfaga de peticiones simultáneas se pueden probar más de 5 contraseñas antes del bloqueo.
+
+- **Solo inserción protegida por la aplicación (D-25):** la API impide editar o borrar consumos, rechazos y entregas, pero quien tenga acceso directo a la base de datos podría hacerlo. Un control en la base de datos (permisos o disparadores) queda como mejora.
+
 ## 3. Requisitos funcionales
 
 Prioridad: **Alta** = indispensable para la v1; **Media** = deseable en la v1.
@@ -134,7 +139,7 @@ Prioridad: **Alta** = indispensable para la v1; **Media** = deseable en la v1.
 | **Entrada desde el celular**   |                                                                                                                                                                                                                                                                                                                  |           |
 | RF-07                          | Cada punto de entrada tiene un QR permanente, impreso en un cartel, con un token firmado que identifica el punto. El administrador lo obtiene desde Administración para imprimirlo. El QR da acceso a la aplicación; no comprueba que el empleado esté en el comedor (D-21).                                     | Alta      |
 | RF-08                          | El empleado escanea el QR con la cámara de su celular; el QR abre la aplicación web con el token.                                                                                                                                                                                                                | Alta      |
-| RF-09                          | El empleado inicia sesión con su ID y contraseña de la empresa; la sesión se recuerda en el celular durante 30 días (configurable).                                                                                                                                                                              | Alta      |
+| RF-09                          | El empleado inicia sesión con su ID y contraseña de la empresa; la sesión se recuerda en el celular durante 30 días (configurable). El número de empleado puede llevar letras y números, así que el celular abre el teclado de texto (D-32).                                                                     | Alta      |
 | RF-10                          | El token del QR no caduca. El servidor solo acepta tokens con firma válida y de un punto activo; si no, el celular pide escanear de nuevo y no se registra rechazo.                                                                                                                                              | Alta      |
 | RF-11                          | El celular muestra un pase a pantalla completa: Autorizado o Rechazado, foto, nombre, turno, tiempo de comida, hora, y una animación continua que distingue el pase vivo de una captura de pantalla.                                                                                                             | Alta      |
 | RF-12                          | Un rechazo muestra su motivo: no registrado, contrato vencido, día de descanso, fuera de horario, turno sin derecho a este tiempo o ya consumió.                                                                                                                                                                 | Alta      |
@@ -158,23 +163,23 @@ Prioridad: **Alta** = indispensable para la v1; **Media** = deseable en la v1.
 | RF-23                          | Exportación de reportes: conteo y cotejo a Excel y PDF; detalle a Excel. Cada exportación de conteo y cotejo termina con una fila "Total".                                                                                                                                                                       | Alta      |
 | **Administración y seguridad** |                                                                                                                                                                                                                                                                                                                  |           |
 | RF-24                          | Los usuarios del sistema (punto, encargado, supervisor, administrador) inician sesión con usuario y contraseña propios; acceso por rol con JWT. Sesión de 12 horas, salvo el rol Punto: 30 días.                                                                                                                 | Alta      |
-| RF-25                          | Alta, baja y edición de puntos de entrada y usuarios del sistema.                                                                                                                                                                                                                                                | Alta      |
+| RF-25                          | Alta, baja y edición de puntos de entrada y usuarios del sistema. La clave de un punto y el nombre de un usuario no se editan: para renombrar se da de alta el nuevo y se desactiva el anterior (D-23).                                                                                                          | Alta      |
 
 ## 4. Requisitos no funcionales
 
-| ID     | Categoría      | Requisito                                                                                                                                                                          |
-|--------|----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| RNF-01 | Rendimiento    | Con sesión ya iniciada, el pase aparece en menos de 2 segundos desde que se escanea el QR; la captura manual responde en menos de 1 segundo.                                       |
-| RNF-02 | Capacidad      | Soporta en su punto de entrada 1,000 consumos por servicio, con picos de 50 validaciones por minuto, sin degradarse.                                                               |
-| RNF-03 | Integridad     | Dos validaciones simultáneas del mismo empleado producen un solo consumo (restricción única en base de datos sobre matrícula, fecha de servicio y tiempo de comida).               |
-| RNF-04 | Auditoría      | Los registros de consumo, entrega y rechazo son de solo inserción; ningún endpoint ni rol los modifica.                                                                            |
-| RNF-05 | Disponibilidad | Si la fuente RR. HH. no responde, el sistema sigue validando con la última copia sincronizada y muestra un aviso.                                                                  |
-| RNF-06 | Seguridad      | Tokens de QR firmados con HMAC-SHA256 y clave del servidor; contraseñas de usuarios del sistema con hash; HTTPS dentro de la red; las credenciales de la empresa nunca se guardan. |
-| RNF-07 | Respaldo       | Respaldo automático diario de la base de datos del sistema.                                                                                                                        |
-| RNF-08 | Usabilidad     | El pase se distingue a 2 metros por color (verde o rojo) y texto grande; la captura manual se opera con la matrícula y Enter.                                                      |
-| RNF-09 | Compatibilidad | Celular: Chrome en Android y Safari en iOS actuales. Pantallas de punto y administración: Chrome y Edge actuales.                                                                  |
-| RNF-10 | Mantenibilidad | Arquitectura por capas en el backend y separación modelo-vista-controlador en el frontend (sección 5); reglas de dominio cubiertas por pruebas unitarias.                          |
-| RNF-11 | Portabilidad   | Instalable en servidor Windows o Linux.                                                                                                                                            |
+| ID     | Categoría      | Requisito                                                                                                                                                                                                                                                                                                |
+|--------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| RNF-01 | Rendimiento    | Con sesión ya iniciada, el pase aparece en menos de 2 segundos desde que se escanea el QR; la captura manual responde en menos de 1 segundo.                                                                                                                                                             |
+| RNF-02 | Capacidad      | Soporta en su punto de entrada 1,000 consumos por servicio, con picos de 50 validaciones por minuto, sin degradarse.                                                                                                                                                                                     |
+| RNF-03 | Integridad     | Dos validaciones simultáneas del mismo empleado producen un solo consumo (restricción única en base de datos sobre matrícula, fecha de servicio y tiempo de comida).                                                                                                                                     |
+| RNF-04 | Auditoría      | Los registros de consumo, entrega y rechazo son de solo inserción; ningún endpoint ni rol los modifica.                                                                                                                                                                                                  |
+| RNF-05 | Disponibilidad | Si la fuente RR. HH. no responde, el sistema sigue validando con la última copia sincronizada. Reportes y Administración muestran al supervisor y al administrador "La última sincronización con RR. HH. falló; se usan los datos del {fecha}", con la fecha de la última sincronización exitosa (D-22). |
+| RNF-06 | Seguridad      | Tokens de QR firmados con HMAC-SHA256 y clave del servidor; contraseñas de usuarios del sistema con hash; HTTPS dentro de la red; las credenciales de la empresa nunca se guardan.                                                                                                                       |
+| RNF-07 | Respaldo       | Respaldo automático diario de la base de datos del sistema.                                                                                                                                                                                                                                              |
+| RNF-08 | Usabilidad     | El pase se distingue a 2 metros por color (verde o rojo) y texto grande; la captura manual se opera con la matrícula y Enter.                                                                                                                                                                            |
+| RNF-09 | Compatibilidad | Celular: Chrome en Android y Safari en iOS actuales. Pantallas de punto y administración: Chrome y Edge actuales.                                                                                                                                                                                        |
+| RNF-10 | Mantenibilidad | Arquitectura por capas en el backend y separación modelo-vista-controlador en el frontend (sección 5); reglas de dominio cubiertas por pruebas unitarias.                                                                                                                                                |
+| RNF-11 | Portabilidad   | Instalable en servidor Windows o Linux.                                                                                                                                                                                                                                                                  |
 
 ## 5. Arquitectura
 
@@ -231,16 +236,16 @@ La verificación "¿ya consumió?" y el registro del consumo ocurren en una sola
 
 Ocho entidades cubren la v1; Consumo, Entrega y Rechazo son de solo inserción.
 
-| Entidad      | Campos principales                                                                                                                                             | Notas                                                                                                                                  |
-|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| Empleado     | Matrícula (clave), nombre, foto, área, turno, días laborales (conjunto de días de la semana), inicio y fin de contrato, fecha de última sincronización, activo | Copia de la fuente RR. HH.; solo la modifica la sincronización. El formato real del rol de descansos se ajusta al confirmar la fuente. |
-| Turno        | Nombre (Matutino, Vespertino, Nocturno)                                                                                                                        | Texto libre en la v1, sin catálogo; debe coincidir exactamente, con mayúsculas y minúsculas, con el valor de RR. HH. (D-17).           |
-| TiempoComida | Nombre (Desayuno, Comida, Cena, Colación)                                                                                                                      | Texto libre en la v1, igual que el turno (D-17).                                                                                       |
-| ReglaDerecho | Turno, tiempo de comida, hora de inicio, hora de fin, pertenece a la jornada del día anterior (sí/no)                                                          | Configurable. Fin menor que inicio = cruza la medianoche. Sin traslapes dentro de un turno.                                            |
-| PuntoEntrada | Clave, nombre, activo                                                                                                                                          | Un QR impreso y una pantalla de solicitudes por punto.                                                                                 |
-| Consumo      | Id, matrícula, fecha de servicio, tiempo de comida, fecha y hora exacta, punto de entrada, canal (Celular, Manual, Contingencia), encargado (si aplica)        | Restricción única (matrícula, fecha de servicio, tiempo de comida). Sin actualización ni borrado.                                      |
-| Entrega      | Id, consumo (único), fecha y hora, chef                                                                                                                        | Una por consumo. Sin actualización ni borrado.                                                                                         |
-| Rechazo      | Id, matrícula, fecha y hora, fecha de servicio y tiempo de comida (si aplican), punto de entrada, canal, encargado (si aplica), motivo                         | Sin actualización ni borrado.                                                                                                          |
+| Entidad      | Campos principales                                                                                                                                      | Notas                                                                                                                                                                                                     |
+|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Empleado     | Matrícula (clave), nombre, foto, área, turno, días laborales (conjunto de días de la semana), inicio y fin de contrato, activo                          | Copia de la fuente RR. HH.; solo la modifica la sincronización. La fecha de cada sincronización se consulta en la bitácora (D-28). El formato real del rol de descansos se ajusta al confirmar la fuente. |
+| Turno        | Nombre (Matutino, Vespertino, Nocturno)                                                                                                                 | Texto libre en la v1, sin catálogo; debe coincidir exactamente, con mayúsculas y minúsculas, con el valor de RR. HH. (D-17).                                                                              |
+| TiempoComida | Nombre (Desayuno, Comida, Cena, Colación)                                                                                                               | Texto libre en la v1, igual que el turno (D-17).                                                                                                                                                          |
+| ReglaDerecho | Turno, tiempo de comida, hora de inicio, hora de fin, pertenece a la jornada del día anterior (sí/no)                                                   | Configurable. Fin menor que inicio = cruza la medianoche. Sin traslapes dentro de un turno.                                                                                                               |
+| PuntoEntrada | Clave, nombre, activo                                                                                                                                   | Un QR impreso y una pantalla de solicitudes por punto.                                                                                                                                                    |
+| Consumo      | Id, matrícula, fecha de servicio, tiempo de comida, fecha y hora exacta, punto de entrada, canal (Celular, Manual, Contingencia), encargado (si aplica) | Restricción única (matrícula, fecha de servicio, tiempo de comida). Sin actualización ni borrado.                                                                                                         |
+| Entrega      | Id, consumo (único), fecha y hora, chef                                                                                                                 | Una por consumo. Sin actualización ni borrado.                                                                                                                                                            |
+| Rechazo      | Id, matrícula, fecha y hora, fecha de servicio y tiempo de comida (si aplican), punto de entrada, canal, encargado (si aplica), motivo                  | Sin actualización ni borrado.                                                                                                                                                                             |
 
 Tablas de apoyo: UsuarioSistema (usuario, hash de contraseña, rol, activo) y BitacoraSincronizacion (fecha, resultado, altas, cambios, bajas, error).
 
@@ -248,20 +253,20 @@ Tablas de apoyo: UsuarioSistema (usuario, hash de contraseña, rol, activo) y Bi
 
 Ningún error puede producir un consumo duplicado ni perder uno registrado.
 
-| Situación                                                                               | Comportamiento del sistema                                                                                                                     |
-|-----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
-| La fuente RR. HH. no responde durante la sincronización                                 | Se conserva la última copia; se registra el error en la bitácora y se muestra un aviso al supervisor y al administrador.                       |
-| La sincronización trae datos inválidos (matrícula vacía, turno desconocido)             | Se omite ese registro, se anota en la bitácora y la sincronización continúa con los demás.                                                     |
-| Dos intentos simultáneos del mismo empleado (dos celulares, o celular y captura manual) | La restricción única permite solo un consumo; el segundo recibe "Rechazado: ya consumió".                                                      |
-| Token de QR alterado, firmado con otra clave o de un punto inactivo                     | El celular muestra "Escanea de nuevo el código de la entrada"; no se registra rechazo.                                                         |
-| ID o contraseña de la empresa incorrectos                                               | El celular muestra "Credenciales incorrectas"; tras 5 intentos fallidos en 15 minutos se bloquea ese ID por 15 minutos.                        |
-| El servicio de autenticación de la empresa no responde                                  | El celular muestra "No se pudo verificar tu cuenta; acude con el encargado" y el chef usa la captura manual.                                   |
-| Empleado sin celular, sin batería o sin Wi-Fi                                           | El chef captura su matrícula en el punto (RF-15).                                                                                              |
-| El chef presiona Servido dos veces seguidas                                             | La entrega es única por consumo; el segundo clic no crea otra y la pantalla lo muestra como ya servido.                                        |
-| Un autorizado nunca recoge su comida                                                    | Queda en "Por servir" hasta el fin del horario; luego sale de la lista y aparece en el reporte como autorizado sin servir.                     |
-| La pantalla del punto pierde conexión                                                   | Muestra "Sin conexión" y sigue intentando; al reconectar, recupera la lista "Por servir".                                                      |
-| El servidor no está disponible                                                          | Procedimiento de contingencia: lista en papel firmada por el chef, capturada después por un administrador como consumos de canal Contingencia. |
-| Error inesperado en la API                                                              | Se registra en bitácora técnica con fecha, endpoint y detalle; el usuario ve un mensaje genérico.                                              |
+| Situación                                                                                     | Comportamiento del sistema                                                                                                                                                                                                    |
+|-----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| La fuente RR. HH. no responde durante la sincronización                                       | Se conserva la última copia; se registra el error en la bitácora y se muestra un aviso al supervisor y al administrador.                                                                                                      |
+| La sincronización trae datos inválidos (matrícula vacía o repetida, turno fuera del catálogo) | Se omite ese registro, se anota en la bitácora y la sincronización continúa con los demás. Si el empleado ya existía, queda como estaba; no se da de baja. Un empleado dado de baja que vuelve a aparecer se reactiva (D-28). |
+| Dos intentos simultáneos del mismo empleado (dos celulares, o celular y captura manual)       | La restricción única permite solo un consumo; el segundo recibe "Rechazado: ya consumió".                                                                                                                                     |
+| Token de QR alterado, firmado con otra clave o de un punto inactivo                           | El celular muestra "Escanea de nuevo el código de la entrada"; no se registra rechazo.                                                                                                                                        |
+| ID o contraseña de la empresa incorrectos                                                     | El celular muestra "Credenciales incorrectas"; tras 5 intentos fallidos en 15 minutos se bloquea ese ID por 15 minutos.                                                                                                       |
+| El servicio de autenticación de la empresa no responde                                        | El celular muestra "No se pudo verificar tu cuenta; acude con el encargado" y el chef usa la captura manual.                                                                                                                  |
+| Empleado sin celular, sin batería o sin Wi-Fi                                                 | El chef captura su matrícula en el punto (RF-15).                                                                                                                                                                             |
+| El chef presiona Servido dos veces seguidas                                                   | La entrega es única por consumo; el segundo clic no crea otra y la pantalla lo muestra como ya servido.                                                                                                                       |
+| Un autorizado nunca recoge su comida                                                          | Queda en "Por servir" hasta el fin del horario; luego sale de la lista y aparece en el reporte como autorizado sin servir.                                                                                                    |
+| La pantalla del punto pierde conexión                                                         | Muestra "Sin conexión" y sigue intentando; al reconectar, recupera la lista "Por servir".                                                                                                                                     |
+| El servidor no está disponible                                                                | Procedimiento de contingencia: lista en papel firmada por el chef, capturada después por un administrador como consumos de canal Contingencia.                                                                                |
+| Error inesperado en la API                                                                    | Se registra en bitácora técnica con fecha, endpoint y detalle; el usuario ve un mensaje genérico.                                                                                                                             |
 
 La captura de contingencia agrega un requisito: **RF-26 (Media)** registrar consumos de canal Contingencia con autor y referencia a la lista en papel, sujetos a la misma restricción única. Solo puede capturarlos un administrador. No se aplican las reglas de derecho (la comida ya se sirvió), pero la matrícula debe existir como empleado sincronizado; si no, se rechaza con "No registrado". La referencia y el tiempo de comida son obligatorios. Un consumo repetido se rechaza con "Ya consumiste este tiempo de comida" (D-15).
 
@@ -279,33 +284,35 @@ La captura de contingencia agrega un requisito: **RF-26 (Media)** registrar cons
 
 ### 9.2 Criterios de aceptación
 
+**Resultado de la aceptación (Tarea 15, 5 de noviembre de 2026, D-31):** los 14 criterios se cumplen en la API y la base del entorno de prueba, y la prueba de carga pasa (p95 de 6 ms por celular y 5.9 ms en captura manual, 0 % de fallos, 1,000 consumos = 1,000 autorizados). Los criterios 1, 2, 3 y 12 quedan sin marcar hasta confirmarlos con un celular real y la pantalla del chef en la red del comedor. El detalle está en [aceptacion.md](aceptacion.md).
+
 - [ ] Un empleado vigente, en día laboral, en su turno y dentro del horario ve el pase Autorizado en su celular en menos de 2 segundos tras escanear, con sesión ya iniciada.
 
 - [ ] La misma solicitud aparece en la pantalla del chef en menos de 3 segundos, con nombre, turno y tiempo de comida, en la lista "Por servir".
 
 - [ ] Al marcar Servido, sale de la lista y queda una entrega registrada; un segundo clic no crea otra.
 
-- [ ] Un QR alterado, firmado con otra clave o de un punto inactivo pide "Escanea de nuevo" y no registra rechazo.
+- [x] Un QR alterado, firmado con otra clave o de un punto inactivo pide "Escanea de nuevo" y no registra rechazo.
 
-- [ ] Cada uno de los seis motivos de rechazo aparece en el pase cuando corresponde.
+- [x] Cada uno de los seis motivos de rechazo aparece en el pase cuando corresponde.
 
-- [ ] Un segundo intento del mismo empleado en el mismo tiempo de comida, por cualquier canal, es rechazado.
+- [x] Un segundo intento del mismo empleado en el mismo tiempo de comida, por cualquier canal, es rechazado.
 
-- [ ] Dos validaciones simultáneas del mismo empleado producen un solo consumo.
+- [x] Dos validaciones simultáneas del mismo empleado producen un solo consumo.
 
-- [ ] Un empleado del turno nocturno puede desayunar al salir y su consumo queda en la fecha de la jornada que trabajó, aunque el día siguiente sea su descanso.
+- [x] Un empleado del turno nocturno puede desayunar al salir y su consumo queda en la fecha de la jornada que trabajó, aunque el día siguiente sea su descanso.
 
-- [ ] La captura manual del chef aplica las mismas reglas que el celular.
+- [x] La captura manual del chef aplica las mismas reglas que el celular.
 
-- [ ] Ningún rol puede editar ni borrar consumos, entregas o rechazos.
+- [x] Ningún rol puede editar ni borrar consumos, entregas o rechazos.
 
-- [ ] Un empleado con contrato vencido en la fuente RR. HH. pierde el derecho tras la siguiente sincronización.
+- [x] Un empleado con contrato vencido en la fuente RR. HH. pierde el derecho tras la siguiente sincronización.
 
 - [ ] Con la fuente RR. HH. caída, el sistema sigue validando y muestra el aviso.
 
-- [ ] El reporte de cotejo cuenta solo comidas servidas, separa las autorizadas sin servir, y se exporta a Excel y PDF.
+- [x] El reporte de cotejo cuenta solo comidas servidas, separa las autorizadas sin servir, y se exporta a Excel y PDF.
 
-- [ ] La prueba de carga cumple RNF-01 y RNF-02.
+- [x] La prueba de carga cumple RNF-01 y RNF-02.
 
 ## 10. Fuera de alcance y subproyectos futuros
 
@@ -351,11 +358,11 @@ Estas decisiones pueden cambiar requisitos; cada una indica a cuáles afecta.
 
 - [ ] Reunión sobre el sistema de huella existente y si puede reutilizarse (sección 10).
 
-- [ ] Wi-Fi accesible desde celulares personales y certificado HTTPS (sección 2.6).
+- [ ] Wi-Fi accesible desde celulares personales y certificado HTTPS (sección 2.6). La API todavía no fuerza HTTPS; se activa cuando exista el certificado (D-29, RNF-06).
 
 - [ ] Motor, tabla o vista y credenciales de solo lectura de la fuente RR. HH., incluido el formato del rol de descansos (RF-01 a RF-03, RF-27).
 
-- [ ] Formato de la matrícula en la fuente RR. HH.: si es solo numérica o puede llevar letras (D-32).
+- [ ] Si la fuente RR. HH. entrega una lista vacía, ¿debe tratarse como falla? Hoy da de baja a todos los empleados activos (D-28).
 
 - [ ] Lista de turnos y horarios de cada tiempo de comida, cuáles pertenecen a la jornada del día anterior y cómo tratar horarios que se traslapen (RF-05, RF-06, RF-28).
 
@@ -366,6 +373,8 @@ Estas decisiones pueden cambiar requisitos; cada una indica a cuáles afecta.
 - [ ] Disponibilidad de foto del empleado en la fuente RR. HH. (RF-11, RF-29).
 
 - [ ] Licencia de QuestPDF: es gratuita para organizaciones con ingresos anuales menores a 1 millón de dólares; confirmar si aplica.
+
+- [ ] Formato de la matrícula en la fuente RR. HH.: si es solo numérica o puede llevar letras (D-32).
 
 ## Anexo A: Enfoques evaluados
 

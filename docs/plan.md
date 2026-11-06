@@ -6,13 +6,13 @@
 | --- | --- |
 | Versión | 1.3 |
 | Fecha | 4 de noviembre de 2026 |
-| Implementa | [SRS v1.4](srs.md) |
+| Implementa | [SRS v1.6](srs.md) |
 | Diseño | [Guía de diseño](diseno.md) |
 | Tareas | 16 (1 a 15, con la 8 dividida en 8a y 8b) |
 
 > **Para agentes:** usar la subskill subagent-driven-development (recomendada) o executing-plans para implementar este plan tarea por tarea. Los pasos usan casillas para dar seguimiento.
 
-**Avance al 5 de noviembre de 2026:** tareas 1 a 13 terminadas y fusionadas en `main` (pull requests #1 a #6). Faltan la Tarea 14 (Reportes y Administración en el frontend) y la Tarea 15 (prueba de carga y aceptación).
+**Avance al 6 de noviembre de 2026:** las 16 tareas están terminadas y fusionadas en `main` (pull requests #1 a #10). Queda confirmar en la red del comedor, con un celular real y la pantalla del chef, los criterios 1, 2, 3 y 12 del SRS y repetir la carga por la red ([aceptacion.md](aceptacion.md)).
 
 **Objetivo:** construir el sistema de control de acceso y consumo del comedor de personal descrito en el SRS: entrada por celular con QR permanente impreso, captura manual del encargado, registro inalterable y reportes de cotejo de factura.
 
