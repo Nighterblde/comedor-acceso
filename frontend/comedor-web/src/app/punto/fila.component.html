@@ -1,0 +1,37 @@
+@if (sinConexion()) {
+  <p class="sin-conexion" role="status">Sin conexión</p>
+}
+
+@if (fila().actual; as actual) {
+  <section class="actual">
+    <p class="etiqueta">Sírvele a</p>
+    <h1 class="nombre">{{ actual.nombre ?? actual.matricula }}</h1>
+    <p class="chips">
+      @if (actual.turno) {
+        <span class="chip turno">{{ actual.turno }}</span>
+      }
+      @if (actual.tiempoComida) {
+        <span class="chip comida">{{ actual.tiempoComida }}</span>
+      }
+    </p>
+    @if (modo === 'panel') {
+      <button type="button" class="servido" (click)="servir()">Marcar servido</button>
+    }
+  </section>
+} @else {
+  <section class="actual">
+    <p class="esperando">Esperando al siguiente…</p>
+  </section>
+}
+
+@if (fila().siguientes.length > 0) {
+  <section class="siguen">
+    <p class="etiqueta">Siguen</p>
+    <ul>
+      @for (s of fila().siguientes; track s.consumoId) {
+        <li>{{ s.nombre ?? s.matricula }}</li>
+      }
+    </ul>
+    <p class="restantes">{{ restantes }} en la fila</p>
+  </section>
+}

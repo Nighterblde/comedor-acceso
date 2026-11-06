@@ -33,16 +33,9 @@
   background: var(--color-dorado);
 }
 
-.chef {
-  display: grid;
-  grid-template-columns: 320px minmax(0, 1fr) 320px;
-  gap: 24px;
-  align-items: start;
-  padding: 24px;
-}
-
-.izquierda {
+:host {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  height: 100vh;
+  overflow: hidden;
 }
