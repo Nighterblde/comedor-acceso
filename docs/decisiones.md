@@ -474,3 +474,15 @@ Plan v2, tarea 10. Detalles que el plan no fijaba; no cambian lo que hace el sis
 - **Sin verificar en máquina:** el instalador no se compiló ni se ejecutó al escribirlo; la lista de comprobación está pendiente en `docs/aceptacion.md`, "Instalación v2".
 
 **Estado:** vigente.
+
+## D-52 Detalles de la identidad y la dirección limpia (tarea 11 del plan v2)
+
+Plan v2, tarea 11. Detalles que el plan no fijaba; no cambian lo que hace el sistema (RF-38, D-43).
+
+- **Fuente Montserrat:** archivos `woff2` del subconjunto latino (pesos 400, 500, 600, 700 y 800, estilo normal) tomados del paquete `@fontsource/montserrat` 5.3.0 (licencia SIL OFL 1.1, texto íntegro en `OFL.txt`). Se guardan en `frontend/comedor-web/public/fuentes/`, no en `src/assets`, porque `public/` es la carpeta de recursos estáticos que ya publica `angular.json`. No se agrega dependencia al `package.json`. Los `@font-face` usan la ruta `/fuentes/...` (mismo origen). El subconjunto latino cubre el español (acentos, ñ, ¿, ¡, º).
+- **Ícono:** `public/icono.svg` (plato con cubiertos en `#235B4E` sobre `#F5F5F2`), dibujado a mano, sin marcas de terceros; se elimina `favicon.ico`.
+- **Títulos:** una `TitleStrategy` propia arma «{sección} · Comedor de personal»; las secciones del panel se llaman «Panel · {nombre}» (por ejemplo «Panel · Cotejo de factura · Comedor de personal»). Sin título de ruta, solo «Comedor de personal».
+- **Token del QR:** al leerlo, `history.replaceState` deja la dirección en `/pase` y el token se guarda en memoria y en `sessionStorage` (`comedor.pase.token`, solo de la pestaña actual). Una recarga de `/pase` vuelve a validar con él; en otra visita (sin token ni valor guardado) se pide escanear de nuevo. El inicio de sesión del empleado ocurre dentro de la misma pantalla, por lo que no usa `returnUrl` y conserva el token.
+- **Prueba de `index.html`:** `angular.json` declara `loader: { ".html": "text" }` en la compilación para poder importar `src/index.html` como texto en las pruebas de Jasmine.
+
+**Estado:** vigente.

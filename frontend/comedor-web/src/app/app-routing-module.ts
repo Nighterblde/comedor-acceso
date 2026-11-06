@@ -4,11 +4,12 @@ import { inicioGuard } from './core/inicio.guard';
 import { rolGuard } from './core/rol.guard';
 
 export const rutas: Routes = [
-  { path: 'login', loadChildren: () => import('./login/login.module').then((m) => m.LoginModule) },
+  { path: 'login', title: 'Iniciar sesión', loadChildren: () => import('./login/login.module').then((m) => m.LoginModule) },
   // Ruta de los accesos directos: lleva al inicio del rol (o al login si no hay sesión).
   { path: 'inicio', canActivate: [inicioGuard], children: [] },
   {
     path: 'punto/:id',
+    title: 'Pantalla del chef',
     canActivate: [rolGuard(['Chef', 'Administrador'])],
     loadChildren: () => import('./punto/punto.module').then((m) => m.PuntoModule),
   },

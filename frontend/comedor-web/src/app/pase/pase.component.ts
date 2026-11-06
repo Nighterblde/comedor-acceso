@@ -8,6 +8,7 @@ export const TEXTO_ESCANEAR = 'Escanea de nuevo el código de la entrada';
 export const TEXTO_REGISTRADO = 'Listo. El día que abra el comedor solo escanea el código de la entrada';
 
 const INTERVALO_TURNO_MS = 3000;
+const CLAVE_TOKEN_QR = 'comedor.pase.token';
 
 type Vista = 'login' | 'cargando' | 'pase' | 'escanear' | 'registrado';
 
@@ -59,7 +60,7 @@ export class PaseComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.token = this.ruta.snapshot.queryParamMap.get('t');
+    this.token = this.leerToken();
     this.registro = this.ruta.snapshot.data['registro'] === true;
     this.punto = this.pase.puntoDeToken(this.token);
     this.reloj = interval(1000).subscribe(() => this.ahora.set(new Date()));
@@ -69,6 +70,28 @@ export class PaseComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.reloj?.unsubscribe();
     this.consultaTurno?.unsubscribe();
+  }
+
+  /**
+   * Toma el token del QR de la dirección y la deja limpia (/pase). Lo conserva en memoria y en
+   * sessionStorage para que una recarga de la misma visita vuelva a validar.
+   */
+  private leerToken(): string | null {
+    const deLaDireccion = this.ruta.snapshot.queryParamMap.get('t');
+    if (deLaDireccion) {
+      try {
+        sessionStorage.setItem(CLAVE_TOKEN_QR, deLaDireccion);
+      } catch {
+        // Sin sessionStorage el token solo vive en memoria.
+      }
+      history.replaceState(history.state, '', window.location.pathname + window.location.hash);
+      return deLaDireccion;
+    }
+    try {
+      return sessionStorage.getItem(CLAVE_TOKEN_QR);
+    } catch {
+      return null;
+    }
   }
 
   sesionIniciada(): void {

@@ -6,8 +6,8 @@ import { LoginEmpleadoComponent } from './login-empleado.component';
 import { PaseComponent } from './pase.component';
 
 const routes: Routes = [
-  { path: 'pase', component: PaseComponent },
-  { path: 'registro', component: PaseComponent, data: { registro: true } },
+  { path: 'pase', title: 'Pase', component: PaseComponent },
+  { path: 'registro', title: 'Registro', component: PaseComponent, data: { registro: true } },
 ];
 
 @NgModule({
