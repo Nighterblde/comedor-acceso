@@ -44,6 +44,7 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-40](#d-40-contraseña-de-la-empresa-pendiente-y-bloqueante-para-producción) | Contraseña de la empresa: pendiente y bloqueante para producción | Pendiente |
 | [D-41](#d-41-acceso-desde-internet-implementación-futura) | Acceso desde internet (datos móviles): implementación futura | Pospuesta |
 | [D-42](#d-42-fuente-de-rr-hh-en-sql-server-o-excel) | Fuente de RR. HH. en SQL Server o Excel | Aceptada |
+| [D-43](#d-43-dirección-e-identidad-profesionales) | Dirección e identidad profesionales | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -302,7 +303,7 @@ Plan v2. Confirmado por el dueño del producto.
 
 Plan v2. Sustituye la vigencia de 12 h y 30 días de RF-24 para el chef.
 
-- **Decisión:** el token del chef dura 3,650 días, para que la TV nunca pida iniciar sesión. El del administrador dura 12 h (el dueño del producto pidió al menos 2).
+- **Decisión:** el token del chef dura 3,650 días, para que la TV nunca pida iniciar sesión. El del administrador dura 2 horas, a petición del dueño del producto; al vencer, el panel pide iniciar sesión de nuevo y vuelve a la misma pantalla.
 - **Revocación:** cada petición del chef o del administrador comprueba que el usuario siga activo y con el mismo rol. Desactivarlo o cambiarle el rol en el panel cierra su sesión al instante. Sin esto, un token de diez años no se podría revocar.
 
 ## D-35 Fila de servicio en la pantalla del chef
@@ -326,7 +327,8 @@ Plan v2. Cambia RF-15.
 
 Plan v2.
 
-- **Decisión:** reportes (cotejo, conteo, detalle) y administración (reglas, puntos, usuarios, personal, sincronización, contingencia) viven en un solo panel en `/panel`, con navegación lateral. Al iniciar sesión, el chef va a su pantalla y el administrador al panel.
+- **Decisión:** reportes (cotejo, conteo, detalle), administración (reglas, puntos, usuarios, personal, sincronización, contingencia) y la fila del comedor viven en un solo panel en `/panel`, con navegación lateral. Al iniciar sesión, el chef va a su pantalla y el administrador al panel.
+- **El administrador puede todo lo del chef:** ve la fila y marca Servido desde el panel (con botón, no con cualquier tecla), y puede abrir la pantalla del chef. Así no hace falta otra cuenta para cubrir al chef. Pedido por el dueño del producto.
 
 ## D-38 Panel y pantalla del chef solo desde la red de la empresa
 
@@ -340,7 +342,7 @@ Plan v2. Confirmado por el dueño del producto.
 Plan v2. La empresa no tiene técnicos; instala el dueño del producto.
 
 - **Decisión:** `InstalarComedor.exe` (Inno Setup) instala SQL Server 2022 Express si falta, la aplicación como servicio de Windows que arranca sola con el equipo, la regla de firewall para la red local, un respaldo diario y dos accesos directos: Pantalla del chef (navegador a pantalla completa) y Panel del comedor.
-- **Un solo proceso:** la API también publica el frontend, en un solo puerto (8080). Se publica autocontenida, así que la PC no necesita .NET.
+- **Un solo proceso:** la API también publica el frontend, en un solo puerto (80, o 8080 si el 80 está ocupado; D-43). Se publica autocontenida, así que la PC no necesita .NET.
 - **Base de datos:** SQL Server Express. Es gratuito, es el motor que ya usa el sistema (no hay que reescribir ni volver a probar) y es lo más probable para leer la base de empleados de la empresa. La base del comedor queda separada de la de RR. HH., que solo se lee (RF-03).
 - **Configuración y secretos:** el instalador genera las claves al azar en `%ProgramData%\Comedor\appsettings.Local.json`, legible solo para el sistema y los administradores del equipo.
 - **Riesgo conocido:** el QR impreso lleva la IP de la PC. Si la IP cambia, deja de funcionar; la guía explica cómo reservarla en el router y `verificar.ps1` avisa si cambió. El dominio propio (D-41) elimina este riesgo.
@@ -367,4 +369,13 @@ Plan v2. El motor de la base de empleados de la empresa aún no se conoce.
 
 - **Decisión:** dos fuentes reales, elegidas por configuración: una vista de SQL Server con columnas fijas (`vw_EmpleadosComedor`), o un archivo Excel con las mismas columnas que el administrador importa desde el panel (con plantilla descargable). La simulada queda para desarrollo.
 - **Motivo:** el Excel permite arrancar aunque no haya acceso a la base de RR. HH.; la vista es la integración automática cuando informática la cree.
+
+## D-43 Dirección e identidad profesionales
+
+Plan v2. Pedido por el dueño del producto.
+
+- **Sin puerto en la dirección:** el sistema usa el puerto 80, así que la dirección queda como `http://192.168.1.20` en vez de `http://192.168.1.20:8080`. Si el 80 está ocupado en la PC, el instalador propone 8080.
+- **Sin código en la barra:** el celular quita el código del QR de la dirección en cuanto lo lee; el empleado ve solo `/pase`.
+- **Sin rastros de Angular:** ícono propio, título "Comedor de personal" y la fuente servida por la aplicación (también funciona sin internet).
+- **Ocultar la IP por completo** requiere un nombre: con el dominio propio (D-41) la dirección será, por ejemplo, `https://comedor.tuempresa.com`. Se descartan los nombres `.local` y el nombre del equipo de Windows, porque muchos celulares Android no los resuelven.
 

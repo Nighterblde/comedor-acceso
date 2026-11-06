@@ -7,9 +7,9 @@
 | Versión | 1.0 |
 | Fecha | 6 de noviembre de 2026 |
 | Implementa | [SRS v2.0](srs.md) |
-| Decisiones | [D-33 a D-42](decisiones.md#d-33-tres-roles-empleado-chef-y-administrador) |
+| Decisiones | [D-33 a D-43](decisiones.md#d-33-tres-roles-empleado-chef-y-administrador) |
 | Diseño | [Guía de diseño](diseno.md) |
-| Tareas | 10 |
+| Tareas | 11 |
 | Plan anterior | [Plan v1](plan.md), terminado |
 
 > **Para agentes:** usar la skill `subagent-driven-development` (recomendada) o `executing-plans` para implementar este plan tarea por tarea. Los pasos usan casillas para dar seguimiento.
@@ -27,13 +27,15 @@
 Toda tarea cumple esta lista y las restricciones globales del [plan v1](plan.md#restricciones-globales), salvo donde esta lista las cambia.
 
 - Roles: `Empleado`, `Chef` y `Administrador` ([D-33](decisiones.md#d-33-tres-roles-empleado-chef-y-administrador)). Desaparecen `Punto`, `Encargado` y `Supervisor`; los usuarios existentes migran: `Punto` y `Encargado` → `Chef`, `Supervisor` → `Administrador`.
-- Sesión del chef: JWT de 3,650 días (`Jwt:DiasChef = 3650`), revocable: cada petición de Chef o Administrador comprueba que el usuario exista, esté activo y conserve su rol ([D-34](decisiones.md#d-34-sesión-del-chef-sin-caducidad-y-revocable)). Sesión del administrador: 12 h (`Jwt:HorasAdministrador = 12`).
+- Sesión del chef: JWT de 3,650 días (`Jwt:DiasChef = 3650`), revocable: cada petición de Chef o Administrador comprueba que el usuario exista, esté activo y conserve su rol ([D-34](decisiones.md#d-34-sesión-del-chef-sin-caducidad-y-revocable)). Sesión del administrador: 2 h (`Jwt:HorasAdministrador = 2`).
 - Fila de servicio: autorizados sin servir del horario en curso, ordenados por `FechaHora` y, a igual hora, por `ConsumoId` ([D-35](decisiones.md#d-35-fila-de-servicio-en-la-pantalla-del-chef)).
 - La TV del chef no tiene campos de texto ni botones de aprobar o rechazar. Cualquier tecla, clic o toque marca Servido a la persona que se muestra en grande. Tras marcar, se ignora toda entrada durante 1,500 ms; también se ignoran las teclas repetidas (`KeyboardEvent.repeat`).
 - Sin captura manual en la TV ([D-36](decisiones.md#d-36-sin-captura-manual-en-la-pantalla-del-chef)). `POST /api/accesos/manual` se conserva con rol Chef para la huella futura.
 - Rutas solo desde la red de la empresa ([D-38](decisiones.md#d-38-panel-y-pantalla-del-chef-solo-desde-la-red-de-la-empresa)): todo `/api/*` salvo `/api/empleados/sesion`, `/api/accesos/celular`, `/api/accesos/mi-turno` y `/api/salud`. Fuera de la red responden 403 con `{ "error": "Disponible solo desde la red de la empresa" }`.
-- Un solo proceso: la API sirve el frontend desde `wwwroot` en el puerto `Comedor:Puerto` (8080 por defecto), en todas las interfaces. En producción `apiUrl` es `''` (mismo origen).
+- El administrador puede hacer todo lo que hace el chef: ver la fila y marcar Servido desde su panel ([D-37](decisiones.md#d-37-panel-único-del-administrador)).
+- Un solo proceso: la API sirve el frontend desde `wwwroot` en el puerto `Comedor:Puerto` (80 por defecto; 8080 si el 80 está ocupado), en todas las interfaces. Con el puerto 80 la dirección no lleva `:puerto` ([D-43](decisiones.md#d-43-dirección-e-identidad-profesionales)). En producción `apiUrl` es `''` (mismo origen).
 - Configuración de la instalación en `%ProgramData%\Comedor\appsettings.Local.json`, fuera del repositorio y de la carpeta del programa; se lee después de `appsettings.json`.
+- Sin rastros de Angular: título "Comedor de personal", ícono propio y la fuente Montserrat servida por la propia aplicación (D-43).
 - Textos nuevos de la interfaz, exactos: "Sírvele a", "Esperando al siguiente…", "Siguen", "Sin conexión", "Eres el {n}.º en la fila", "Te están sirviendo: pasa con el chef", "Servido. ¡Buen provecho!".
 
 ## Foco de revisión
@@ -88,9 +90,9 @@ docs/
 **Interfaces (produce):**
 - `Roles.Empleado = "Empleado"`, `Roles.Chef = "Chef"`, `Roles.Administrador = "Administrador"`, `Roles.TodosDelSistema = "Chef,Administrador"`.
 - Migración `TresRoles`: `UPDATE UsuariosSistema SET Rol = 'Chef' WHERE Rol IN ('Punto','Encargado')` y `UPDATE UsuariosSistema SET Rol = 'Administrador' WHERE Rol = 'Supervisor'`. `Down` vacío (no se puede saber el rol original).
-- Roles por ruta: Chef → `GET /api/puntos/{id}/solicitudes`, `GET /api/puntos/{id}/fila`, `POST /api/consumos/{id}/servido`, `POST /api/accesos/manual`. Chef y Administrador → `GET /api/puntos/{id}/qr`, `GET /api/auth/yo`. Administrador → `/api/admin/*`, `/api/reportes/*`, `/api/sincronizacion/*`.
+- Roles por ruta: Chef y Administrador → `GET /api/puntos/{id}/solicitudes`, `GET /api/puntos/{id}/fila`, `POST /api/consumos/{id}/servido`, `POST /api/accesos/manual`, `GET /api/puntos/{id}/qr` y `GET /api/auth/yo`. Administrador → `/api/admin/*`, `/api/reportes/*`, `/api/sincronizacion/*`.
 
-- [ ] **Paso 1: escribir las pruebas que fallan:** `Migracion_PuntoYEncargado_PasanAChef_SupervisorAAdministrador` (insertar las tres filas con SQL, aplicar la migración, leer roles); `Usuario_RolSupervisor_400`; `Usuario_RolChef_SeGuarda`; `Reportes_ConRolChef_403`; `Reportes_ConRolAdministrador_200`; `Servido_ConRolChef_200`; frontend `usuarios_soloOfreceChefYAdministrador`.
+- [ ] **Paso 1: escribir las pruebas que fallan:** `Migracion_PuntoYEncargado_PasanAChef_SupervisorAAdministrador` (insertar las tres filas con SQL, aplicar la migración, leer roles); `Usuario_RolSupervisor_400`; `Usuario_RolChef_SeGuarda`; `Reportes_ConRolChef_403`; `Reportes_ConRolAdministrador_200`; `Servido_ConRolChef_200`; `Servido_ConRolAdministrador_200`; frontend `usuarios_soloOfreceChefYAdministrador`.
 - [ ] **Paso 2:** `dotnet test backend/Comedor.sln --filter "FullyQualifiedName~RolesTests|FullyQualifiedName~AdminTests"` → FALLA.
 - [ ] **Paso 3:** implementar; la migración se genera con `dotnet ef migrations add TresRoles` y se le agregan los dos `UPDATE`.
 - [ ] **Paso 4:** `dotnet test backend/Comedor.sln` y `npx ng test --watch=false --browsers=ChromeHeadless` → PASA.
@@ -101,13 +103,13 @@ docs/
 **Archivos:** modificar `Sesion/OpcionesJwt.cs`, `Sesion/IniciarSesionSistema.cs`, `ServiciosComedor.cs` (evento `OnTokenValidated`), `AuthController.cs`, `appsettings.json`, `login.component.ts`, `auth.service.ts`. Probar en `tests/Comedor.Api.Tests/AuthTests.cs` y `core.spec.ts`.
 
 **Interfaces (produce):**
-- `OpcionesJwt { int DiasChef = 3650; int HorasAdministrador = 12; }`; se eliminan `HorasSistema` y `DiasPunto`.
+- `OpcionesJwt { int DiasChef = 3650; int HorasAdministrador = 2; }`; se eliminan `HorasSistema` y `DiasPunto`.
 - `ResultadoSesionSistema(bool Exito, string? Token, string? Rol, DateTime? ExpiraEn, string? Inicio)`. `Inicio` = `/punto/{id del primer punto activo, por Id}` para Chef y `/panel` para Administrador. Si un chef inicia sesión y no hay ningún punto activo, responde 409 con `{ "error": "No hay un punto de entrada activo; pide al administrador que lo cree." }`.
 - `POST /api/auth/login` → `{ token, rol, expiraEn, inicio }`.
 - `OnTokenValidated`: si el rol del token es Chef o Administrador, carga el usuario por `sub`; si no existe, está inactivo o su rol es otro, `contexto.Fail("Sesión revocada")` → 401.
-- Frontend: guarda `inicio` con la sesión (`comedor.inicio`) y, tras iniciar sesión sin `returnUrl`, navega a él. Nueva ruta `/inicio`: con sesión navega a `comedor.inicio`; sin sesión, a `/login?returnUrl=/inicio`. Es la ruta que abren los accesos directos. Un 401 en cualquier llamada del chef o del administrador borra la sesión y lleva a `/login?returnUrl=<ruta actual>`.
+- Frontend: guarda `inicio` con la sesión (`comedor.inicio`) y, tras iniciar sesión sin `returnUrl`, navega a él. Nueva ruta `/inicio`: con sesión navega a `comedor.inicio`; sin sesión, a `/login?returnUrl=/inicio`. Es la ruta que abren los accesos directos. Un 401 en cualquier llamada del chef o del administrador borra la sesión y lleva a `/login?returnUrl=<ruta actual>` con el aviso "Tu sesión terminó; vuelve a iniciar sesión". El panel muestra en la barra superior "Sesión hasta las {hh:mm}".
 
-- [ ] **Paso 1: escribir las pruebas que fallan:** `Login_Chef_Expira3650Dias_EInicioEnPunto`; `Login_Administrador_Expira12Horas_EInicioEnPanel`; `TokenChef_UsuarioDesactivado_401`; `TokenAdministrador_RolCambiadoAChef_401EnReportes`; `TokenEmpleado_NoConsultaUsuariosDelSistema` (el empleado no está en `UsuariosSistema` y sigue entrando); frontend `login_sinReturnUrl_navegaAInicio`, `rutaInicio_conSesion_vaAlInicioGuardado`, `rutaInicio_sinSesion_vaALogin`, `Login_ChefSinPuntoActivo_409`, `respuesta401_borraSesionYVaALogin`.
+- [ ] **Paso 1: escribir las pruebas que fallan:** `Login_Chef_Expira3650Dias_EInicioEnPunto`; `Login_Administrador_Expira2Horas_EInicioEnPanel`; `TokenChef_UsuarioDesactivado_401`; `TokenAdministrador_RolCambiadoAChef_401EnReportes`; `TokenEmpleado_NoConsultaUsuariosDelSistema` (el empleado no está en `UsuariosSistema` y sigue entrando); frontend `login_sinReturnUrl_navegaAInicio`, `rutaInicio_conSesion_vaAlInicioGuardado`, `rutaInicio_sinSesion_vaALogin`, `Login_ChefSinPuntoActivo_409`, `respuesta401_borraSesionYVaALogin`, `panel_muestraHoraDeFinDeSesion`.
 - [ ] **Paso 2:** `dotnet test backend/tests/Comedor.Api.Tests --filter AuthTests` y `--include='src/app/{core,login}/**/*.spec.ts'` → FALLA.
 - [ ] **Paso 3:** implementar.
 - [ ] **Paso 4:** mismos comandos → PASA.
@@ -135,7 +137,7 @@ docs/
 
 **Interfaces:**
 - Consume: `GET /api/puntos/{id}/fila` y `POST /api/consumos/{id}/servido` (Tareas 1 y 3).
-- Produce: `PuntoService.fila(puntoId): Observable<FilaServicio>` y `marcarServido(consumoId)`; modelo `FilaServicio { actual: SolicitudPunto | null; siguientes: SolicitudPunto[]; total: number }`.
+- Produce: `FilaComponent` con la entrada `modo: 'tv' | 'panel'` (por defecto `'tv'`; el panel de la Tarea 6 usa `'panel'`, donde solo marca el botón "Marcar servido"); `PuntoService.fila(puntoId): Observable<FilaServicio>` y `marcarServido(consumoId)`; modelo `FilaServicio { actual: SolicitudPunto | null; siguientes: SolicitudPunto[]; total: number }`.
 
 Comportamiento: pantalla completa en horizontal. Con `actual`: "Sírvele a", el nombre a 96 px o más, turno y tiempo de comida; abajo "Siguen" con los nombres de `siguientes` y el número restante. Sin `actual`: "Esperando al siguiente…". La fila se consulta cada 2,000 ms; si falla, "Sin conexión" y sigue intentando. `@HostListener('document:keydown')`, `document:click` y `document:touchstart` llaman a `servir()`: si hay `actual`, no hay petición en curso, no pasaron 1,500 ms desde la última marca y la tecla no es repetida, envía `marcarServido(actual.consumoId)` y vuelve a pedir la fila. La barra superior muestra el punto y la hora. Sin campos de texto ni botones.
 
@@ -163,13 +165,14 @@ Comportamiento: con el pase Autorizado, el celular consulta `miTurno` cada 3,000
 
 ## Tarea 6: Panel único del administrador
 
-**Archivos:** crear `panel/panel.module.ts`, `panel.component.*`; modificar `app-routing-module.ts`, `reportes.module.ts`, `admin.module.ts`, `aviso-sincronizacion.component.ts`. Probar en `panel/panel.spec.ts`. Actualizar `docs/diseno.md` §4.
+**Archivos:** crear `panel/panel.module.ts`, `panel.component.*`, `panel/fila-panel.component.*`; modificar `app-routing-module.ts`, `reportes.module.ts`, `admin.module.ts`, `aviso-sincronizacion.component.ts`. Probar en `panel/panel.spec.ts`. Actualizar `docs/diseno.md` §4.
 
 **Interfaces:**
-- Produce: ruta `/panel` (rol Administrador) con barra superior (usuario y rol), aviso de sincronización y navegación lateral en dos grupos: **Reportes** (`/panel/cotejo`, `/panel/conteo`, `/panel/detalle`) y **Administración** (`/panel/reglas`, `/panel/puntos`, `/panel/usuarios`, `/panel/personal`, `/panel/sincronizacion`, `/panel/contingencia`). `/panel` abre `/panel/cotejo`. `/reportes` y `/admin` redirigen a `/panel`.
+- Produce: ruta `/panel` (rol Administrador) con barra superior (usuario y rol), aviso de sincronización y navegación lateral en dos grupos: **Reportes** (`/panel/cotejo`, `/panel/conteo`, `/panel/detalle`) y **Administración** (`/panel/reglas`, `/panel/puntos`, `/panel/usuarios`, `/panel/personal`, `/panel/sincronizacion`, `/panel/contingencia`), más un grupo **Comedor** con `/panel/fila`: la misma fila de la TV dentro del panel (persona actual, siguientes y botón "Marcar servido"; aquí la tecla no marca, solo el botón) y el enlace "Abrir pantalla del chef" (`/punto/{id}` en una pestaña nueva). `/panel` abre `/panel/fila` durante un horario de comida y `/panel/cotejo` fuera de él. `/reportes` y `/admin` redirigen a `/panel`.
+- `FilaComponent` (Tarea 4) recibe la entrada `modo: 'tv' | 'panel'`: en `tv` escucha teclas, clics y toques; en `panel` solo el botón.
 - Las pantallas existentes se reutilizan como rutas hijas; las pestañas Cotejo, Conteo y Detalle de `ReportesComponent` pasan a ser rutas.
 
-- [ ] **Paso 1: escribir las pruebas que fallan:** `panel_muestraLosDosGrupos`; `panel_abreCotejoPorDefecto`; `rutaReportes_redirigeAPanel`; `rutaAdmin_redirigeAPanel`; `panel_conRolChef_vaALogin`; `navegacion_marcaRutaActiva` (`aria-current="page"`).
+- [ ] **Paso 1: escribir las pruebas que fallan:** `panel_muestraLosTresGrupos`; `panel_enHorario_abreFila`; `panel_fueraDeHorario_abreCotejo`; `filaEnPanel_teclaNoMarca_botonSiMarca`; `abrirPantallaDelChef_enlaceAPunto`; `rutaReportes_redirigeAPanel`; `rutaAdmin_redirigeAPanel`; `panel_conRolChef_vaALogin`; `navegacion_marcaRutaActiva` (`aria-current="page"`).
 - [ ] **Paso 2:** `--include='src/app/{panel,reportes,admin}/**/*.spec.ts'` → FALLA.
 - [ ] **Paso 3:** implementar.
 - [ ] **Paso 4:** `npx ng test --watch=false --browsers=ChromeHeadless` → PASA.
@@ -215,7 +218,7 @@ Comportamiento: con el pase Autorizado, el celular consulta `miTurno` cada 3,000
 
 **Interfaces (produce):**
 - `GET /api/salud` (anónimo) → `{ "estado": "ok", "version": "<versión del ensamblado>" }`.
-- `Program`: `builder.Host.UseWindowsService(o => o.ServiceName = "Comedor")`; agrega `%ProgramData%\Comedor\appsettings.Local.json` (opcional) después de los demás archivos de configuración; escucha en `http://0.0.0.0:{Comedor:Puerto}` (8080 por defecto) salvo que `ASPNETCORE_URLS` esté definido; `UseDefaultFiles`, `UseStaticFiles` y `MapFallbackToFile("index.html")` solo para rutas que no empiezan con `/api`.
+- `Program`: `builder.Host.UseWindowsService(o => o.ServiceName = "Comedor")`; agrega `%ProgramData%\Comedor\appsettings.Local.json` (opcional) después de los demás archivos de configuración; escucha en `http://0.0.0.0:{Comedor:Puerto}` (80 por defecto) salvo que `ASPNETCORE_URLS` esté definido; `UseDefaultFiles`, `UseStaticFiles` y `MapFallbackToFile("index.html")` solo para rutas que no empiezan con `/api`.
 - Frontend: `environment.ts` (producción) con `apiUrl: ''`; `environment.development.ts` con `apiUrl: 'http://localhost:5277'`.
 
 - [ ] **Paso 1: escribir las pruebas que fallan:** `Salud_Anonimo_200ConVersion`; `RutaDelFrontend_DevuelveIndexHtml` (con un `wwwroot/index.html` de prueba); `RutaApiInexistente_404NoIndex`; `ConfiguracionLocal_SobrescribeAppsettings` (un archivo temporal pasado por la variable `COMEDOR_CONFIG_LOCAL`, que solo usan las pruebas, cambia `Comedor:ZonaHoraria`).
@@ -230,8 +233,8 @@ Comportamiento: con el pase Autorizado, el celular consulta `miTurno` cada 3,000
 
 **Interfaces (produce):**
 - `publicar.ps1`: `npx ng build` → copia `dist/comedor-web/browser` a `publicacion/wwwroot`; `dotnet publish backend/src/Comedor.Api -c Release -r win-x64 --self-contained true -o publicacion`; luego `iscc instalador/comedor.iss` → `salida/InstalarComedor.exe`. No necesita .NET instalado en la PC de la empresa.
-- `comedor.iss` (Inno Setup 6), asistente en español con una página propia: usuario y contraseña del administrador inicial (mínimo 8 caracteres) y puerto (8080). Instala en `C:\Program Files\Comedor` y, en orden: (1) si no existe la instancia `SQLEXPRESS`, descarga e instala SQL Server 2022 Express en silencio con `/QS /ACTION=Install /FEATURES=SQLEngine /INSTANCENAME=SQLEXPRESS /SQLSYSADMINACCOUNTS="NT AUTHORITY\SYSTEM" "BUILTIN\Administrators" /IACCEPTSQLSERVERLICENSETERMS`; (2) corre `configurar.ps1`; (3) crea el servicio `Comedor` (inicio automático, cuenta LocalSystem, reinicio ante fallas) y lo arranca; (4) crea accesos directos en el escritorio: **Pantalla del chef** (`msedge --kiosk http://localhost:{puerto}/inicio --edge-kiosk-type=fullscreen`) y **Panel del comedor** (`http://localhost:{puerto}/panel`). La desinstalación quita el servicio, la regla de firewall, la tarea de respaldo y los accesos directos, y conserva la base y `%ProgramData%\Comedor`.
-- `configurar.ps1 -Puerto <int> -AdminUsuario <string> -AdminContrasena <string>`: si no existe, crea `%ProgramData%\Comedor\appsettings.Local.json` con `Jwt:Clave` y `Qr:ClaveFirma` aleatorias de 48 caracteres, la cadena `Server=.\SQLEXPRESS;Database=Comedor;Trusted_Connection=True;TrustServerCertificate=True`, `Semilla:Admin`, `Comedor:Puerto` y `App:UrlPublica = http://<IP de la red local>:<puerto>`; deja ese archivo legible solo para SYSTEM y Administradores; crea la regla de firewall "Comedor" (TCP, puerto, `RemoteAddress LocalSubnet`) y la tarea programada "Comedor - Respaldo" diaria a las 03:00. Si el archivo ya existe (actualización), no lo toca.
+- `comedor.iss` (Inno Setup 6), asistente en español con una página propia: usuario y contraseña del administrador inicial (mínimo 8 caracteres) y puerto: 80 por defecto; si está ocupado, el asistente lo dice y propone 8080. Instala en `C:\Program Files\Comedor` y, en orden: (1) si no existe la instancia `SQLEXPRESS`, descarga e instala SQL Server 2022 Express en silencio con `/QS /ACTION=Install /FEATURES=SQLEngine /INSTANCENAME=SQLEXPRESS /SQLSYSADMINACCOUNTS="NT AUTHORITY\SYSTEM" "BUILTIN\Administrators" /IACCEPTSQLSERVERLICENSETERMS`; (2) corre `configurar.ps1`; (3) crea el servicio `Comedor` (inicio automático, cuenta LocalSystem, reinicio ante fallas) y lo arranca; (4) crea accesos directos en el escritorio: **Pantalla del chef** (`msedge --kiosk http://localhost:{puerto}/inicio --edge-kiosk-type=fullscreen`) y **Panel del comedor** (`http://localhost:{puerto}/panel`). La desinstalación quita el servicio, la regla de firewall, la tarea de respaldo y los accesos directos, y conserva la base y `%ProgramData%\Comedor`.
+- `configurar.ps1 -Puerto <int> -AdminUsuario <string> -AdminContrasena <string>`: si no existe, crea `%ProgramData%\Comedor\appsettings.Local.json` con `Jwt:Clave` y `Qr:ClaveFirma` aleatorias de 48 caracteres, la cadena `Server=.\SQLEXPRESS;Database=Comedor;Trusted_Connection=True;TrustServerCertificate=True`, `Semilla:Admin`, `Comedor:Puerto` y `App:UrlPublica = http://<IP de la red local>` (con `:<puerto>` solo si no es 80); deja ese archivo legible solo para SYSTEM y Administradores; crea la regla de firewall "Comedor" (TCP, puerto, `RemoteAddress LocalSubnet`) y la tarea programada "Comedor - Respaldo" diaria a las 03:00. Si el archivo ya existe (actualización), no lo toca.
 - `respaldar.ps1`: `BACKUP DATABASE Comedor` a `%ProgramData%\Comedor\Respaldos\Comedor-<aaaaMMdd-HHmm>.bak` y borra los respaldos de más de 30 días (RNF-07).
 - `verificar.ps1`: comprueba y muestra en verde o rojo: servicio `Comedor` en ejecución, `GET /api/salud` 200, regla de firewall, tarea de respaldo y que el host de `App:UrlPublica` sea una IP actual del equipo; si no lo es, muestra "La IP cambió: reimprime el QR desde Panel > Puntos" y la IP nueva.
 - Guías en lenguaje sencillo, sin términos técnicos: `instalacion.md` (requisitos, instalar, reservar la IP en el router, imprimir el QR, verificar, actualizar, desinstalar), `manual-chef.md` (una página: abrir "Pantalla del chef", presionar cualquier tecla para servir, qué hacer si dice "Sin conexión") y `manual-administrador.md` (panel, reportes, reglas, usuarios, importar personal, respaldos).
@@ -242,8 +245,23 @@ Comportamiento: con el pase Autorizado, el celular consulta `miTurno` cada 3,000
 - [ ] **Paso 4:** en la misma VM: instalar con el .exe; `verificar.ps1` → todo en verde; reiniciar Windows y volver a verificar; desde un celular en la misma red, escanear el QR impreso desde el panel, iniciar sesión y ver la fila en la TV; correr `respaldar.ps1` y confirmar el `.bak`; reinstalar encima (actualización) y confirmar que los datos siguen; desinstalar y confirmar que la base y los respaldos se conservan. Registrar el resultado en `docs/aceptacion.md`, sección "Instalación v2".
 - [ ] **Paso 5:** `git commit -m "feat: instalador, respaldos y guías de uso"`
 
+## Tarea 11: Dirección e identidad profesionales
+
+**Archivos:** modificar `frontend/comedor-web/src/index.html`, `public/` (ícono), `src/styles.scss`, `pase/pase.component.ts`; crear `src/assets/fuentes/` con Montserrat (licencia OFL incluida) y `public/icono.svg`. Probar en `pase/pase.spec.ts` y `app.spec.ts`. Actualizar `docs/diseno.md` §2.2.
+
+**Interfaces (produce):**
+- Sin rastros de Angular: se borra `favicon.ico`; `index.html` usa `icono.svg` (un plato con cubiertos en verde institucional `#235B4E` sobre fondo claro, sin logotipos de terceros) y `<meta name="theme-color" content="#10312B">`; el título es "Comedor de personal" en toda pantalla, más el nombre de la sección (por ejemplo "Panel · Cotejo de factura").
+- Montserrat se sirve desde la aplicación (`@font-face` en `styles.scss` con los pesos 400, 500, 600, 700 y 800); se quitan los `<link>` a Google Fonts para que el sistema se vea igual sin internet.
+- El celular quita el código del QR de la barra de direcciones en cuanto lo lee: `history.replaceState` deja la dirección como `/pase`, y el token se conserva en memoria y en `sessionStorage` para reintentos de la misma visita.
+
+- [ ] **Paso 1: escribir las pruebas que fallan:** `index_sinFaviconDeAngular_conIconoPropio`; `index_sinGoogleFonts`; `titulo_cambiaPorSeccion`; `pase_quitaTokenDeLaDireccion`; `pase_recargaConTokenEnSesion_validaDeNuevo`.
+- [ ] **Paso 2:** `--include='src/app/{pase,app}*/**/*.spec.ts'` y la prueba de `index.html` → FALLA.
+- [ ] **Paso 3:** implementar.
+- [ ] **Paso 4:** `npx ng test --watch=false --browsers=ChromeHeadless` y `npx ng build` → PASA; `dist/comedor-web/browser` no contiene `favicon.ico`.
+- [ ] **Paso 5:** `git commit -m "feat: identidad propia y dirección limpia"`
+
 ## Fuera de este plan
 
-- **Acceso desde datos móviles u otro Wi-Fi** ([D-41](decisiones.md#d-41-acceso-desde-internet-implementación-futura)): Cloudflare Tunnel con dominio propio. La Tarea 7 ya deja el panel y la pantalla del chef cerrados ante el túnel; activar el acceso será configuración, no código.
+- **Acceso desde datos móviles u otro Wi-Fi y nombre propio en la dirección** ([D-41](decisiones.md#d-41-acceso-desde-internet-implementación-futura), [D-43](decisiones.md#d-43-dirección-e-identidad-profesionales)): Cloudflare Tunnel con dominio propio; la dirección pasa de `http://192.168.1.20` a `https://comedor.tuempresa.com`. La Tarea 7 ya deja el panel y la pantalla del chef cerrados ante el túnel; activar el acceso será configuración, no código.
 - **Inicio de sesión real del empleado** ([D-40](decisiones.md#d-40-contraseña-de-la-empresa-pendiente-y-bloqueante-para-producción)): el adaptador de `IAutenticadorEmpresa` se hace cuando se conozca el sistema de la empresa. **Sin él no se puede usar en producción.**
 - **Huella** (D-21, RF-16): futura; reutiliza el canal manual.
