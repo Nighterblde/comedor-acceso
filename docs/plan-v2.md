@@ -163,6 +163,8 @@ Comportamiento: con el pase Autorizado, el celular consulta `miTurno` cada 3,000
 - [ ] **Paso 4:** mismo comando → PASA.
 - [ ] **Paso 5:** `git commit -m "feat: turno en la fila en el celular"`
 
+> **Ampliación posterior (D-54, SRS 2.1):** el pase incluye el botón «Cerrar sesión» (`pase.component.*`; pruebas `cerrarSesion_*` en `pase.spec.ts`).
+
 ## Tarea 6: Panel único del administrador
 
 **Archivos:** crear `panel/panel.module.ts`, `panel.component.*`, `panel/fila-panel.component.*`; modificar `app-routing-module.ts`, `reportes.module.ts`, `admin.module.ts`, `aviso-sincronizacion.component.ts`. Probar en `panel/panel.spec.ts`. Actualizar `docs/diseno.md` §4.

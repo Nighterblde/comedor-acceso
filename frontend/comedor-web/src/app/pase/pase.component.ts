@@ -98,6 +98,18 @@ export class PaseComponent implements OnInit, OnDestroy {
     this.avanzar();
   }
 
+  /**
+   * Cierra la sesión del empleado y vuelve al inicio de sesión. Conserva el código del QR de esta
+   * visita (no es un dato de la cuenta) para poder entrar con otra cuenta sin volver a escanear.
+   */
+  cerrarSesion(): void {
+    this.consultaTurno?.unsubscribe();
+    this.pase.cerrarSesion();
+    this.resultado.set(null);
+    this.turno.set(null);
+    this.vista.set('login');
+  }
+
   private avanzar(): void {
     if (!this.pase.tieneSesion()) {
       this.vista.set('login');

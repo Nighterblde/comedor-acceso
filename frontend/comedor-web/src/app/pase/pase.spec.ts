@@ -410,4 +410,89 @@ describe('módulo Pase', () => {
       http.expectNone(URL_TURNO);
     }));
   });
+
+  describe('cerrar sesión del empleado', () => {
+    const URL_TURNO = `${environment.apiUrl}/api/accesos/mi-turno`;
+    const boton = (f: ComponentFixture<PaseComponent>): HTMLButtonElement | null =>
+      f.nativeElement.querySelector('button[data-prueba="cerrar-sesion"]');
+
+    function conPaseAutorizado(): ComponentFixture<PaseComponent> {
+      localStorage.setItem('comedor.token.empleado', 'jwt');
+      const f = crear('abc.def');
+      http.expectOne(URL_CELULAR).flush(resultado({}));
+      f.detectChanges();
+      return f;
+    }
+
+    it('cerrarSesion_borraLaSesionYMuestraElLogin', fakeAsync(() => {
+      const f = conPaseAutorizado();
+      tick(0);
+      http.expectOne(URL_TURNO).flush({ estado: 'EnFila', posicion: 2 });
+
+      boton(f)!.click();
+      f.detectChanges();
+
+      expect(localStorage.getItem('comedor.token.empleado')).toBeNull();
+      expect(f.nativeElement.querySelector('app-login-empleado')).not.toBeNull();
+      expect(texto(f)).not.toContain('AUTORIZADO');
+      expect(texto(f)).not.toContain('Ana López Pérez');
+      f.destroy();
+    }));
+
+    it('cerrarSesion_conservaElCodigoDelQrParaEntrarConOtraCuenta', fakeAsync(() => {
+      const f = conPaseAutorizado();
+      tick(0);
+      http.expectOne(URL_TURNO).flush({ estado: 'EnFila', posicion: 1 });
+
+      boton(f)!.click();
+      f.detectChanges();
+
+      expect(sessionStorage.getItem('comedor.pase.token')).toBe('abc.def');
+      f.destroy();
+    }));
+
+    it('cerrarSesion_dejaDeConsultarElTurno', fakeAsync(() => {
+      const f = conPaseAutorizado();
+      tick(0);
+      http.expectOne(URL_TURNO).flush({ estado: 'EnFila', posicion: 1 });
+
+      boton(f)!.click();
+      tick(9000);
+
+      http.expectNone(URL_TURNO);
+      f.destroy();
+    }));
+
+    it('cerrarSesion_tambienEnElPaseRechazado', () => {
+      localStorage.setItem('comedor.token.empleado', 'jwt');
+      const f = crear('abc.def');
+      http.expectOne(URL_CELULAR).flush(resultado({ estado: 'Rechazado', motivo: 'Fuera de horario' }));
+      f.detectChanges();
+
+      expect(boton(f)).not.toBeNull();
+      boton(f)!.click();
+      f.detectChanges();
+
+      expect(f.nativeElement.querySelector('app-login-empleado')).not.toBeNull();
+    });
+
+    it('cerrarSesion_tambienCuandoPideEscanearDeNuevo', () => {
+      localStorage.setItem('comedor.token.empleado', 'jwt');
+      const f = crear(null);
+      f.detectChanges();
+
+      expect(texto(f)).toContain(TEXTO_ESCANEAR);
+      boton(f)!.click();
+      f.detectChanges();
+
+      expect(f.nativeElement.querySelector('app-login-empleado')).not.toBeNull();
+    });
+
+    it('cerrarSesion_noApareceEnElLogin', () => {
+      const f = crear('abc.def');
+
+      expect(f.nativeElement.querySelector('app-login-empleado')).not.toBeNull();
+      expect(boton(f)).toBeNull();
+    });
+  });
 });

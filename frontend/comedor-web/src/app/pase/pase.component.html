@@ -6,10 +6,16 @@
     <main class="aviso" aria-busy="true"><p role="status">Validando…</p></main>
   }
   @case ('escanear') {
-    <main class="aviso"><p role="status">{{ textoEscanear }}</p></main>
+    <main class="aviso">
+      <p role="status">{{ textoEscanear }}</p>
+      <button type="button" class="cerrar-sesion" data-prueba="cerrar-sesion" (click)="cerrarSesion()">Cerrar sesión</button>
+    </main>
   }
   @case ('registrado') {
-    <main class="aviso"><p role="status">{{ textoRegistrado }}</p></main>
+    <main class="aviso">
+      <p role="status">{{ textoRegistrado }}</p>
+      <button type="button" class="cerrar-sesion" data-prueba="cerrar-sesion" (click)="cerrarSesion()">Cerrar sesión</button>
+    </main>
   }
   @case ('pase') {
     @if (resultado(); as r) {
@@ -64,6 +70,7 @@
           }
 
           <p class="reloj" aria-label="Hora actual" data-prueba="reloj">{{ ahora() | date: 'HH:mm:ss' }}</p>
+          <button type="button" class="cerrar-sesion en-pase" data-prueba="cerrar-sesion" (click)="cerrarSesion()">Cerrar sesión</button>
         </div>
       </main>
     }

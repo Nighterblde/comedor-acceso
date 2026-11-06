@@ -208,3 +208,29 @@
     display: none;
   }
 }
+
+.cerrar-sesion {
+  min-height: 48px;
+  margin-top: 24px;
+  padding: 0 24px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-institucional-700);
+  background: var(--color-superficie);
+  border: 2px solid var(--color-institucional-700);
+  border-radius: var(--radio-control);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--foco);
+    outline-offset: 2px;
+  }
+
+  &.en-pase {
+    margin-top: auto;
+    color: #fff;
+    background: transparent;
+    border-color: #fff;
+  }
+}

@@ -55,6 +55,7 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-51](#d-51-detalles-del-instalador-y-los-respaldos-tarea-10-del-plan-v2) | Detalles del instalador y los respaldos (tarea 10 del plan v2) | Aceptada |
 | [D-52](#d-52-detalles-de-la-identidad-y-la-dirección-limpia-tarea-11-del-plan-v2) | Detalles de la identidad y la dirección limpia (tarea 11 del plan v2) | Aceptada |
 | [D-53](#d-53-rehacer-la-dirección-del-qr-tras-un-cambio-de-ip-tarea-12-del-plan-v2) | Rehacer la dirección del QR tras un cambio de IP (tarea 12 del plan v2) | Aceptada |
+| [D-54](#d-54-cerrar-sesión-del-empleado-en-el-celular) | Cerrar sesión del empleado en el celular | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -507,5 +508,16 @@ Plan v2, correcciones tras la revisión final de la rama. No cambia lo que hace 
 - **Límite conocido:** la IP elegida usa la regla de D-51 (interfaz con puerta de enlace predeterminada); con una VPN o un adaptador virtual podría elegirse otra. Por eso `verificar.ps1` y la guía nombran la IP que el QR realmente usa.
 - **Sin verificar en máquina:** los scripts solo se comprobaron con `ParseFile` (0 errores); la prueba real está en `docs/aceptacion.md`, "Instalación v2", filas 19 y 25.
 - **Otras correcciones de la misma pasada** (no cambian el SRS): (1) la TV libera la entrada si `POST /servido` no responde en 10 s (`timeout` de 10 000 ms, más largo que el bloqueo de 1 500 ms; el error sigue el camino de cualquier error); (2) la fila, `ListarSolicitudes` y el turno del celular solo cuentan a quien tiene una regla de su **mismo turno** (comparación exacta, D-17) cuya ventana contiene la hora (`HorarioEnCurso`), para que un empleado de otro turno no reaparezca en la fila ni se le registre una entrega de más; (3) la plantilla de personal da formato de texto a la columna `Matricula` y la lectura del Excel convierte las celdas numéricas enteras a su entero con cultura invariante (sin decimales ni notación científica), para que `00123` y los números largos coincidan con el ID de la empresa.
+
+**Estado:** vigente.
+
+## D-54 Cerrar sesión del empleado en el celular
+
+Pedido por el dueño del producto durante las pruebas locales del plan v2, porque sin esta opción no se podía probar con varias cuentas en un mismo celular. Amplía RF-09 (SRS 2.1).
+
+- **Decisión:** el pase del empleado (Autorizado, Rechazado, «Escanea de nuevo» y «Listo») tiene un botón «Cerrar sesión». Borra la sesión del empleado, deja de consultar el turno y vuelve al inicio de sesión del mismo punto.
+- **Se conserva el código del QR de la visita:** no es un dato de la cuenta, así que otra cuenta puede iniciar sesión sin volver a escanear.
+- **Qué no hace:** no deshace ni anula el consumo ya registrado (RF-19: los registros son de solo inserción). Si el empleado cierra sesión y vuelve a entrar con la misma cuenta, la nueva validación se rechaza como «ya consumió» (RF-14).
+- **Solo frontend:** no hay endpoint nuevo; la sesión del empleado es un JWT sin estado en el servidor y se descarta en el celular.
 
 **Estado:** vigente.
