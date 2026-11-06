@@ -2,7 +2,8 @@ namespace Comedor.Application.Sesion;
 
 public class OpcionesJwt
 {
-    public int HorasSistema { get; set; } = 12;
+    /// <summary>Vigencia de la sesión del chef (sin caducidad práctica, revocable por petición; D-34).</summary>
+    public int DiasChef { get; set; } = 3650;
 
-    public int DiasPunto { get; set; } = 30;
+    public int HorasAdministrador { get; set; } = 2;
 }

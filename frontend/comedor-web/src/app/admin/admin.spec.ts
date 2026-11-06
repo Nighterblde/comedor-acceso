@@ -1,12 +1,14 @@
 import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { signal, Type } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal, Type } from '@angular/core';
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { provideRouter, RouterModule } from '@angular/router';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { of, Subject, throwError } from 'rxjs';
 import { SincronizacionService } from '../compartido/sincronizacion.service';
 import { environment } from '../../environments/environment';
+import { AdminComponent } from './admin.component';
 import { AdminService } from './admin.service';
 import { ContingenciaComponent } from './contingencia.component';
 import { PuntosComponent } from './puntos.component';
@@ -321,5 +323,22 @@ describe('módulo admin', () => {
       });
       expect(f.nativeElement.textContent).toContain('Ya consumiste este tiempo de comida');
     }));
+  });
+
+  describe('marco del panel', () => {
+    it('panel_muestraHoraDeFinDeSesion', () => {
+      localStorage.setItem('comedor.expira', new Date(2026, 10, 10, 15, 42).toISOString());
+      TestBed.configureTestingModule({
+        declarations: [AdminComponent],
+        imports: [RouterModule],
+        providers: [provideRouter([])],
+        schemas: [NO_ERRORS_SCHEMA],
+      });
+      const f = TestBed.createComponent(AdminComponent);
+      f.detectChanges();
+
+      expect(f.nativeElement.textContent).toContain('Sesión hasta las 15:42');
+      localStorage.removeItem('comedor.expira');
+    });
   });
 });

@@ -9,6 +9,8 @@ const CLAVE_TOKEN_SISTEMA = 'comedor.token.sistema';
 const CLAVE_TOKEN_EMPLEADO = 'comedor.token.empleado';
 const CLAVE_ROL = 'comedor.rol';
 const CLAVE_USUARIO = 'comedor.usuario';
+const CLAVE_INICIO = 'comedor.inicio';
+const CLAVE_EXPIRA = 'comedor.expira';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -22,6 +24,8 @@ export class AuthService {
           guardar(CLAVE_TOKEN_SISTEMA, r.token);
           guardar(CLAVE_ROL, r.rol);
           guardar(CLAVE_USUARIO, usuario.trim());
+          guardar(CLAVE_INICIO, r.inicio);
+          guardar(CLAVE_EXPIRA, r.expiraEn);
         }),
         map(() => undefined),
       );
@@ -53,14 +57,37 @@ export class AuthService {
     return leer(CLAVE_USUARIO);
   }
 
+  /** Ruta de inicio del rol, entregada por el servidor al iniciar sesión (/punto/{id} o /panel). */
+  inicio(): string | null {
+    return leer(CLAVE_INICIO);
+  }
+
+  /** Hora local (hh:mm) en que termina la sesión del sistema, o null si se desconoce. */
+  finSesion(): string | null {
+    const crudo = leer(CLAVE_EXPIRA);
+    const fecha = crudo ? new Date(crudo) : null;
+    if (!fecha || Number.isNaN(fecha.getTime())) {
+      return null;
+    }
+    const dos = (n: number) => String(n).padStart(2, '0');
+    return `${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`;
+  }
+
   cerrarSesionEmpleado(): void {
     borrar(CLAVE_TOKEN_EMPLEADO);
   }
 
-  cerrarSesion(): void {
+  /** Borra solo la sesión del sistema (chef o administrador); conserva la del empleado. */
+  cerrarSesionSistema(): void {
     borrar(CLAVE_TOKEN_SISTEMA);
-    borrar(CLAVE_TOKEN_EMPLEADO);
     borrar(CLAVE_ROL);
     borrar(CLAVE_USUARIO);
+    borrar(CLAVE_INICIO);
+    borrar(CLAVE_EXPIRA);
+  }
+
+  cerrarSesion(): void {
+    this.cerrarSesionSistema();
+    borrar(CLAVE_TOKEN_EMPLEADO);
   }
 }
