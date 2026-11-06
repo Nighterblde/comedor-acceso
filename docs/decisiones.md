@@ -532,5 +532,6 @@ Corrección del instalador (D-39, D-51) tras su primera prueba real, en una PC c
 - **Versión:** el enlace de Microsoft ya entrega SQL Server **2025** Express y no hay un enlace estable de Express 2022 (el que apareció era la edición Developer, que no es de uso libre en producción). Se acepta 2025 Express, el motor con el que se probaron las migraciones en desarrollo; reemplaza el «2022» de D-39.
 - **Verificado:** la descarga (714 MB, firma válida de Microsoft) y que `comedor.iss` compila. **Sin verificar:** la instalación completa con estos argumentos; hay que repetir la prueba (`docs/aceptacion.md`, "Instalación v2", fila 3).
 - **Límite:** durante la descarga y la instalación (varios minutos) la ventana del instalador puede parecer detenida; el texto de la página lo avisa.
+- **Firma (segunda prueba real):** la comprobación de firma justo después de la descarga falló dos veces en la PC de pruebas aunque el archivo es el oficial (en el escritorio da «Valid»). La causa no está confirmada; la hipótesis es un bloqueo transitorio del archivo recién descargado. La comprobación ahora reintenta hasta 6 veces (unos 24 s) y, si falla, el aviso y el registro de instalación muestran el estado real de la firma (`Estado=… Firmante=…`).
 
 **Estado:** vigente.

@@ -53,6 +53,7 @@ var
   PaginaAdmin: TInputQueryWizardPage;
   PaginaDescarga: TDownloadWizardPage;
   PuertoRevisado: Boolean;
+  UltimoDetalleFirma: String;
   PuertoElegido: Integer;
   InstalacionConConfig: Boolean;
   ConfigTamano: Integer;
@@ -179,15 +180,37 @@ begin
   end;
 end;
 
-{ True si el archivo está firmado por Microsoft (se comprueba antes de ejecutarlo como administrador). }
+{ True si el archivo está firmado por Microsoft (se comprueba antes de ejecutarlo como administrador).
+  Reintenta unos segundos: recién descargado, el archivo puede estar bloqueado por el antivirus de Windows. El estado
+  de la última comprobación queda en UltimoDetalleFirma, en el registro y en los avisos. }
 function FirmadoPorMicrosoft(const Archivo: String): Boolean;
 var
-  Codigo: Integer;
+  Codigo, Intento: Integer;
+  ArchivoSalida: String;
+  Detalle: AnsiString;
 begin
-  Result := Exec(PowerShellExe,
-    '-NoProfile -ExecutionPolicy Bypass -Command "$f = Get-AuthenticodeSignature -LiteralPath ''' + Archivo +
-    '''; if ($f.Status -eq ''Valid'' -and $f.SignerCertificate.Subject -like ''*Microsoft Corporation*'') { exit 0 } else { exit 1 }"',
-    '', SW_HIDE, ewWaitUntilTerminated, Codigo) and (Codigo = 0);
+  Result := False;
+  UltimoDetalleFirma := '';
+  ArchivoSalida := ExpandConstant('{tmp}irma.txt');
+  for Intento := 1 to 6 do
+  begin
+    DeleteFile(ArchivoSalida);
+    if Exec(PowerShellExe,
+      '-NoProfile -ExecutionPolicy Bypass -Command "$f = Get-AuthenticodeSignature -LiteralPath ''' + Archivo + '''; ' +
+      'Set-Content -LiteralPath ''' + ArchivoSalida + ''' -Value (''Estado='' + $f.Status + '' Firmante='' + $f.SignerCertificate.Subject); ' +
+      'if ($f.Status -eq ''Valid'' -and $f.SignerCertificate.Subject -like ''*Microsoft Corporation*'') { exit 0 } else { exit 1 }"',
+      '', SW_HIDE, ewWaitUntilTerminated, Codigo) and (Codigo = 0) then
+    begin
+      Result := True;
+      Exit;
+    end;
+    if LoadStringFromFile(ArchivoSalida, Detalle) then
+      UltimoDetalleFirma := Trim(String(Detalle))
+    else
+      UltimoDetalleFirma := 'PowerShell no respondió (código ' + IntToStr(Codigo) + ')';
+    Log('Firma de ' + Archivo + ' (intento ' + IntToStr(Intento) + '): ' + UltimoDetalleFirma);
+    Sleep(4000);
+  end;
 end;
 
 { Descarga el paquete de SQL Server Express en inglés y lo instala como instancia SQLEXPRESS. Se llama antes de copiar
@@ -206,7 +229,7 @@ begin
 
   if not FirmadoPorMicrosoft(Web) then
   begin
-    MsgBox('El archivo descargado de SQL Server Express no tiene una firma válida de Microsoft. No se instalará.', mbCriticalError, MB_OK);
+    MsgBox('El archivo descargado de SQL Server Express no tiene una firma válida de Microsoft. No se instalará.' + #13#10 + #13#10 + 'Detalle: ' + UltimoDetalleFirma, mbCriticalError, MB_OK);
     Exit;
   end;
 
@@ -221,7 +244,7 @@ begin
   end;
   if not FirmadoPorMicrosoft(Paquete) then
   begin
-    MsgBox('El paquete de SQL Server Express no tiene una firma válida de Microsoft. No se instalará.', mbCriticalError, MB_OK);
+    MsgBox('El paquete de SQL Server Express no tiene una firma válida de Microsoft. No se instalará.' + #13#10 + #13#10 + 'Detalle: ' + UltimoDetalleFirma, mbCriticalError, MB_OK);
     Exit;
   end;
 
