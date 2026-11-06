@@ -112,3 +112,39 @@ Lo siguiente no se puede verificar en un equipo de desarrollo. Hay que confirmar
 Lo siguiente se vio durante el recorrido. No impide aceptar el sistema y no se cambió nada; se deja para que lo revise el dueño del producto.
 
 - Cuando la fuente RR. HH. falla, la respuesta de "Sincronizar ahora" y la bitácora guardan el mensaje técnico de la excepción, en inglés y con la ruta del archivo en el servidor (por ejemplo, "Could not find file '…\empleados.json'"). Solo lo ven el Administrador y el Supervisor.
+
+## Instalación v2
+
+**Estado: PENDIENTE.** Tarea 10 del plan v2. Los archivos del instalador (`instalador/comedor.iss`, `publicar.ps1`, `configurar.ps1`, `respaldar.ps1`, `verificar.ps1`) y las guías están escritos, pero **no se compiló `InstalarComedor.exe` ni se ejecutó nada en una máquina**: no hay Inno Setup en el equipo de desarrollo y no se instalan servicios ni reglas de firewall allí. Solo se comprobó que los `.ps1` no tienen errores de sintaxis (`[System.Management.Automation.Language.Parser]::ParseFile`: 0 errores en los cuatro). La sintaxis de `comedor.iss` solo se revisó leyéndola.
+
+Hay que hacerlo en una máquina virtual con Windows 10 u 11 limpia, sin .NET ni SQL Server, con `publicar.ps1` ya ejecutado en la PC de desarrollo. Marcar cada fila con el resultado real.
+
+| N.º | Comprobación | Resultado esperado | Hecho |
+| --- | --- | --- | --- |
+| 1 | Con la VM limpia, correr `verificar.ps1` | Todo en rojo, sin errores del script, código de salida distinto de 0 | [ ] |
+| 2 | `publicar.ps1` en la PC de desarrollo | Genera `salida\InstalarComedor.exe` sin errores; si falta `iscc`, avisa con un mensaje claro | [ ] |
+| 3 | Confirmar el enlace de descarga de SQL Server 2022 Express y los argumentos silenciosos (`#define UrlSqlExpress` en `comedor.iss`) | Se descarga el instalador web de Microsoft y la instalación en silencio termina; la instancia `SQLEXPRESS` existe | [ ] |
+| 4 | Instalar con `InstalarComedor.exe` (administrador `admin1`, contraseña de 8 o más caracteres, puerto 80) | El asistente rechaza contraseñas de menos de 8 caracteres; instala en `C:\Program Files\Comedor`; crea los dos accesos directos | [ ] |
+| 5 | Con el puerto 80 ocupado (por ejemplo, otro programa escuchando) abrir el asistente | Avisa y propone 8080; los accesos directos y el QR llevan `:8080` | [ ] |
+| 6 | `verificar.ps1` tras instalar | Todo en verde: servicio, `/api/salud` 200, regla de firewall, tarea de respaldo, IP del QR | [ ] |
+| 7 | `appsettings.Local.json` | Existe en `C:\ProgramData\Comedor`; solo SYSTEM y Administradores lo leen (`icacls`); claves de 48 caracteres; `Fuente:Tipo` = `Excel`; la dirección no lleva `:puerto` con el 80 | [ ] |
+| 8 | Reiniciar Windows y volver a correr `verificar.ps1` | Todo en verde sin abrir ningún programa; el servicio arrancó solo | [ ] |
+| 9 | Matar el proceso `Comedor.Api.exe` | El servicio se reinicia solo en unos segundos | [ ] |
+| 9a | Reiniciar Windows con SQL Server arrancando lento (o detener `MSSQL$SQLEXPRESS` y reiniciar solo `Comedor`) | El servicio `Comedor` espera a SQL Server (dependencia) y queda en ejecución sin intervención; el inicio es automático retrasado | [ ] |
+| 9b | Instalación en PC limpia con primera migración lenta (más de 30 s) | El asistente espera hasta 3 minutos; si no arranca, avisa y remite a `verificar.ps1` sin fallar | [ ] |
+| 9c | Interrumpir `configurar.ps1` tras crear el archivo (simular error de `icacls`) y volver a instalar | No queda `appsettings.Local.json` vacío; el asistente vuelve a pedir usuario, contraseña y puerto | [ ] |
+| 9d | `verificar.ps1` desde PowerShell sin elevar | Dice "Abre PowerShell como administrador y vuelve a ejecutar" y sale con código 1 | [ ] |
+| 10 | Panel del comedor: iniciar sesión con el administrador, crear un punto, **Imprimir QR** | Se imprime el QR con la dirección de la PC | [ ] |
+| 11 | Pantalla del chef (acceso directo) | Abre a pantalla completa en Edge y llega a la pantalla del chef o a su inicio de sesión | [ ] |
+| 12 | Importar el Excel de personal desde **Administración > Personal** | Altas correctas; la sincronización de las 02:00 no desactiva al personal importado | [ ] |
+| 13 | Desde un celular en la misma red: escanear el QR, iniciar sesión y ver la fila en la TV | Pase Autorizado; la persona aparece en la fila de la pantalla del chef | [ ] |
+| 14 | Desde una red distinta o con datos móviles, abrir la dirección | No abre (el firewall solo permite la red local) | [ ] |
+| 15 | Correr `respaldar.ps1` (como Administrador y como SYSTEM, por la tarea programada) | Aparece `Comedor-<aaaaMMdd-HHmm>.bak` en `C:\ProgramData\Comedor\Respaldos` y una línea en `respaldos.log` | [ ] |
+| 16 | Tarea "Comedor - Respaldo" en el Programador de tareas, ejecutar manualmente | Termina con resultado 0x0 y crea otro `.bak` | [ ] |
+| 17 | Borrado a los 30 días: poner a un `.bak` de prueba una fecha de modificación de hace 31 días y correr `respaldar.ps1` | Se borra solo ese archivo | [ ] |
+| 18 | Reinstalar encima con el mismo `.exe` (actualización) | No pide usuario, contraseña ni puerto; `appsettings.Local.json` queda intacto (misma fecha y claves); los datos y el QR impreso siguen funcionando; `verificar.ps1` en verde | [ ] |
+| 19 | Cambiar la IP de la PC y correr `verificar.ps1` | Muestra "La IP cambió: reimprime el QR desde Panel > Puntos" y la IP nueva; código de salida distinto de 0 | [ ] |
+| 20 | Desinstalar | Se quitan el servicio, la regla de firewall, la tarea de respaldo y los accesos directos; la base y `C:\ProgramData\Comedor` (con los respaldos) se conservan | [ ] |
+| 21 | Reinstalar tras desinstalar | Reutiliza la configuración y la base existentes; los datos siguen | [ ] |
+| 22 | Instalar con la instancia `SQLEXPRESS` ya presente | No descarga ni instala SQL Server otra vez | [ ] |
+| 23 | Instalar sin internet y sin SQL Express | El asistente explica que no pudo descargar y no instala nada a medias | [ ] |
