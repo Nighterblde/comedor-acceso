@@ -196,3 +196,15 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+.turno {
+  margin: 12px 0 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+
+  &:empty {
+    display: none;
+  }
+}

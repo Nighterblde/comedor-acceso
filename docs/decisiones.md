@@ -407,3 +407,13 @@ Plan v2, tarea 4. Detalles que el plan no fijaba; no cambian lo que hace el sist
 - **Modo del componente:** `FilaComponent` escucha teclas, clics y toques del documento solo en modo `tv`; en modo `panel` los ignora y muestra el botón "Marcar servido". El bloqueo de 1,5 s y la petición en curso aplican a ambos modos.
 - **Error al marcar:** si la petición de servido falla, se libera la petición en curso y se vuelve a pedir la fila; el bloqueo de 1,5 s sigue vigente.
 - **Servicio:** se retiran `PuntoService.solicitudes` y `capturaManual` del frontend, que ya nadie usa (D-36); los endpoints del servidor se conservan.
+
+## D-47 Detalles del turno en el celular (tarea 5 del plan v2)
+
+Plan v2, tarea 5. Detalles que el plan no fijaba; no cambian lo que hace el sistema (RF-33).
+
+- **Primera consulta:** se hace en cuanto aparece el pase Autorizado y luego cada 3,000 ms.
+- **Fin de la consulta:** `Servido` y `SinTurno` la detienen; también se detiene al salir de la pantalla. Si una consulta falla se conserva el último texto y se reintenta en el siguiente ciclo.
+- **Accesibilidad:** el texto va en una región `role="status"` (`aria-live="polite"`) siempre presente y vacía mientras no hay turno, a 28 px en negrita para leerse a 1–2 m.
+
+**Estado:** vigente.

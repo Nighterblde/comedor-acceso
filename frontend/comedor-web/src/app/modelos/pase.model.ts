@@ -26,3 +26,10 @@ export interface RespuestaLogin {
 export interface RespuestaSesionEmpleado {
   token: string;
 }
+
+export type EstadoTurno = 'SinTurno' | 'EnFila' | 'Sirviendo' | 'Servido';
+
+export interface MiTurno {
+  estado: EstadoTurno;
+  posicion: number | null;
+}

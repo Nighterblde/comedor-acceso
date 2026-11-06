@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { catchError, Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../core/auth.service';
-import { ResultadoAcceso } from '../modelos/pase.model';
+import { MiTurno, ResultadoAcceso } from '../modelos/pase.model';
 
 export const MENSAJE_CREDENCIALES = 'Credenciales incorrectas';
 export const MENSAJE_BLOQUEADO = 'Cuenta bloqueada por 15 minutos';
@@ -18,6 +18,10 @@ export class PaseService {
 
   validar(tokenQr: string): Observable<ResultadoAcceso> {
     return this.http.post<ResultadoAcceso>(`${environment.apiUrl}/api/accesos/celular`, { tokenQr });
+  }
+
+  miTurno(): Observable<MiTurno> {
+    return this.http.get<MiTurno>(`${environment.apiUrl}/api/accesos/mi-turno`);
   }
 
   tieneSesion(): boolean {
