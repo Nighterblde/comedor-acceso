@@ -4,9 +4,10 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AdminService } from '../admin/admin.service';
 import { rutas } from '../app-routing-module';
+import { HttpErrorResponse } from '@angular/common/http';
 import { SincronizacionService } from '../compartido/sincronizacion.service';
 import { FilaServicio, SolicitudPunto } from '../modelos/consumo.model';
 import { PuntoService } from '../punto/punto.service';
@@ -49,7 +50,7 @@ function configurar({ rol = 'Administrador', hora = 9, puntos }: Opciones = {}) 
     localStorage.setItem('comedor.usuario', 'super');
     localStorage.setItem('comedor.expira', new Date(2026, 10, 6, 15, 42).toISOString());
   }
-  const admin = jasmine.createSpyObj<AdminService>('AdminService', ['reglas', 'puntos']);
+  const admin = jasmine.createSpyObj<AdminService>('AdminService', ['reglas', 'puntos', 'plantillaPersonal', 'importarPersonal']);
   admin.reglas.and.returnValue(of([REGLA_COMIDA]));
   admin.puntos.and.returnValue(of(puntos ?? [{ id: 'P1', nombre: 'Entrada', activo: true }]));
   const punto = jasmine.createSpyObj<PuntoService>('PuntoService', ['fila', 'marcarServido']);
@@ -185,5 +186,83 @@ describe('panel del administrador', () => {
     expect(barra.textContent).toContain('Sesión hasta las 15:42');
     expect(barra.textContent).toContain('super');
     expect(barra.textContent).toContain('Administrador');
+  });
+});
+
+describe('pestaña Personal', () => {
+  afterEach(() => localStorage.clear());
+
+  const archivo = () =>
+    new File(['PK'], 'personal.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+  function elegirArchivo(raiz: HTMLElement, f: File): void {
+    const entrada = raiz.querySelector('input[type="file"]') as HTMLInputElement;
+    const lista = new DataTransfer();
+    lista.items.add(f);
+    entrada.files = lista.files;
+    entrada.dispatchEvent(new Event('change'));
+  }
+
+  const botonImportar = (raiz: HTMLElement) =>
+    Array.from(raiz.querySelectorAll('button')).find((b) => (b.textContent ?? '').includes('Importar')) as HTMLButtonElement;
+
+  it('personal_importar_muestraResultado', async () => {
+    const { admin } = configurar();
+    admin.importarPersonal.and.returnValue(
+      of({ exito: true, altas: 3, cambios: 2, bajas: 1, omitidos: 4, error: null }),
+    );
+    const arnes = await abrir('/panel/personal');
+    const raiz = arnes.routeNativeElement as HTMLElement;
+    expect(Array.from(raiz.querySelectorAll('button')).map((b) => b.textContent?.trim())).toContain(
+      'Descargar plantilla',
+    );
+
+    const f = archivo();
+    elegirArchivo(raiz, f);
+    arnes.detectChanges();
+    botonImportar(raiz).click();
+    arnes.detectChanges();
+
+    expect(admin.importarPersonal).toHaveBeenCalledOnceWith(f);
+    const estado = (raiz.querySelector('[role="status"]') as HTMLElement).textContent ?? '';
+    expect(estado).toContain('Altas: 3');
+    expect(estado).toContain('Cambios: 2');
+    expect(estado).toContain('Bajas: 1');
+    expect(estado).toContain('Omitidos: 4');
+  });
+
+  it('personal_sinArchivo_noEnvia', async () => {
+    const { admin } = configurar();
+    const arnes = await abrir('/panel/personal');
+    const raiz = arnes.routeNativeElement as HTMLElement;
+
+    const boton = botonImportar(raiz);
+    expect(boton.disabled).toBeTrue();
+    boton.click();
+    raiz.querySelector('form')!.dispatchEvent(new Event('submit'));
+
+    expect(admin.importarPersonal).not.toHaveBeenCalled();
+  });
+
+  it('personal_error400_muestraElMensaje', async () => {
+    const { admin } = configurar();
+    admin.importarPersonal.and.returnValue(
+      throwError(
+        () => new HttpErrorResponse({ status: 400, error: { error: 'Sube un archivo .xlsx de hasta 5 MB' } }),
+      ),
+    );
+    const arnes = await abrir('/panel/personal');
+    const raiz = arnes.routeNativeElement as HTMLElement;
+
+    elegirArchivo(raiz, archivo());
+    arnes.detectChanges();
+    botonImportar(raiz).click();
+    arnes.detectChanges();
+
+    expect((raiz.querySelector('[role="alert"]') as HTMLElement).textContent).toContain(
+      'Sube un archivo .xlsx de hasta 5 MB',
+    );
   });
 });

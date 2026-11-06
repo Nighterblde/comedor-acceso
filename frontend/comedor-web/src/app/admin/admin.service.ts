@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   BitacoraSincronizacion,
@@ -60,6 +60,27 @@ export class AdminService {
 
   bitacora(): Observable<BitacoraSincronizacion[]> {
     return this.http.get<BitacoraSincronizacion[]>(`${this.base}/sincronizacion`);
+  }
+
+  /** Descarga la plantilla de personal (RF-36) como archivo. */
+  plantillaPersonal(): Observable<void> {
+    return this.http.get(`${this.base}/personal/plantilla.xlsx`, { responseType: 'blob' }).pipe(
+      map((blob) => {
+        const url = URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = 'plantilla-personal.xlsx';
+        enlace.click();
+        URL.revokeObjectURL(url);
+      }),
+    );
+  }
+
+  /** Sube el Excel de personal y sincroniza (campo `archivo`; el navegador fija el Content-Type multipart). */
+  importarPersonal(archivo: File): Observable<ResultadoSincronizacion> {
+    const cuerpo = new FormData();
+    cuerpo.append('archivo', archivo, archivo.name);
+    return this.http.post<ResultadoSincronizacion>(`${this.base}/personal/importar`, cuerpo);
   }
 
   contingencia(datos: Contingencia): Observable<ConsumoContingencia> {

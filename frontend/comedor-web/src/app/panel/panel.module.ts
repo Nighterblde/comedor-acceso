@@ -14,7 +14,7 @@ import { ReportesModule } from '../reportes/reportes.module';
 import { FilaPanelComponent } from './fila-panel.component';
 import { PanelComponent } from './panel.component';
 import { panelInicioGuard } from './panel-inicio.guard';
-import { PersonalPendienteComponent } from './personal-pendiente.component';
+import { PersonalComponent } from './personal.component';
 
 export const rutasPanel: Routes = [
   {
@@ -29,7 +29,7 @@ export const rutasPanel: Routes = [
       { path: 'reglas', component: ReglasComponent },
       { path: 'puntos', component: PuntosComponent },
       { path: 'usuarios', component: UsuariosComponent },
-      { path: 'personal', component: PersonalPendienteComponent },
+      { path: 'personal', component: PersonalComponent },
       { path: 'sincronizacion', component: SincronizacionComponent },
       { path: 'contingencia', component: ContingenciaComponent },
     ],
@@ -37,7 +37,7 @@ export const rutasPanel: Routes = [
 ];
 
 @NgModule({
-  declarations: [PanelComponent, FilaPanelComponent, PersonalPendienteComponent],
+  declarations: [PanelComponent, FilaPanelComponent, PersonalComponent],
   imports: [CommonModule, CompartidoModule, AdminModule, ReportesModule, FilaModule, RouterModule.forChild(rutasPanel)],
 })
 export class PanelModule {}

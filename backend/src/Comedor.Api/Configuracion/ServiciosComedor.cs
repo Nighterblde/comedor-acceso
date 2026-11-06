@@ -17,6 +17,7 @@ using Comedor.Infrastructure.Externos;
 using Comedor.Infrastructure.Persistencia;
 using Comedor.Infrastructure.Repositorios;
 using Comedor.Infrastructure.Seguridad;
+using Comedor.Infrastructure.Sincronizacion;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -90,8 +91,28 @@ public static class ServiciosComedor
             .GetChildren().ToDictionary(c => c.Key, c => c.Value ?? "");
         servicios.AddSingleton<IAutenticadorEmpresa>(new AutenticadorEmpresaSimulado(usuariosEmpresa));
 
-        var ruta = Path.Combine(AppContext.BaseDirectory, config["Fuente:RutaEmpleados"] ?? "datos/empleados-simulados.json");
-        servicios.AddSingleton<IFuentePersonalRRHH>(new FuenteRRHHSimulada(ruta));
+        // Fuente de RR. HH. (D-42). Un tipo desconocido falla al iniciar.
+        var rutaExcel = Environment.ExpandEnvironmentVariables(
+            config["Fuente:RutaExcel"] is { Length: > 0 } r
+                ? r
+                : Path.Combine("%ProgramData%", "Comedor", "personal.xlsx"));
+        IFuentePersonalRRHH fuente = (config["Fuente:Tipo"] is { Length: > 0 } tipo ? tipo : "Simulada") switch
+        {
+            "Simulada" => new FuenteRRHHSimulada(
+                Path.Combine(AppContext.BaseDirectory, config["Fuente:RutaEmpleados"] ?? "datos/empleados-simulados.json")),
+            "SqlServer" => new FuenteRRHHSqlServer(
+                config.Requerido("Fuente:Cadena"),
+                config["Fuente:Vista"] is { Length: > 0 } vista ? vista : "vw_EmpleadosComedor"),
+            "Excel" => new FuenteRRHHExcel(rutaExcel),
+            var otro => throw new InvalidOperationException(
+                $"Fuente:Tipo '{otro}' no es válido. Usa Simulada, SqlServer o Excel."),
+        };
+        servicios.AddSingleton(fuente);
+        servicios.AddScoped(sp => new ImportarPersonal(rutaExcel,
+            sp.GetRequiredService<IEmpleadoRepositorio>(),
+            sp.GetRequiredService<IBitacoraSincronizacionRepositorio>(),
+            sp.GetRequiredService<IReloj>(),
+            sp.GetRequiredService<OpcionesSincronizacion>()));
 
         servicios.AddSingleton(new OpcionesSesion { DiasEmpleado = config.GetValue("Sesion:DiasEmpleado", 30) });
         servicios.AddSingleton(new OpcionesJwt
