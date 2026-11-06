@@ -180,36 +180,73 @@ begin
   end;
 end;
 
-{ True si el archivo está firmado por Microsoft (se comprueba antes de ejecutarlo como administrador).
-  Reintenta unos segundos: recién descargado, el archivo puede estar bloqueado por el antivirus de Windows. El estado
-  de la última comprobación queda en UltimoDetalleFirma, en el registro y en los avisos. }
-function FirmadoPorMicrosoft(const Archivo: String): Boolean;
+const
+  FirmaValida = 0;
+  FirmaInvalida = 1;
+  FirmaSinComprobar = 2;
+
+{ Comprueba la firma digital (Authenticode) antes de ejecutar un archivo descargado como administrador.
+  FirmaValida: firmado por Microsoft. FirmaInvalida: se leyó la firma y no es válida o no es de Microsoft.
+  FirmaSinComprobar: PowerShell no pudo hacer la comprobación. La salida y los errores de PowerShell van a
+  %TEMP%\comedor-firma.txt (fuera de la carpeta temporal protegida del instalador) y quedan en UltimoDetalleFirma.
+  Reintenta unos segundos porque el antivirus puede bloquear el archivo recién descargado. }
+function ComprobarFirma(const Archivo: String): Integer;
 var
   Codigo, Intento: Integer;
-  ArchivoSalida: String;
+  Salida, Parametros: String;
   Detalle: AnsiString;
 begin
-  Result := False;
+  Result := FirmaSinComprobar;
   UltimoDetalleFirma := '';
-  ArchivoSalida := ExpandConstant('{tmp}irma.txt');
-  for Intento := 1 to 6 do
+  Salida := ExpandConstant('{%TEMP}\comedor-firma.txt');
+  for Intento := 1 to 3 do
   begin
-    DeleteFile(ArchivoSalida);
-    if Exec(PowerShellExe,
-      '-NoProfile -ExecutionPolicy Bypass -Command "$f = Get-AuthenticodeSignature -LiteralPath ''' + Archivo + '''; ' +
-      'Set-Content -LiteralPath ''' + ArchivoSalida + ''' -Value (''Estado='' + $f.Status + '' Firmante='' + $f.SignerCertificate.Subject); ' +
-      'if ($f.Status -eq ''Valid'' -and $f.SignerCertificate.Subject -like ''*Microsoft Corporation*'') { exit 0 } else { exit 1 }"',
-      '', SW_HIDE, ewWaitUntilTerminated, Codigo) and (Codigo = 0) then
-    begin
-      Result := True;
-      Exit;
-    end;
-    if LoadStringFromFile(ArchivoSalida, Detalle) then
+    DeleteFile(Salida);
+    Parametros := '/c ""' + PowerShellExe + '" -NoProfile -ExecutionPolicy Bypass -Command "' +
+      '$f = Get-AuthenticodeSignature -LiteralPath ''' + Archivo + '''; ' +
+      '''Estado='' + $f.Status + '' Firmante='' + $f.SignerCertificate.Subject; ' +
+      'if ($f.Status -eq ''Valid'' -and $f.SignerCertificate.Subject -like ''*Microsoft Corporation*'') { exit 0 } else { exit 1 }" ' +
+      '> "' + Salida + '" 2>&1"';
+    Log('Comprobación de firma: ' + ExpandConstant('{cmd}') + ' ' + Parametros);
+    Exec(ExpandConstant('{cmd}'), Parametros, '', SW_HIDE, ewWaitUntilTerminated, Codigo);
+    if LoadStringFromFile(Salida, Detalle) then
       UltimoDetalleFirma := Trim(String(Detalle))
     else
-      UltimoDetalleFirma := 'PowerShell no respondió (código ' + IntToStr(Codigo) + ')';
-    Log('Firma de ' + Archivo + ' (intento ' + IntToStr(Intento) + '): ' + UltimoDetalleFirma);
+      UltimoDetalleFirma := '';
+    if UltimoDetalleFirma = '' then
+      UltimoDetalleFirma := 'PowerShell no devolvió nada (código ' + IntToStr(Codigo) + ')';
+    Log('Firma de ' + Archivo + ' (intento ' + IntToStr(Intento) + ', código ' + IntToStr(Codigo) + '): ' + UltimoDetalleFirma);
+    if Codigo = 0 then
+    begin
+      Result := FirmaValida;
+      Exit;
+    end;
+    if Pos('Estado=', UltimoDetalleFirma) = 1 then
+      Result := FirmaInvalida
+    else
+      Result := FirmaSinComprobar;
     Sleep(4000);
+  end;
+end;
+
+{ True si se puede ejecutar el archivo: firma válida, o el administrador decide continuar cuando la firma
+  no se pudo comprobar. Una firma leída que no es de Microsoft siempre bloquea. }
+function PuedeEjecutar(const Archivo, Nombre: String): Boolean;
+begin
+  case ComprobarFirma(Archivo) of
+    FirmaValida:
+      Result := True;
+    FirmaInvalida:
+      begin
+        MsgBox(Nombre + ' no tiene una firma válida de Microsoft. No se instalará.' + #13#10 + #13#10 + 'Detalle: ' + UltimoDetalleFirma,
+          mbCriticalError, MB_OK);
+        Result := False;
+      end;
+  else
+    Result := SuppressibleMsgBox('No se pudo comprobar la firma digital de ' + Nombre + '.' + #13#10 + #13#10 +
+      'Detalle: ' + UltimoDetalleFirma + #13#10 + #13#10 +
+      'El archivo se descargó por HTTPS desde el sitio de Microsoft. ¿Quieres continuar con la instalación de SQL Server Express?',
+      mbConfirmation, MB_YESNO, IDNO) = IDYES;
   end;
 end;
 
@@ -222,16 +259,13 @@ var
   Web, Medios, Paquete: String;
 begin
   Result := False;
-  Web := ExpandConstant('{tmp}SqlExpressSetup.exe');
-  Medios := ExpandConstant('{tmp}sqlmedia');
-  Paquete := Medios + 'SQLEXPR_x64_ENU.exe';
+  Web := ExpandConstant('{tmp}\SqlExpressSetup.exe');
+  Medios := ExpandConstant('{tmp}\sqlmedia');
+  Paquete := Medios + '\SQLEXPR_x64_ENU.exe';
   ForceDirectories(Medios);
 
-  if not FirmadoPorMicrosoft(Web) then
-  begin
-    MsgBox('El archivo descargado de SQL Server Express no tiene una firma válida de Microsoft. No se instalará.' + #13#10 + #13#10 + 'Detalle: ' + UltimoDetalleFirma, mbCriticalError, MB_OK);
+  if not PuedeEjecutar(Web, 'El instalador descargado de SQL Server Express') then
     Exit;
-  end;
 
   PaginaDescarga.SetText('Descargando SQL Server Express…',
     'Son unos 700 MB y puede tardar varios minutos. No cierres esta ventana, aunque parezca detenida.');
@@ -242,19 +276,16 @@ begin
       mbCriticalError, MB_OK);
     Exit;
   end;
-  if not FirmadoPorMicrosoft(Paquete) then
-  begin
-    MsgBox('El paquete de SQL Server Express no tiene una firma válida de Microsoft. No se instalará.' + #13#10 + #13#10 + 'Detalle: ' + UltimoDetalleFirma, mbCriticalError, MB_OK);
+  if not PuedeEjecutar(Paquete, 'El paquete de SQL Server Express') then
     Exit;
-  end;
 
   PaginaDescarga.SetText('Instalando SQL Server Express…',
     'Puede tardar varios minutos. No cierres esta ventana, aunque parezca detenida.');
   if (not Exec(Paquete,
-    '/Q /ACTION=Install /FEATURES=SQLEngine /INSTANCENAME=SQLEXPRESS /SQLSYSADMINACCOUNTS="NT AUTHORITYSYSTEM" "BUILTINAdministrators" /IACCEPTSQLSERVERLICENSETERMS',
+    '/Q /ACTION=Install /FEATURES=SQLEngine /INSTANCENAME=SQLEXPRESS /SQLSYSADMINACCOUNTS="NT AUTHORITY\SYSTEM" "BUILTIN\Administrators" /IACCEPTSQLSERVERLICENSETERMS',
     '', SW_HIDE, ewWaitUntilTerminated, Codigo)) or ((Codigo <> 0) and (Codigo <> 3010)) or (not SqlExpressInstalado) then
   begin
-    MsgBox('No se pudo instalar SQL Server Express (código ' + IntToStr(Codigo) + '). Revisa el último registro en C:Program FilesMicrosoft SQL Server(carpeta 170 o 160)Setup BootstrapLog, archivo Summary.txt.',
+    MsgBox('No se pudo instalar SQL Server Express (código ' + IntToStr(Codigo) + '). Revisa el último registro en C:\Program Files\Microsoft SQL Server\(carpeta 170 o 160)\Setup Bootstrap\Log, archivo Summary.txt.',
       mbCriticalError, MB_OK);
     Exit;
   end;
