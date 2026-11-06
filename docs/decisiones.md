@@ -442,3 +442,15 @@ Plan v2, tarea 8. Detalles que el plan no fijaba; no cambian lo que hace el sist
 - **Configuración:** `Fuente:Tipo` (Simulada por defecto, SqlServer, Excel); un valor desconocido impide iniciar con un mensaje claro. `Fuente:Cadena` es obligatoria con SqlServer y solo viene de user-secrets o variables de entorno; `Fuente:RutaExcel` expande variables de entorno. La vista se valida con `^[A-Za-z0-9_.\[\]]+$` antes de concatenarla; solo se ejecuta un SELECT.
 
 **Estado:** vigente.
+
+## D-50 Detalles del ejecutable único (tarea 9 del plan v2)
+
+Plan v2, tarea 9. Detalles que el plan no fijaba; no cambian lo que hace el sistema (RF-35, RF-38, D-39, D-43).
+
+- **Rutas del frontend:** en lugar de `MapFallbackToFile`, un `MapFallback` propio devuelve `wwwroot/index.html` para toda ruta que no sea `/api/*`; una ruta `/api/*` desconocida responde 404 sin cuerpo de página. Los archivos estáticos se sirven después del filtro de red de la empresa y antes de la autenticación, sin tocar `/api`.
+- **Servicio de Windows:** cuando el proceso corre como servicio (el directorio actual es `System32`), la raíz de contenido y `wwwroot` salen de la carpeta del ejecutable, no del directorio actual.
+- **Configuración local:** `%ProgramData%\Comedor\appsettings.Local.json` es opcional y se agrega después de los demás orígenes. `COMEDOR_CONFIG_LOCAL` (solo pruebas) sustituye esa ruta. Si `ASPNETCORE_URLS`/`urls` no está definido se escucha en `http://0.0.0.0:{Comedor:Puerto}` (80).
+- **`GET /api/salud`:** anónimo y público también desde el túnel; devuelve `estado: "ok"` y la versión informativa del ensamblado.
+- **Entornos del frontend:** `environment.ts` (producción, valor por defecto de `ng build`) usa `apiUrl: ''`; `environment.development.ts` conserva `http://localhost:5277` y reemplaza al anterior en la configuración `development`. Las pruebas del frontend usan `environment.ts`.
+
+**Estado:** vigente.
