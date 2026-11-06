@@ -19,7 +19,7 @@ public class ListarSolicitudes(IAccesoRepositorio accesos, IReglaRepositorio reg
         return filas
             .Where(f => !f.Autorizado || f.Servido
                 || (f.TiempoComida is not null && f.FechaServicio is not null
-                    && HorarioEnCurso.Contiene(todas, ahora, f.TiempoComida, f.FechaServicio.Value)))
+                    && HorarioEnCurso.Contiene(todas, ahora, f.Turno, f.TiempoComida, f.FechaServicio.Value)))
             .OrderByDescending(f => f.FechaHora)
             .ToList();
     }

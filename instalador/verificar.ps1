@@ -125,6 +125,12 @@ else {
         else {
             Write-Host '        No se encontró ninguna IP en la red.' -ForegroundColor Yellow
         }
+        if ($hostQr) {
+            Write-Host ('        IP con la que se hizo el QR actual: ' + $hostQr) -ForegroundColor Yellow
+        }
+        Write-Host '        Elige una de estas dos opciones:' -ForegroundColor Yellow
+        Write-Host '          a) Ejecuta "configurar.ps1 -ActualizarIp" y luego reimprime el QR desde Panel > Puntos.' -ForegroundColor Yellow
+        Write-Host '          b) Reserva de nuevo en el router la IP anterior para este equipo (la del QR actual).' -ForegroundColor Yellow
     }
 }
 

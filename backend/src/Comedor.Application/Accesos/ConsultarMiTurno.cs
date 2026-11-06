@@ -19,7 +19,7 @@ public class ConsultarMiTurno(IAccesoRepositorio accesos, IReglaRepositorio regl
             var candidato = filas
                 .Where(f => f.Autorizado && f.Matricula == matricula && f.TiempoComida is not null
                     && f.FechaServicio is not null
-                    && HorarioEnCurso.Contiene(todas, ahora, f.TiempoComida, f.FechaServicio.Value))
+                    && HorarioEnCurso.Contiene(todas, ahora, f.Turno, f.TiempoComida, f.FechaServicio.Value))
                 .OrderByDescending(f => f.FechaHora)
                 .FirstOrDefault();
             if (candidato is not null && (suyo is null || candidato.FechaHora > suyo.FechaHora))

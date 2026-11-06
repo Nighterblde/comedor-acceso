@@ -164,6 +164,22 @@ describe('pantalla del chef (fila)', () => {
     f.destroy();
   }));
 
+  it('peticionQueNuncaResponde_liberaLaEntradaTras10sYPermiteMarcar', fakeAsync(() => {
+    const servicio = crearServicio();
+    servicio.fila.and.returnValue(of(conAna));
+    servicio.marcarServido.and.returnValue(new Subject<{ yaServido: boolean }>());
+    const f = montar(servicio);
+    tecla();
+    tick(9000);
+    tecla();
+    expect(servicio.marcarServido).toHaveBeenCalledTimes(1);
+    tick(1001);
+    tecla();
+    expect(servicio.marcarServido).toHaveBeenCalledTimes(2);
+    tick(1500);
+    f.destroy();
+  }));
+
   it('teclaPasados1500ms_marcaAlSiguiente', fakeAsync(() => {
     const { f, servicio } = armar(conAna);
     tecla();

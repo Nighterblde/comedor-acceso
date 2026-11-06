@@ -12,11 +12,14 @@ public class FilaTests
     private static readonly DateOnly Hoy = new(2026, 11, 10);
 
     private static SolicitudPunto Fila(string matricula, DateTime hora, Guid? id = null, bool servido = false,
-        bool autorizado = true, string tiempo = "Comida") =>
-        new(autorizado ? id ?? Guid.NewGuid() : null, hora, matricula, "Nombre", null, "Matutino", tiempo, Hoy,
+        bool autorizado = true, string tiempo = "Comida", string turno = "Matutino") =>
+        new(autorizado ? id ?? Guid.NewGuid() : null, hora, matricula, "Nombre", null, turno, tiempo, Hoy,
             autorizado, autorizado ? null : "Fuera de horario", servido);
 
-    private static (ConsultarFila Fila, ConsultarMiTurno Turno) Crear(params SolicitudPunto[] filas)
+    private static (ConsultarFila Fila, ConsultarMiTurno Turno) Crear(params SolicitudPunto[] filas) =>
+        CrearA(Martes1330, filas);
+
+    private static (ConsultarFila Fila, ConsultarMiTurno Turno) CrearA(DateTime ahora, params SolicitudPunto[] filas)
     {
         var accesos = new Mock<IAccesoRepositorio>();
         accesos.Setup(a => a.SolicitudesAsync("P1", It.IsAny<DateTime>())).ReturnsAsync(filas);
@@ -27,6 +30,7 @@ public class FilaTests
         {
             new("Matutino", "Comida", new TimeOnly(13, 0), new TimeOnly(15, 0)),
             new("Matutino", "Desayuno", new TimeOnly(7, 0), new TimeOnly(9, 0)),
+            new("Vespertino", "Comida", new TimeOnly(18, 0), new TimeOnly(20, 0)),
         });
         var puntos = new Mock<IPuntoRepositorio>();
         puntos.Setup(p => p.TodosAsync()).ReturnsAsync(new List<PuntoEntrada>
@@ -34,7 +38,7 @@ public class FilaTests
             new("P0", "Otro", true), new("P1", "Comedor", true),
         });
         var reloj = new Mock<IReloj>();
-        reloj.Setup(r => r.Ahora()).Returns(Martes1330);
+        reloj.Setup(r => r.Ahora()).Returns(ahora);
         var fila = new ConsultarFila(accesos.Object, reglas.Object, reloj.Object);
         return (fila, new ConsultarMiTurno(accesos.Object, reglas.Object, puntos.Object, reloj.Object));
     }
@@ -94,6 +98,29 @@ public class FilaTests
 
         Assert.Equal("COMIDA", r.Actual!.Matricula);
         Assert.Equal(1, r.Total);
+    }
+
+    [Fact]
+    public async Task Fila_OtroTurnoMismoTiempoDeComida_NoAparece()
+    {
+        var las1800 = Martes1330.Date.AddHours(18);
+        var (sut, _) = CrearA(las1800,
+            Fila("MATUTINO", Martes1330, turno: "Matutino"),
+            Fila("VESPERTINO", las1800.AddMinutes(-5), turno: "Vespertino"));
+
+        var r = await sut.EjecutarAsync("P1");
+
+        Assert.Equal("VESPERTINO", r.Actual!.Matricula);
+        Assert.Equal(1, r.Total);
+    }
+
+    [Fact]
+    public async Task MiTurno_OtroTurnoMismoTiempoDeComida_SinTurno()
+    {
+        var las1800 = Martes1330.Date.AddHours(18);
+        var (_, sut) = CrearA(las1800, Fila("MATUTINO", Martes1330, turno: "Matutino"));
+
+        Assert.Equal(new MiTurno(EstadoTurno.SinTurno, null), await sut.EjecutarAsync("MATUTINO"));
     }
 
     [Fact]

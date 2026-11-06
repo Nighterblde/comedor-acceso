@@ -21,7 +21,7 @@ public class ConsultarFila(IAccesoRepositorio accesos, IReglaRepositorio reglas,
         IReadOnlyList<SolicitudPunto> filas, IReadOnlyList<ReglaDerecho> reglas, DateTime ahora) =>
         filas
             .Where(f => f.Autorizado && !f.Servido && f.TiempoComida is not null && f.FechaServicio is not null
-                && HorarioEnCurso.Contiene(reglas, ahora, f.TiempoComida, f.FechaServicio.Value))
+                && HorarioEnCurso.Contiene(reglas, ahora, f.Turno, f.TiempoComida, f.FechaServicio.Value))
             .OrderBy(f => f.FechaHora)
             .ThenBy(f => f.ConsumoId)
             .ToList();

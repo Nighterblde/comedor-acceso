@@ -63,6 +63,7 @@ public class PersonalController(ImportarPersonal importar) : ControllerBase
         }
 
         hoja.Range(1, 1, 1, FuenteRRHHExcel.Columnas.Count).Style.Font.Bold = true;
+        hoja.Column(1).Style.NumberFormat.Format = "@"; // matrícula como texto: conserva ceros a la izquierda
         hoja.Cell(2, 1).Value = "A0001";
         hoja.Cell(2, 2).Value = "Ana Pérez López";
         hoja.Cell(2, 3).Value = "Producción";

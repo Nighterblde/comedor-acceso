@@ -178,4 +178,19 @@ public sealed class PersonalTests(SqlServerFixture sql) : IDisposable
         Assert.False(h.Cell(2, 1).IsEmpty());
         Assert.True(h.Cell(3, 1).IsEmpty());
     }
+
+    [Fact]
+    public async Task Plantilla_ColumnaMatriculaEsTexto()
+    {
+        using var fabrica = Fabrica();
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
+
+        var r = await c.GetAsync("/api/admin/personal/plantilla.xlsx");
+
+        using var libro = new XLWorkbook(await r.Content.ReadAsStreamAsync());
+        var h = libro.Worksheet(1);
+        Assert.Equal(XLDataType.Text, h.Cell(2, 1).DataType);
+        Assert.Equal("@", h.Cell(2, 1).Style.NumberFormat.Format);
+        Assert.Equal("@", h.Cell(50, 1).Style.NumberFormat.Format);
+    }
 }
