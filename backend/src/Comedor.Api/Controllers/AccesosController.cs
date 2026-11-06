@@ -1,4 +1,5 @@
 using Comedor.Application.Accesos;
+using Comedor.Application.Usuarios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +14,7 @@ public record SolicitudAccesoManual(string? Matricula, string? PuntoId);
 public class AccesosController(ValidarAcceso validar) : ControllerBase
 {
     [HttpPost("celular")]
-    [Authorize(Roles = "Empleado")]
+    [Authorize(Roles = Roles.Empleado)]
     public async Task<IActionResult> Celular([FromBody] SolicitudAccesoCelular? solicitud)
     {
         var matricula = User.FindFirst("sub")?.Value;
@@ -31,7 +32,7 @@ public class AccesosController(ValidarAcceso validar) : ControllerBase
     }
 
     [HttpPost("manual")]
-    [Authorize(Roles = "Punto,Encargado")]
+    [Authorize(Roles = Roles.TodosDelSistema)]
     public async Task<IActionResult> Manual([FromBody] SolicitudAccesoManual? solicitud)
     {
         var encargado = User.FindFirst("sub")?.Value;

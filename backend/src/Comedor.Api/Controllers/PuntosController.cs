@@ -1,6 +1,7 @@
 using Comedor.Application.Abstracciones;
 using Comedor.Application.Accesos;
 using Comedor.Application.Qr;
+using Comedor.Application.Usuarios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +17,7 @@ public class PuntosController(
     IConfiguration config) : ControllerBase
 {
     [HttpGet("{id}/qr")]
-    [Authorize(Roles = "Punto,Encargado,Administrador")]
+    [Authorize(Roles = Roles.TodosDelSistema)]
     public async Task<IActionResult> Qr(string id)
     {
         string token;
@@ -40,7 +41,7 @@ public class PuntosController(
     }
 
     [HttpGet("{id}/solicitudes")]
-    [Authorize(Roles = "Punto,Encargado")]
+    [Authorize(Roles = Roles.TodosDelSistema)]
     public async Task<ActionResult<IReadOnlyList<SolicitudPunto>>> Solicitudes(string id, [FromQuery] DateTime? desde) =>
         Ok(await listar.EjecutarAsync(id, desde));
 }

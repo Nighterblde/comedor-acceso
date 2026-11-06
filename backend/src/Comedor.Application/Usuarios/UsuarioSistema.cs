@@ -3,14 +3,12 @@ namespace Comedor.Application.Usuarios;
 /// <summary>Roles de los usuarios del sistema y del empleado.</summary>
 public static class Roles
 {
-    public const string Punto = "Punto";
-    public const string Encargado = "Encargado";
-    public const string Supervisor = "Supervisor";
+    public const string Chef = "Chef";
     public const string Administrador = "Administrador";
     public const string Empleado = "Empleado";
 
     /// <summary>Roles que inician sesión con usuario y contraseña propios (RF-24).</summary>
-    public const string TodosDelSistema = Punto + "," + Encargado + "," + Supervisor + "," + Administrador;
+    public const string TodosDelSistema = Chef + "," + Administrador;
 }
 
 public sealed class UsuarioSistema

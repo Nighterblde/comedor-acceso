@@ -34,12 +34,12 @@ describe('núcleo del frontend', () => {
     const req = http.expectOne(`${environment.apiUrl}/api/auth/login`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ usuario: 'chef', contrasena: 'secreta' });
-    req.flush({ token: 'tok-sistema', rol: 'Encargado', expiraEn: '2026-11-05T00:00:00' });
+    req.flush({ token: 'tok-sistema', rol: 'Chef', expiraEn: '2026-11-05T00:00:00' });
 
     expect(localStorage.getItem('comedor.token.sistema')).toBe('tok-sistema');
-    expect(localStorage.getItem('comedor.rol')).toBe('Encargado');
+    expect(localStorage.getItem('comedor.rol')).toBe('Chef');
     expect(auth.tokenSistema()).toBe('tok-sistema');
-    expect(auth.rol()).toBe('Encargado');
+    expect(auth.rol()).toBe('Chef');
   });
 
   it('login_guardaUsuario_yCerrarSesionLoBorra', () => {
@@ -49,7 +49,7 @@ describe('núcleo del frontend', () => {
     auth.login(' chef ', 'secreta').subscribe();
     http
       .expectOne(`${environment.apiUrl}/api/auth/login`)
-      .flush({ token: 'tok-sistema', rol: 'Encargado', expiraEn: '2026-11-05T00:00:00' });
+      .flush({ token: 'tok-sistema', rol: 'Chef', expiraEn: '2026-11-05T00:00:00' });
 
     expect(auth.usuario()).toBe('chef');
     auth.cerrarSesion();
@@ -118,7 +118,7 @@ describe('núcleo del frontend', () => {
     expect(sinRol instanceof UrlTree).toBeTrue();
     expect(TestBed.inject(Router).serializeUrl(sinRol as UrlTree)).toBe('/login?returnUrl=%2Fadmin');
 
-    localStorage.setItem('comedor.rol', 'Supervisor');
+    localStorage.setItem('comedor.rol', 'Chef');
     expect(ejecutar() instanceof UrlTree).toBeTrue();
 
     localStorage.setItem('comedor.rol', 'Administrador');

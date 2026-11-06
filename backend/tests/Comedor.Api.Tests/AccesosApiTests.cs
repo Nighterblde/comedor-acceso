@@ -139,7 +139,7 @@ public class AccesosApiTests(SqlServerFixture sql)
     public async Task FlujoCompleto_SesionQrYAcceso_Autorizado()
     {
         using var fabrica = await CrearFabricaAsync();
-        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Punto));
+        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Chef));
         var qrRespuesta = (await punto.GetFromJsonAsync<RespuestaQr>($"/api/puntos/{ComedorApiFactory.PuntoId}/qr"))!;
         Assert.Equal("http://localhost:4200/pase?t=" + Uri.EscapeDataString(qrRespuesta.Token), qrRespuesta.Url);
         var empleado = ConToken(fabrica, await TokenEmpleadoAsync(fabrica));
@@ -168,7 +168,7 @@ public class AccesosApiTests(SqlServerFixture sql)
     public async Task Qr_PuntoInexistente_404()
     {
         using var fabrica = await CrearFabricaAsync();
-        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Punto));
+        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Chef));
 
         Assert.Equal(HttpStatusCode.NotFound, (await punto.GetAsync("/api/puntos/NOEXISTE/qr")).StatusCode);
     }
@@ -177,7 +177,7 @@ public class AccesosApiTests(SqlServerFixture sql)
     public async Task Solicitudes_AutorizadoAparecePorServir_ConNombre()
     {
         using var fabrica = await CrearFabricaAsync();
-        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Punto));
+        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Chef));
         var empleado = ConToken(fabrica, await TokenEmpleadoAsync(fabrica));
         await empleado.PostAsJsonAsync("/api/accesos/celular", new { tokenQr = await TokenQrAsync(punto) });
 
@@ -194,7 +194,7 @@ public class AccesosApiTests(SqlServerFixture sql)
     public async Task Servido_MarcaServidoEnSolicitudes()
     {
         using var fabrica = await CrearFabricaAsync();
-        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Punto));
+        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Chef));
         var empleado = ConToken(fabrica, await TokenEmpleadoAsync(fabrica));
         await empleado.PostAsJsonAsync("/api/accesos/celular", new { tokenQr = await TokenQrAsync(punto) });
         var id = await ConsumoIdAsync(punto);
@@ -211,7 +211,7 @@ public class AccesosApiTests(SqlServerFixture sql)
     public async Task Servido_ConsumoInexistente_404()
     {
         using var fabrica = await CrearFabricaAsync();
-        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Punto));
+        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Chef));
 
         var r = await punto.PostAsync($"/api/consumos/{Guid.NewGuid()}/servido", null);
 
@@ -222,8 +222,8 @@ public class AccesosApiTests(SqlServerFixture sql)
     public async Task Servido_DosVecesSimultaneas_UnaEntrega()
     {
         using var fabrica = await CrearFabricaAsync();
-        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Punto));
-        var encargado = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Encargado));
+        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Chef));
+        var encargado = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Chef));
         var empleado = ConToken(fabrica, await TokenEmpleadoAsync(fabrica));
         await empleado.PostAsJsonAsync("/api/accesos/celular", new { tokenQr = await TokenQrAsync(punto) });
         var id = await ConsumoIdAsync(punto);
@@ -245,8 +245,8 @@ public class AccesosApiTests(SqlServerFixture sql)
     public async Task Concurrencia_CelularYManualSimultaneos_UnSoloConsumo()
     {
         using var fabrica = await CrearFabricaAsync();
-        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Punto));
-        var encargado = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Encargado));
+        var punto = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Chef));
+        var encargado = ConToken(fabrica, await TokenSistemaAsync(fabrica, Roles.Chef));
         var empleado = ConToken(fabrica, await TokenEmpleadoAsync(fabrica));
         var qr = await TokenQrAsync(punto);
 

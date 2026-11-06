@@ -29,7 +29,7 @@ public class SincronizacionEstadoTests(SqlServerFixture sql)
     }
 
     [Fact]
-    public async Task Estado_Supervisor_VeUltimaFallidaYFechaDeLaUltimaExitosa()
+    public async Task Estado_Administrador_VeUltimaFallidaYFechaDeLaUltimaExitosa()
     {
         using var fabrica = new ComedorApiFactory(sql);
         await fabrica.SembrarAsync();
@@ -42,7 +42,7 @@ public class SincronizacionEstadoTests(SqlServerFixture sql)
             await repo.RegistrarAsync(new BitacoraSincronizacion(Guid.NewGuid(), fallida, false, 0, 0, 0, 0, "caída"));
         }
 
-        var c = await ClienteAsync(fabrica, Roles.Supervisor);
+        var c = await ClienteAsync(fabrica, Roles.Administrador);
         var r = await c.GetAsync("/api/sincronizacion/estado");
 
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
@@ -66,7 +66,7 @@ public class SincronizacionEstadoTests(SqlServerFixture sql)
     }
 
     [Theory]
-    [InlineData(Roles.Punto)]
+    [InlineData(Roles.Chef)]
     [InlineData(Roles.Empleado)]
     public async Task Estado_RolSinAcceso403(string rol)
     {
@@ -80,14 +80,14 @@ public class SincronizacionEstadoTests(SqlServerFixture sql)
     }
 
     [Fact]
-    public async Task Estado_SinToken401_YRolEncargado403()
+    public async Task Estado_SinToken401_YRolChef403()
     {
         using var fabrica = new ComedorApiFactory(sql);
         await fabrica.SembrarAsync();
 
         Assert.Equal(HttpStatusCode.Unauthorized,
             (await fabrica.CreateClient().GetAsync("/api/sincronizacion/estado")).StatusCode);
-        var encargado = await ClienteAsync(fabrica, Roles.Encargado);
-        Assert.Equal(HttpStatusCode.Forbidden, (await encargado.GetAsync("/api/sincronizacion/estado")).StatusCode);
+        var chef = await ClienteAsync(fabrica, Roles.Chef);
+        Assert.Equal(HttpStatusCode.Forbidden, (await chef.GetAsync("/api/sincronizacion/estado")).StatusCode);
     }
 }

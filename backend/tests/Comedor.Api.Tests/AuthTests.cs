@@ -39,17 +39,17 @@ public class AuthTests(SqlServerFixture sql)
     }
 
     [Fact]
-    public async Task Login_RolPunto_DevuelveToken30Dias()
+    public async Task Login_RolChef_DevuelveToken30Dias()
     {
         using var fabrica = new ComedorApiFactory(sql);
         var cliente = fabrica.CreateClient();
-        await fabrica.CrearUsuarioAsync("punto-entrada", "Punto-Prueba-123", Roles.Punto);
+        await fabrica.CrearUsuarioAsync("chef-entrada", "Chef-Prueba-123", Roles.Chef);
 
-        var respuesta = await Login(cliente, "punto-entrada", "Punto-Prueba-123");
+        var respuesta = await Login(cliente, "chef-entrada", "Chef-Prueba-123");
 
         Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
         var cuerpo = (await respuesta.Content.ReadFromJsonAsync<RespuestaLogin>())!;
-        Assert.Equal(Roles.Punto, cuerpo.Rol);
+        Assert.Equal(Roles.Chef, cuerpo.Rol);
         Assert.Equal(TimeSpan.FromDays(30), Vigencia(cuerpo.Token));
     }
 
