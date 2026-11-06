@@ -34,6 +34,16 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-28](#d-28-reglas-de-la-sincronización-de-personal) | Reglas de la sincronización de personal | Aceptada, revisable |
 | [D-29](#d-29-api-base-seguridad-y-configuración) | API base, seguridad y configuración | Aceptada |
 | [D-30](#d-30-pantalla-del-chef-y-endpoints-de-acceso) | Pantalla del chef y endpoints de acceso | Aceptada |
+| [D-33](#d-33-tres-roles-empleado-chef-y-administrador) | Tres roles: Empleado, Chef y Administrador | Aceptada |
+| [D-34](#d-34-sesión-del-chef-sin-caducidad-y-revocable) | Sesión del chef sin caducidad y revocable | Aceptada |
+| [D-35](#d-35-fila-de-servicio-en-la-pantalla-del-chef) | Fila de servicio en la pantalla del chef | Aceptada |
+| [D-36](#d-36-sin-captura-manual-en-la-pantalla-del-chef) | Sin captura manual en la pantalla del chef | Aceptada |
+| [D-37](#d-37-panel-único-del-administrador) | Panel único del administrador | Aceptada |
+| [D-38](#d-38-panel-y-pantalla-del-chef-solo-desde-la-red-de-la-empresa) | Panel y pantalla del chef solo desde la red de la empresa | Aceptada |
+| [D-39](#d-39-instalación-con-un-exe) | Instalación con un .exe, servicio de Windows y SQL Server Express | Aceptada |
+| [D-40](#d-40-contraseña-de-la-empresa-pendiente-y-bloqueante-para-producción) | Contraseña de la empresa: pendiente y bloqueante para producción | Pendiente |
+| [D-41](#d-41-acceso-desde-internet-implementación-futura) | Acceso desde internet (datos móviles): implementación futura | Pospuesta |
+| [D-42](#d-42-fuente-de-rr-hh-en-sql-server-o-excel) | Fuente de RR. HH. en SQL Server o Excel | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -280,3 +290,81 @@ Tarea 15 (prueba manual del dueño del producto). Estado: aplicada.
 - **Decisión:** el campo "Número de empleado" del inicio de sesión en el celular abre el teclado de texto, no el numérico. Se quitó `inputmode="numeric"`, que se había agregado en la Tarea 12 sin que el SRS ni la guía de diseño lo pidieran.
 - **Motivo:** el formato real de la matrícula en la fuente de RR. HH. sigue pendiente con el cliente (SRS §11), y las matrículas de prueba llevan letras (`E1001`). Con el teclado numérico no se podían escribir desde el celular.
 - **Revisable:** si el cliente confirma que las matrículas son solo números, se puede volver al teclado numérico. El formato de la matrícula se agregó a los pendientes con el cliente (SRS 1.5, sección 11).
+
+## D-33 Tres roles: Empleado, Chef y Administrador
+
+Plan v2. Confirmado por el dueño del producto.
+
+- **Decisión:** solo hay tres roles. Chef reúne a los antiguos Punto y Encargado; Administrador reúne a Supervisor y Administrador. Una migración convierte a los usuarios existentes.
+- **Motivo:** con un solo comedor y una sola entrada, cinco roles complicaban la navegación y la administración de usuarios.
+
+## D-34 Sesión del chef sin caducidad y revocable
+
+Plan v2. Sustituye la vigencia de 12 h y 30 días de RF-24 para el chef.
+
+- **Decisión:** el token del chef dura 3,650 días, para que la TV nunca pida iniciar sesión. El del administrador dura 12 h (el dueño del producto pidió al menos 2).
+- **Revocación:** cada petición del chef o del administrador comprueba que el usuario siga activo y con el mismo rol. Desactivarlo o cambiarle el rol en el panel cierra su sesión al instante. Sin esto, un token de diez años no se podría revocar.
+
+## D-35 Fila de servicio en la pantalla del chef
+
+Plan v2. Sustituye la lista "Por servir" de RF-29.
+
+- **Decisión:** la TV muestra en grande solo a la primera persona autorizada sin servir ("Sírvele a …"), y debajo cuántos siguen. Cualquier tecla, clic o toque la marca como servida y aparece la siguiente.
+- **Fila, no bloqueo:** si otro empleado escanea mientras se atiende a alguien, se valida al momento y entra a la fila; su celular le dice su lugar ("Eres el 2.º en la fila") y le avisa cuando le toca. El dueño del producto eligió la fila sobre bloquear y pedir que vuelva a escanear.
+- **Protección contra dobles pulsaciones:** tras marcar, la TV ignora toda entrada durante 1.5 s y las teclas repetidas, para no marcar por error a la siguiente persona.
+- **Orden:** por hora de validación y, a igual hora, por identificador del consumo, para que la TV y los celulares coincidan.
+
+## D-36 Sin captura manual en la pantalla del chef
+
+Plan v2. Cambia RF-15.
+
+- **Decisión:** la TV no tiene campo para capturar matrículas; todos los empleados usan su celular. La captura de contingencia sigue en el panel del administrador (RF-26).
+- **Motivo:** el chef no debe operar nada, y cualquier tecla marca Servido.
+- **Se conserva:** el endpoint de captura manual, con rol Chef, para reutilizarlo cuando se integre la huella (RF-16).
+
+## D-37 Panel único del administrador
+
+Plan v2.
+
+- **Decisión:** reportes (cotejo, conteo, detalle) y administración (reglas, puntos, usuarios, personal, sincronización, contingencia) viven en un solo panel en `/panel`, con navegación lateral. Al iniciar sesión, el chef va a su pantalla y el administrador al panel.
+
+## D-38 Panel y pantalla del chef solo desde la red de la empresa
+
+Plan v2. Confirmado por el dueño del producto.
+
+- **Decisión:** todas las rutas de la API, salvo las que usa el celular del empleado y la de salud, responden solo a direcciones de la red local. Una petición que llega por un túnel o un proxy (encabezados `CF-Connecting-IP` o `X-Forwarded-For`) se trata como externa.
+- **Motivo:** cuando se habilite el acceso desde internet (D-41), solo quedará expuesto lo que necesita el empleado.
+
+## D-39 Instalación con un .exe
+
+Plan v2. La empresa no tiene técnicos; instala el dueño del producto.
+
+- **Decisión:** `InstalarComedor.exe` (Inno Setup) instala SQL Server 2022 Express si falta, la aplicación como servicio de Windows que arranca sola con el equipo, la regla de firewall para la red local, un respaldo diario y dos accesos directos: Pantalla del chef (navegador a pantalla completa) y Panel del comedor.
+- **Un solo proceso:** la API también publica el frontend, en un solo puerto (8080). Se publica autocontenida, así que la PC no necesita .NET.
+- **Base de datos:** SQL Server Express. Es gratuito, es el motor que ya usa el sistema (no hay que reescribir ni volver a probar) y es lo más probable para leer la base de empleados de la empresa. La base del comedor queda separada de la de RR. HH., que solo se lee (RF-03).
+- **Configuración y secretos:** el instalador genera las claves al azar en `%ProgramData%\Comedor\appsettings.Local.json`, legible solo para el sistema y los administradores del equipo.
+- **Riesgo conocido:** el QR impreso lleva la IP de la PC. Si la IP cambia, deja de funcionar; la guía explica cómo reservarla en el router y `verificar.ps1` avisa si cambió. El dominio propio (D-41) elimina este riesgo.
+- **Riesgo conocido:** en la red local la aplicación usa HTTP, así que la contraseña del empleado viaja sin cifrar dentro de la red de la empresa hasta que exista HTTPS (D-41).
+
+## D-40 Contraseña de la empresa: pendiente y bloqueante para producción
+
+Plan v2. El dueño del producto eligió que el empleado entre con su ID y la contraseña de la empresa.
+
+- **Estado:** no se sabe todavía qué sistema valida esas contraseñas. El autenticador sigue simulado.
+- **Bloqueante:** sin el adaptador real los empleados no pueden iniciar sesión en producción. Se hace en cuanto se conozca el sistema de la empresa (SRS §11).
+
+## D-41 Acceso desde internet: implementación futura
+
+Plan v2. Para los empleados que usan datos móviles u otro Wi-Fi.
+
+- **Propuesta:** Cloudflare Tunnel desde la PC del comedor con un dominio propio (por ejemplo `comedor-<empresa>.com`, unos US$10 a 15 al año). Da una dirección HTTPS fija que funciona desde cualquier red, sin abrir puertos del router, y resuelve el certificado HTTPS pendiente (RNF-06) y el cambio de IP (D-39).
+- **Sin dominio propio:** la dirección gratuita temporal de Cloudflare cambia en cada reinicio, así que no sirve para un QR impreso.
+- **Mientras tanto:** solo red de la empresa. D-38 ya deja cerrados el panel y la pantalla del chef ante el túnel.
+
+## D-42 Fuente de RR. HH. en SQL Server o Excel
+
+Plan v2. El motor de la base de empleados de la empresa aún no se conoce.
+
+- **Decisión:** dos fuentes reales, elegidas por configuración: una vista de SQL Server con columnas fijas (`vw_EmpleadosComedor`), o un archivo Excel con las mismas columnas que el administrador importa desde el panel (con plantilla descargable). La simulada queda para desarrollo.
+- **Motivo:** el Excel permite arrancar aunque no haya acceso a la base de RR. HH.; la vista es la integración automática cuando informática la cree.
+

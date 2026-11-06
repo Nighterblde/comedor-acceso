@@ -23,6 +23,7 @@ Quien no tenga celular puede identificarse con su matrícula ante el chef, que l
 | [Especificación de requisitos (SRS)](docs/srs.md) | Alcance, usuarios, requisitos funcionales y no funcionales, arquitectura, modelo de datos, errores, criterios de aceptación y pendientes con el cliente. |
 | [Plan de implementación](docs/plan.md) | 16 tareas con desarrollo guiado por pruebas: archivos, interfaces, pruebas y comandos de cada una. |
 | [Guía de diseño](docs/diseno.md) | Principios, colores, tipografía, componentes, pantallas de referencia y reglas de accesibilidad del frontend. |
+| [Plan de implementación v2](docs/plan-v2.md) | Siguiente etapa: fila del chef, tres roles, panel único e instalación con un .exe (10 tareas). |
 | [Registro de decisiones](docs/decisiones.md) | Decisiones de arquitectura y de negocio, con su motivo y alternativas descartadas. |
 | [Carga y aceptación](docs/aceptacion.md) | Resultado de la prueba de carga (RNF-01, RNF-02) y del recorrido de los criterios de aceptación, con lo pendiente en el entorno del cliente. |
 
