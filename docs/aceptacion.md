@@ -115,7 +115,7 @@ Lo siguiente se vio durante el recorrido. No impide aceptar el sistema y no se c
 
 ## Instalación v2
 
-**Estado: PENDIENTE.** Tarea 10 del plan v2. Los archivos del instalador (`instalador/comedor.iss`, `publicar.ps1`, `configurar.ps1`, `respaldar.ps1`, `verificar.ps1`) y las guías están escritos, pero **no se compiló `InstalarComedor.exe` ni se ejecutó nada en una máquina**: no hay Inno Setup en el equipo de desarrollo y no se instalan servicios ni reglas de firewall allí. Solo se comprobó que los `.ps1` no tienen errores de sintaxis (`[System.Management.Automation.Language.Parser]::ParseFile`: 0 errores en los cuatro). La sintaxis de `comedor.iss` solo se revisó leyéndola.
+**Estado: PENDIENTE.** Tarea 10 del plan v2. Los archivos del instalador (`instalador/comedor.iss`, `publicar.ps1`, `configurar.ps1`, `respaldar.ps1`, `verificar.ps1`) y las guías están escritos, pero **no se compiló `InstalarComedor.exe` ni se ejecutó nada en una máquina**: no hay Inno Setup en el equipo de desarrollo y no se instalan servicios ni reglas de firewall allí. Solo se comprobó que los `.ps1` no tienen errores de sintaxis (`[System.Management.Automation.Language.Parser]::ParseFile`: 0 errores en los cuatro). La primera compilación real se hizo el 6 de noviembre de 2026 con Inno Setup 7.1.1: falló en una línea que empezaba con `#13#10` (el preprocesador la tomaba por una directiva; también habría fallado en Inno Setup 6), se corrigió y `publicar.ps1` genera `salidaInstalarComedor.exe` (unos 47 MB) sin advertencias. **Sigue sin ejecutarse el instalador**: nada de esta lista se ha comprobado en una máquina.
 
 Hay que hacerlo en una máquina virtual con Windows 10 u 11 limpia, sin .NET ni SQL Server, con `publicar.ps1` ya ejecutado en la PC de desarrollo. Marcar cada fila con el resultado real.
 
@@ -123,7 +123,7 @@ Hay que hacerlo en una máquina virtual con Windows 10 u 11 limpia, sin .NET ni 
 | --- | --- | --- | --- |
 | 1 | Con la VM limpia, correr `verificar.ps1` | Todo en rojo, sin errores del script, código de salida distinto de 0 | [ ] |
 | 2 | `publicar.ps1` en la PC de desarrollo | Genera `salida\InstalarComedor.exe` sin errores; si falta `iscc`, avisa con un mensaje claro | [ ] |
-| 3 | Confirmar el enlace de descarga de SQL Server 2022 Express y los argumentos silenciosos (`#define UrlSqlExpress` en `comedor.iss`) | Se descarga el instalador web de Microsoft y la instalación en silencio termina; la instancia `SQLEXPRESS` existe | [ ] |
+| 3 | Confirmar la descarga y la instalación de SQL Server Express (paquete en inglés, D-55) en un Windows con idioma español (México); el primer intento falló por el idioma del paquete | Se descarga el instalador web de Microsoft y la instalación en silencio termina; la instancia `SQLEXPRESS` existe | [ ] |
 | 4 | Instalar con `InstalarComedor.exe` (administrador `admin1`, contraseña de 8 o más caracteres, puerto 80) | El asistente rechaza contraseñas de menos de 8 caracteres; instala en `C:\Program Files\Comedor`; crea los dos accesos directos | [ ] |
 | 5 | Con el puerto 80 ocupado (por ejemplo, otro programa escuchando) abrir el asistente | Avisa y propone 8080; los accesos directos y el QR llevan `:8080` | [ ] |
 | 6 | `verificar.ps1` tras instalar | Todo en verde: servicio, `/api/salud` 200, regla de firewall, tarea de respaldo, IP del QR | [ ] |

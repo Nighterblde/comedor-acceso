@@ -1,11 +1,12 @@
 ﻿; Instalador del Comedor de personal (Inno Setup 6.3 o posterior). RF-35, RNF-11, D-39, D-51.
 ; Se compila con publicar.ps1 (iscc instalador\comedor.iss) después de dejar la API y el frontend en ..\publicacion.
-; Orden de la instalación: (1) SQL Server 2022 Express si falta, (2) configurar.ps1, (3) servicio "Comedor", (4) accesos directos.
+; Orden de la instalación: (1) SQL Server Express si falta, (2) configurar.ps1, (3) servicio "Comedor", (4) accesos directos.
 
 #define NombreApp "Comedor de personal"
 #define VersionApp "2.0.0"
-; Instalador web (bootstrapper) oficial de SQL Server 2022 Express. NO VERIFICADO desde este repositorio:
-; confirmar el enlace y los argumentos silenciosos en una PC limpia antes de entregar (ver docs/aceptacion.md, "Instalación v2").
+; Instalador web (bootstrapper) oficial de SQL Server Express. El enlace de Microsoft hoy lleva a SQL Server 2025 Express (D-55).
+; Se usa en modo de descarga con el paquete en INGLÉS: el paquete en español falla en Windows con otra variante regional
+; (por ejemplo es-MX). La instalación completa en una PC limpia sigue pendiente (docs/aceptacion.md, "Instalación v2").
 #define UrlSqlExpress "https://go.microsoft.com/fwlink/p/?linkid=2216019"
 
 [Setup]
@@ -155,7 +156,7 @@ begin
   PaginaAdmin.Add('Puerto (80 recomendado):', False);
   PaginaAdmin.Values[3] := '80';
 
-  PaginaDescarga := CreateDownloadPage(SetupMessage(msgWizardPreparing), 'Descargando SQL Server 2022 Express…', nil);
+  PaginaDescarga := CreateDownloadPage(SetupMessage(msgWizardPreparing), 'Descargando SQL Server Express…', nil);
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
@@ -176,6 +177,65 @@ begin
         mbInformation, MB_OK);
     end;
   end;
+end;
+
+{ True si el archivo está firmado por Microsoft (se comprueba antes de ejecutarlo como administrador). }
+function FirmadoPorMicrosoft(const Archivo: String): Boolean;
+var
+  Codigo: Integer;
+begin
+  Result := Exec(PowerShellExe,
+    '-NoProfile -ExecutionPolicy Bypass -Command "$f = Get-AuthenticodeSignature -LiteralPath ''' + Archivo +
+    '''; if ($f.Status -eq ''Valid'' -and $f.SignerCertificate.Subject -like ''*Microsoft Corporation*'') { exit 0 } else { exit 1 }"',
+    '', SW_HIDE, ewWaitUntilTerminated, Codigo) and (Codigo = 0);
+end;
+
+{ Descarga el paquete de SQL Server Express en inglés y lo instala como instancia SQLEXPRESS. Se llama antes de copiar
+  archivos: si falla, no se instala nada. El instalador web, sin el modo de descarga, elige el idioma del sistema y el
+  paquete en español falla en Windows con otra variante regional (es-MX). }
+function InstalarSqlExpress: Boolean;
+var
+  Codigo: Integer;
+  Web, Medios, Paquete: String;
+begin
+  Result := False;
+  Web := ExpandConstant('{tmp}SqlExpressSetup.exe');
+  Medios := ExpandConstant('{tmp}sqlmedia');
+  Paquete := Medios + 'SQLEXPR_x64_ENU.exe';
+  ForceDirectories(Medios);
+
+  if not FirmadoPorMicrosoft(Web) then
+  begin
+    MsgBox('El archivo descargado de SQL Server Express no tiene una firma válida de Microsoft. No se instalará.', mbCriticalError, MB_OK);
+    Exit;
+  end;
+
+  PaginaDescarga.SetText('Descargando SQL Server Express…',
+    'Son unos 700 MB y puede tardar varios minutos. No cierres esta ventana, aunque parezca detenida.');
+  if (not Exec(Web, '/Action=Download /MediaType=Core /MediaPath="' + Medios + '" /Language=en-US /Quiet',
+    '', SW_HIDE, ewWaitUntilTerminated, Codigo)) or (Codigo <> 0) or (not FileExists(Paquete)) then
+  begin
+    MsgBox('No se pudo descargar el paquete de SQL Server Express (código ' + IntToStr(Codigo) + '). Revisa la conexión a internet y que haya al menos 4 GB libres, y vuelve a ejecutar el instalador.',
+      mbCriticalError, MB_OK);
+    Exit;
+  end;
+  if not FirmadoPorMicrosoft(Paquete) then
+  begin
+    MsgBox('El paquete de SQL Server Express no tiene una firma válida de Microsoft. No se instalará.', mbCriticalError, MB_OK);
+    Exit;
+  end;
+
+  PaginaDescarga.SetText('Instalando SQL Server Express…',
+    'Puede tardar varios minutos. No cierres esta ventana, aunque parezca detenida.');
+  if (not Exec(Paquete,
+    '/Q /ACTION=Install /FEATURES=SQLEngine /INSTANCENAME=SQLEXPRESS /SQLSYSADMINACCOUNTS="NT AUTHORITYSYSTEM" "BUILTINAdministrators" /IACCEPTSQLSERVERLICENSETERMS',
+    '', SW_HIDE, ewWaitUntilTerminated, Codigo)) or ((Codigo <> 0) and (Codigo <> 3010)) or (not SqlExpressInstalado) then
+  begin
+    MsgBox('No se pudo instalar SQL Server Express (código ' + IntToStr(Codigo) + '). Revisa el último registro en C:Program FilesMicrosoft SQL Server(carpeta 170 o 160)Setup BootstrapLog, archivo Summary.txt.',
+      mbCriticalError, MB_OK);
+    Exit;
+  end;
+  Result := True;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -220,19 +280,20 @@ begin
   end
   else if (CurPageID = wpReady) and (not SqlExpressInstalado) then
   begin
-    { Descarga de SQL Server 2022 Express antes de copiar archivos. Si falla, no se instala nada. }
+    { Descarga e instala SQL Server Express antes de copiar archivos. Si falla, no se instala nada. }
     PaginaDescarga.Clear;
     PaginaDescarga.Add('{#UrlSqlExpress}', 'SqlExpressSetup.exe', '');
     PaginaDescarga.Show;
     try
       try
         PaginaDescarga.Download;
+        Result := InstalarSqlExpress;
       except
         if PaginaDescarga.AbortedByUser then
           Log('Descarga cancelada por el usuario.')
         else
-          SuppressibleMsgBox('No se pudo descargar SQL Server Express: ' + AddPeriod(GetExceptionMessage) +
-            #13#10 + 'Revisa la conexión a internet y vuelve a ejecutar el instalador.', mbCriticalError, MB_OK, IDOK);
+          SuppressibleMsgBox('No se pudo descargar SQL Server Express: ' + AddPeriod(GetExceptionMessage) + #13#10 +
+            'Revisa la conexión a internet y vuelve a ejecutar el instalador.', mbCriticalError, MB_OK, IDOK);
         Result := False;
       end;
     finally
@@ -248,36 +309,6 @@ var
 begin
   Result := '';
   Exec(ExpandConstant('{sys}\net.exe'), 'stop ' + ServicioNombre, '', SW_HIDE, ewWaitUntilTerminated, Codigo);
-end;
-
-function InstalarSqlExpress: Boolean;
-var
-  Codigo: Integer;
-  Instalador: String;
-begin
-  Result := True;
-  if SqlExpressInstalado then
-    Exit;
-  Instalador := ExpandConstant('{tmp}\SqlExpressSetup.exe');
-  WizardForm.StatusLabel.Caption := 'Instalando SQL Server 2022 Express (puede tardar varios minutos)…';
-  { El instalador de SQL Server debe estar firmado por Microsoft antes de ejecutarlo como administrador. }
-  if not Exec(PowerShellExe,
-    '-NoProfile -ExecutionPolicy Bypass -Command "$f = Get-AuthenticodeSignature -LiteralPath ''' + Instalador +
-    '''; if ($f.Status -eq ''Valid'' -and $f.SignerCertificate.Subject -like ''*Microsoft Corporation*'') { exit 0 } else { exit 1 }"',
-    '', SW_HIDE, ewWaitUntilTerminated, Codigo) or (Codigo <> 0) then
-  begin
-    MsgBox('El archivo descargado de SQL Server Express no tiene una firma válida de Microsoft. No se instalará.', mbCriticalError, MB_OK);
-    Result := False;
-    Exit;
-  end;
-  if (not Exec(Instalador,
-    '/QS /ACTION=Install /FEATURES=SQLEngine /INSTANCENAME=SQLEXPRESS /SQLSYSADMINACCOUNTS="NT AUTHORITY\SYSTEM" "BUILTIN\Administrators" /IACCEPTSQLSERVERLICENSETERMS',
-    '', SW_SHOW, ewWaitUntilTerminated, Codigo)) or ((Codigo <> 0) and (Codigo <> 3010)) or (not SqlExpressInstalado) then
-  begin
-    MsgBox('No se pudo instalar SQL Server Express (código ' + IntToStr(Codigo) + '). Revisa el registro de la instalación de SQL Server en C:\Program Files\Microsoft SQL Server\160\Setup Bootstrap\Log.',
-      mbCriticalError, MB_OK);
-    Result := False;
-  end;
 end;
 
 function EjecutarConfigurar: Boolean;
@@ -360,9 +391,8 @@ procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
   begin
-    if InstalarSqlExpress then
-      if EjecutarConfigurar then
-        CrearYArrancarServicio;
+    if EjecutarConfigurar then
+      CrearYArrancarServicio;
   end;
 end;
 

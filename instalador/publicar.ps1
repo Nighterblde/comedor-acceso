@@ -23,12 +23,18 @@ function Ejecutar([string]$que, [scriptblock]$bloque) {
 # iscc primero: si falta, no se pierde tiempo compilando.
 $iscc = (Get-Command iscc.exe -ErrorAction SilentlyContinue).Source
 if (-not $iscc) {
-    foreach ($candidato in @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe")) {
-        if (Test-Path -LiteralPath $candidato) { $iscc = $candidato; break }
+    # Inno Setup 6 o posterior: la carpeta lleva el número de versión ("Inno Setup 6", "Inno Setup 7"...).
+    foreach ($base in @($env:ProgramFiles, ${env:ProgramFiles(x86)})) {
+        $candidato = Get-ChildItem -LiteralPath $base -Directory -Filter 'Inno Setup *' -ErrorAction SilentlyContinue |
+            Sort-Object Name -Descending |
+            ForEach-Object { Join-Path $_.FullName 'ISCC.exe' } |
+            Where-Object { Test-Path -LiteralPath $_ } |
+            Select-Object -First 1
+        if ($candidato) { $iscc = $candidato; break }
     }
 }
 if (-not $iscc) {
-    throw 'No se encontró iscc.exe (Inno Setup 6). Instálalo desde https://jrsoftware.org/isdl.php y vuelve a ejecutar publicar.ps1.'
+    throw 'No se encontró iscc.exe (Inno Setup 6 o posterior). Instálalo desde https://jrsoftware.org/isdl.php y vuelve a ejecutar publicar.ps1.'
 }
 
 if (Test-Path -LiteralPath $publicacion) { Remove-Item -LiteralPath $publicacion -Recurse -Force }
