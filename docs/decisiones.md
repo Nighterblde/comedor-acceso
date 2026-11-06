@@ -481,7 +481,7 @@ Plan v2, tarea 10. Detalles que el plan no fijaba; no cambian lo que hace el sis
 - **Configuración incompleta:** `configurar.ps1` borra `appsettings.Local.json` si falla al crearlo o restringirlo, sale con código 1 y borra el archivo temporal de la contraseña; un archivo de 0 bytes cuenta como inexistente (también para el asistente). `verificar.ps1` sin permisos de administrador solo pide abrir PowerShell como administrador y sale con 1.
 - **SQL Server preexistente:** el servicio corre como `LocalSystem` con autenticación integrada. Si la instancia `SQLEXPRESS` ya existía (el instalador no la reinstala), `NT AUTHORITY\SYSTEM` debe ser `sysadmin` en ella, o la base `Comedor` debe crearse antes y `SYSTEM` ser `db_owner`; de lo contrario la migración falla y el servicio se reinicia en bucle. Está documentado en `docs/instalacion.md`.
 - **Ubicación de los archivos:** todos viven en `instalador/` (incluido `publicar.ps1`). Las carpetas `publicacion/` y `salida/` están en `.gitignore`.
-- **Sin verificar en máquina:** el instalador no se compiló ni se ejecutó al escribirlo; la lista de comprobación está pendiente en `docs/aceptacion.md`, "Instalación v2".
+- **Sin verificar en máquina:** el instalador se compiló con Inno Setup 7.1.1 (tras corregir una línea que el preprocesador tomaba por directiva) pero no se ha ejecutado; la lista de comprobación está pendiente en `docs/aceptacion.md`, "Instalación v2". Inno Setup 7 muestra «Non-commercial use only»: para uso comercial de la empresa hay que revisar su licencia.
 
 **Estado:** vigente.
 

@@ -231,8 +231,8 @@ begin
         if PaginaDescarga.AbortedByUser then
           Log('Descarga cancelada por el usuario.')
         else
-          SuppressibleMsgBox('No se pudo descargar SQL Server Express: ' + AddPeriod(GetExceptionMessage) +
-            #13#10 + 'Revisa la conexión a internet y vuelve a ejecutar el instalador.', mbCriticalError, MB_OK, IDOK);
+          SuppressibleMsgBox('No se pudo descargar SQL Server Express: ' + AddPeriod(GetExceptionMessage) + #13#10 +
+            'Revisa la conexión a internet y vuelve a ejecutar el instalador.', mbCriticalError, MB_OK, IDOK);
         Result := False;
       end;
     finally
