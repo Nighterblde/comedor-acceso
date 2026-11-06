@@ -1,10 +1,11 @@
 import { Component, HostListener, Input, OnDestroy, OnInit, signal } from '@angular/core';
-import { catchError, merge, of, Subject, Subscription, switchMap, timer } from 'rxjs';
+import { catchError, merge, of, Subject, Subscription, switchMap, timeout, timer } from 'rxjs';
 import { FilaServicio } from '../modelos/consumo.model';
 import { PuntoService } from './punto.service';
 
 const INTERVALO_CONSULTA_MS = 2000;
 const BLOQUEO_TRAS_MARCAR_MS = 1500;
+const TIEMPO_MAXIMO_SERVIDO_MS = 10000;
 
 @Component({
   selector: 'app-fila',
@@ -85,6 +86,9 @@ export class FilaComponent implements OnInit, OnDestroy {
       this.enCurso = false;
       this.refrescar$.next();
     };
-    this.servicio.marcarServido(actual.consumoId).subscribe({ next: terminar, error: terminar });
+    this.servicio
+      .marcarServido(actual.consumoId)
+      .pipe(timeout(TIEMPO_MAXIMO_SERVIDO_MS))
+      .subscribe({ next: terminar, error: terminar });
   }
 }
