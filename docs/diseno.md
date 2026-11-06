@@ -4,8 +4,8 @@
 
 | Campo | Valor |
 | --- | --- |
-| Versión | 1.0 |
-| Fecha | 4 de noviembre de 2026 |
+| Versión | 1.1 |
+| Fecha | 6 de noviembre de 2026 |
 | Estado | Aprobada para implementación |
 | Prototipo | [Lienzo de pantallas en Claude](https://claude.ai/artifact/Dpu1MLjke1vM65gV1o9oBn) (privado; se comparte desde su menú Compartir) |
 | Requisitos | [SRS](srs.md) · [Plan](plan.md) |
@@ -133,7 +133,7 @@ La Tarea 11 crea `frontend/comedor-web/src/styles/_tokens.scss` con estos valore
 | Iniciar sesión | Celular 390 × 844 | Punto leído del QR, número de empleado (teclado de texto, acepta letras y números, D-32), contraseña, botón Entrar, aviso de sesión por 30 días, ayuda "acude con el chef". | RF-08, RF-09, RF-31 |
 | Pase autorizado | Celular | Fondo verde, ícono, AUTORIZADO, "Pasa con el chef", tarjeta con foto, nombre, matrícula, chips de turno y tiempo (el área queda como mejora futura, [D-19](decisiones.md#d-19-el-pase-no-muestra-el-área)), reloj con segundos y borde animado. | RF-11, RNF-08 |
 | Pase rechazado | Celular | Fondo guinda, ícono, RECHAZADO, tarjeta con el motivo exacto y cuándo ocurrió, datos del empleado, reloj y borde animado. | RF-11, RF-12 |
-| Pantalla del chef | Tablet o pantalla 1280 × 800, horizontal | Barra con punto y hora. Columna izquierda: captura manual. Centro: tarjetas "Por servir" con nombre, turno, tiempo de comida y botón Servido (sin foto, D-20). Derecha: rechazos recientes solo informativos. Sin botones de aprobar ni rechazar. El QR no aparece aquí: va impreso (D-21). | RF-15, RF-29, RF-30 |
+| Pantalla del chef | TV o pantalla 1280 × 800 o mayor, horizontal | Barra con punto y hora. Al centro, "Sírvele a" y el nombre de la persona en 96 px o más, con chips de turno y tiempo de comida (sin foto, D-20). Abajo, "Siguen" con los nombres que siguen y cuántos hay en la fila. Sin personas: "Esperando al siguiente…". Sin campos de texto ni botones: cualquier tecla, clic o toque marca Servido a la persona mostrada (D-35, D-36). El QR no aparece aquí: va impreso (D-21). En el panel del administrador la misma pantalla trae el botón "Marcar servido" y no reacciona a teclas ni toques. | RF-15, RF-29, RF-30 |
 | Cotejo de factura | Escritorio, adaptable | Filtro de fechas, Consultar, Exportar Excel y PDF, indicadores de servidas, sin servir y rechazos, tabla por fecha de servicio y tiempo de comida con fila de total. | RF-21, RF-23 |
 | Reglas de derecho | Escritorio, adaptable | Navegación de administración, aviso de sincronización fallida, tabla de reglas, formulario con validación de traslape y casilla "pertenece a la jornada del día anterior". | RF-05, RF-06, RF-28, RNF-05 |
 
@@ -141,8 +141,8 @@ La Tarea 11 crea `frontend/comedor-web/src/styles/_tokens.scss` con estos valore
 
 - **Pase vivo:** el borde del pase cambia de dorado a blanco cada 1.6 s, y el reloj avanza cada segundo. Con `prefers-reduced-motion` la animación se hace más lenta, pero no desaparece, porque es la señal antifraude.
 - **QR impreso (D-21):** Administración > Puntos muestra el QR del punto en una vista imprimible; no rota ni tiene cuenta regresiva.
-- **Sin conexión:** si la pantalla del chef no puede consultar las solicitudes, muestra "Sin conexión" y sigue intentando.
-- **Lista por servir:** se actualiza cada 2 s; al presionar Servido la tarjeta sale de la lista. Las tarjetas nuevas se agregan al final.
+- **Sin conexión:** si la pantalla del chef no puede consultar la fila, muestra "Sin conexión" y sigue intentando.
+- **Fila del chef:** se consulta cada 2 s. Al marcar Servido (cualquier tecla, clic o toque) se vuelve a pedir la fila de inmediato y se ignora toda entrada durante 1,5 s, además de las teclas repetidas y mientras haya una petición en curso; así una pulsación doble o sostenida marca solo a la persona mostrada.
 - **Estados de carga:** en botones, el texto cambia a "Validando…" y se desactivan para evitar dobles envíos.
 
 ## 6. Accesibilidad

@@ -398,3 +398,12 @@ Plan v2, tarea 3. Detalles que el plan no fijaba; no cambian lo que hace el sist
 - **Ventana de la fila:** se consultan las últimas 12 horas del punto y se filtra por el horario en curso; un autorizado sin servir de un tiempo de comida anterior no aparece.
 - **Turno del empleado:** `ConsultarMiTurno` recorre los puntos de entrada (`IPuntoRepositorio.TodosAsync`) con `SolicitudesAsync`, sin agregar métodos al repositorio de accesos. Toma el consumo autorizado más reciente de la matrícula en el horario en curso (si hay en varios puntos, el de hora mayor) y calcula la posición en la fila de ese punto.
 - **Primero de la fila:** `Sirviendo` con `Posicion = 1`; los demás, `EnFila` con su lugar; servido, `Servido` sin posición; sin consumo en el horario en curso, `SinTurno`.
+
+## D-46 Detalles de la pantalla del chef (tarea 4 del plan v2)
+
+Plan v2, tarea 4. Detalles que el plan no fijaba; no cambian lo que hace el sistema (RF-29, RF-30, D-35, D-36).
+
+- **Cuántos faltan:** bajo "Siguen" se muestra "{n} en la fila", con n = `total` − 1 (las personas en espera sin contar a la que se muestra en grande); `siguientes` trae como máximo 3 nombres.
+- **Modo del componente:** `FilaComponent` escucha teclas, clics y toques del documento solo en modo `tv`; en modo `panel` los ignora y muestra el botón "Marcar servido". El bloqueo de 1,5 s y la petición en curso aplican a ambos modos.
+- **Error al marcar:** si la petición de servido falla, se libera la petición en curso y se vuelve a pedir la fila; el bloqueo de 1,5 s sigue vigente.
+- **Servicio:** se retiran `PuntoService.solicitudes` y `capturaManual` del frontend, que ya nadie usa (D-36); los endpoints del servidor se conservan.

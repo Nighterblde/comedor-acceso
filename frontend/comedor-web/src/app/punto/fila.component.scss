@@ -1,0 +1,126 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 24px 48px;
+  gap: 24px;
+}
+
+.sin-conexion {
+  margin: 0;
+  padding: 8px 16px;
+  align-self: flex-start;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-advertencia-texto);
+  background: var(--color-advertencia-fondo);
+  border: 1px solid var(--color-advertencia-borde);
+  border-radius: var(--radio-control);
+}
+
+.actual {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border-top: 4px solid var(--color-autorizado);
+  border-radius: var(--radio-tarjeta);
+  background: var(--color-superficie);
+}
+
+.etiqueta {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 600;
+  color: var(--color-texto-secundario);
+}
+
+.nombre {
+  margin: 16px 0;
+  max-width: 100%;
+  padding: 0 24px;
+  font-size: max(96px, 8vw);
+  font-weight: 800;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  color: var(--color-institucional-900);
+}
+
+.chips {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+}
+
+.chip {
+  padding: 8px 28px;
+  font-size: 36px;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.turno {
+  background: var(--color-chip-verde);
+  color: var(--color-institucional-900);
+}
+
+.comida {
+  background: var(--color-chip-dorado);
+  color: #5c4520;
+}
+
+.esperando {
+  margin: 0;
+  font-size: 64px;
+  font-weight: 700;
+  color: var(--color-texto-terciario);
+}
+
+.servido {
+  margin-top: 32px;
+  min-height: 56px;
+  padding: 0 32px;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-autorizado);
+  border: none;
+  border-radius: var(--radio-control);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--foco);
+  }
+}
+
+.siguen {
+  padding: 16px 24px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--color-superficie);
+
+  .etiqueta {
+    font-size: 28px;
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+    margin: 8px 0;
+    padding: 0;
+    list-style: none;
+    font-size: 36px;
+    font-weight: 600;
+  }
+}
+
+.restantes {
+  margin: 0;
+  font-size: 24px;
+  color: var(--color-texto-terciario);
+}

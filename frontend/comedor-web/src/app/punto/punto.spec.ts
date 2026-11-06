@@ -1,12 +1,8 @@
-import { Type } from '@angular/core';
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
-import { of, throwError } from 'rxjs';
-import { ResultadoAcceso } from '../modelos/pase.model';
-import { SolicitudPunto } from '../modelos/consumo.model';
-import { CapturaManualComponent } from './captura-manual.component';
+import { of, Subject, throwError } from 'rxjs';
+import { FilaServicio, SolicitudPunto } from '../modelos/consumo.model';
+import { FilaComponent } from './fila.component';
 import { PuntoService } from './punto.service';
-import { SolicitudesComponent } from './solicitudes.component';
 
 function solicitud(parcial: Partial<SolicitudPunto>): SolicitudPunto {
   return {
@@ -25,132 +21,242 @@ function solicitud(parcial: Partial<SolicitudPunto>): SolicitudPunto {
   };
 }
 
-function crear<T>(tipo: Type<T>, servicio: unknown): ComponentFixture<T> {
+const vacia: FilaServicio = { actual: null, siguientes: [], total: 0 };
+const conAna: FilaServicio = { actual: solicitud({}), siguientes: [], total: 1 };
+
+function crearServicio() {
+  return jasmine.createSpyObj<PuntoService>('PuntoService', ['fila', 'marcarServido']);
+}
+
+function montar(servicio: jasmine.SpyObj<PuntoService>, modo: 'tv' | 'panel' = 'tv') {
   TestBed.configureTestingModule({
-    declarations: [tipo],
-    imports: [FormsModule],
+    declarations: [FilaComponent],
     providers: [{ provide: PuntoService, useValue: servicio }],
   });
-  const f = TestBed.createComponent(tipo);
-  (f.componentInstance as { puntoId: string }).puntoId = 'P1';
+  const f: ComponentFixture<FilaComponent> = TestBed.createComponent(FilaComponent);
+  f.componentInstance.puntoId = 'P1';
+  f.componentInstance.modo = modo;
+  f.detectChanges();
+  tick(0);
+  f.detectChanges();
   return f;
 }
 
-describe('módulo punto', () => {
-  describe('solicitudes', () => {
-    function armar(lista: SolicitudPunto[]) {
-      const servicio = jasmine.createSpyObj<PuntoService>('PuntoService', ['solicitudes', 'marcarServido']);
-      servicio.solicitudes.and.returnValue(of(lista));
-      servicio.marcarServido.and.returnValue(of({ yaServido: false }));
-      const f = crear(SolicitudesComponent, servicio);
-      f.detectChanges();
-      tick(0);
-      f.detectChanges();
-      return { f, servicio };
-    }
+function armar(fila: FilaServicio, modo: 'tv' | 'panel' = 'tv') {
+  const servicio = crearServicio();
+  servicio.fila.and.returnValue(of(fila));
+  servicio.marcarServido.and.returnValue(of({ yaServido: false }));
+  return { f: montar(servicio, modo), servicio };
+}
 
-    it('solicitudes_consultaCada2Segundos', fakeAsync(() => {
-      const { f, servicio } = armar([]);
-      expect(servicio.solicitudes).toHaveBeenCalledTimes(1);
-      expect(servicio.solicitudes.calls.mostRecent().args[0]).toBe('P1');
-      tick(2000);
-      expect(servicio.solicitudes).toHaveBeenCalledTimes(2);
-      tick(4000);
-      expect(servicio.solicitudes).toHaveBeenCalledTimes(4);
-      f.destroy();
-    }));
+function tecla(init: KeyboardEventInit = { key: 'a' }) {
+  document.dispatchEvent(new KeyboardEvent('keydown', init));
+}
 
-    it('autorizadoSinServir_muestraBotonServido', fakeAsync(() => {
-      const { f } = armar([solicitud({})]);
-      const botones = Array.from<HTMLButtonElement>(f.nativeElement.querySelectorAll('button'));
+describe('pantalla del chef (fila)', () => {
+  it('conActual_muestraSirveleAYNombre', fakeAsync(() => {
+    const { f } = armar(conAna);
+    const texto: string = f.nativeElement.textContent;
+    expect(texto).toContain('Sírvele a');
+    expect(texto).toContain('Ana Pérez');
+    expect(texto).toContain('Matutino');
+    expect(texto).toContain('Comida');
+    expect(texto).not.toContain('Esperando al siguiente…');
+    f.destroy();
+  }));
+
+  it('sinActual_muestraEsperando', fakeAsync(() => {
+    const { f } = armar(vacia);
+    expect(f.nativeElement.textContent).toContain('Esperando al siguiente…');
+    expect(f.nativeElement.textContent).not.toContain('Sírvele a');
+    f.destroy();
+  }));
+
+  it('muestraSiguientesYTotal', fakeAsync(() => {
+    const { f } = armar({
+      actual: solicitud({}),
+      siguientes: [
+        solicitud({ consumoId: 'c2', nombre: 'Beto Ruiz' }),
+        solicitud({ consumoId: 'c3', nombre: 'Carla Soto' }),
+      ],
+      total: 5,
+    });
+    const texto: string = f.nativeElement.textContent;
+    expect(texto).toContain('Siguen');
+    expect(texto).toContain('Beto Ruiz');
+    expect(texto).toContain('Carla Soto');
+    expect(texto).toContain('4 en la fila');
+    f.destroy();
+  }));
+
+  it('nombre_seMuestraA96pxOMas', fakeAsync(() => {
+    const { f } = armar(conAna);
+    document.body.appendChild(f.nativeElement);
+    const nombre: HTMLElement = f.nativeElement.querySelector('.nombre');
+    expect(parseFloat(getComputedStyle(nombre).fontSize)).toBeGreaterThanOrEqual(96);
+    f.nativeElement.remove();
+    f.destroy();
+  }));
+
+  it('teclaCualquiera_marcaServidoDelActual', fakeAsync(() => {
+    const { f, servicio } = armar(conAna);
+    tecla({ key: 'q' });
+    expect(servicio.marcarServido).toHaveBeenCalledOnceWith('c1');
+    tick(1500);
+    f.destroy();
+  }));
+
+  it('marcar_vuelveAPedirLaFila', fakeAsync(() => {
+    const { f, servicio } = armar(conAna);
+    expect(servicio.fila).toHaveBeenCalledTimes(1);
+    tecla();
+    expect(servicio.fila).toHaveBeenCalledTimes(2);
+    tick(1500);
+    f.destroy();
+  }));
+
+  it('clic_marcaServido', fakeAsync(() => {
+    const { f, servicio } = armar(conAna);
+    document.dispatchEvent(new MouseEvent('click'));
+    expect(servicio.marcarServido).toHaveBeenCalledOnceWith('c1');
+    tick(1500);
+    f.destroy();
+  }));
+
+  it('toque_marcaServido', fakeAsync(() => {
+    const { f, servicio } = armar(conAna);
+    document.dispatchEvent(new Event('touchstart'));
+    expect(servicio.marcarServido).toHaveBeenCalledOnceWith('c1');
+    tick(1500);
+    f.destroy();
+  }));
+
+  it('sinActual_teclaNoEnviaNada', fakeAsync(() => {
+    const { f, servicio } = armar(vacia);
+    tecla();
+    document.dispatchEvent(new MouseEvent('click'));
+    expect(servicio.marcarServido).not.toHaveBeenCalled();
+    f.destroy();
+  }));
+
+  it('dosTeclasSeguidas_unaSolaPeticion', fakeAsync(() => {
+    const { f, servicio } = armar(conAna);
+    tecla();
+    tecla();
+    document.dispatchEvent(new MouseEvent('click'));
+    document.dispatchEvent(new Event('touchstart'));
+    tick(500);
+    tecla();
+    expect(servicio.marcarServido).toHaveBeenCalledOnceWith('c1');
+    tick(1500);
+    f.destroy();
+  }));
+
+  it('peticionEnCurso_ignoraEntradaAunPasados1500ms', fakeAsync(() => {
+    const servicio = crearServicio();
+    servicio.fila.and.returnValue(of(conAna));
+    servicio.marcarServido.and.returnValue(new Subject<{ yaServido: boolean }>());
+    const f = montar(servicio);
+    tecla();
+    tick(3000);
+    tecla();
+    expect(servicio.marcarServido).toHaveBeenCalledTimes(1);
+    f.destroy();
+  }));
+
+  it('teclaPasados1500ms_marcaAlSiguiente', fakeAsync(() => {
+    const { f, servicio } = armar(conAna);
+    tecla();
+    tick(1499);
+    tecla();
+    expect(servicio.marcarServido).toHaveBeenCalledTimes(1);
+
+    servicio.fila.and.returnValue(
+      of({ actual: solicitud({ consumoId: 'c2', nombre: 'Beto Ruiz' }), siguientes: [], total: 1 }),
+    );
+    tick(1);
+    tick(2000);
+    f.detectChanges();
+    tecla();
+    expect(servicio.marcarServido).toHaveBeenCalledTimes(2);
+    expect(servicio.marcarServido.calls.mostRecent().args[0]).toBe('c2');
+    tick(1500);
+    f.destroy();
+  }));
+
+  it('teclaRepetida_ignorada', fakeAsync(() => {
+    const { f, servicio } = armar(conAna);
+    tecla({ key: 'a', repeat: true });
+    expect(servicio.marcarServido).not.toHaveBeenCalled();
+    tecla({ key: 'a' });
+    tick(1500);
+    tecla({ key: 'a', repeat: true });
+    expect(servicio.marcarServido).toHaveBeenCalledTimes(1);
+    f.destroy();
+  }));
+
+  it('consultaCada2Segundos', fakeAsync(() => {
+    const { f, servicio } = armar(vacia);
+    expect(servicio.fila).toHaveBeenCalledTimes(1);
+    expect(servicio.fila.calls.mostRecent().args[0]).toBe('P1');
+    tick(2000);
+    expect(servicio.fila).toHaveBeenCalledTimes(2);
+    tick(4000);
+    expect(servicio.fila).toHaveBeenCalledTimes(4);
+    f.destroy();
+  }));
+
+  it('errorDeRed_muestraSinConexion', fakeAsync(() => {
+    const servicio = crearServicio();
+    servicio.fila.and.returnValues(throwError(() => new Error('red')), of(conAna));
+    const f = montar(servicio);
+    expect(f.nativeElement.textContent).toContain('Sin conexión');
+
+    tick(2000);
+    f.detectChanges();
+    expect(servicio.fila).toHaveBeenCalledTimes(2);
+    expect(f.nativeElement.textContent).not.toContain('Sin conexión');
+    expect(f.nativeElement.textContent).toContain('Ana Pérez');
+    f.destroy();
+  }));
+
+  it('noHayCamposNiBotones', fakeAsync(() => {
+    const { f } = armar(conAna);
+    expect(f.nativeElement.querySelectorAll('button, input, textarea, select').length).toBe(0);
+    f.destroy();
+  }));
+
+  describe('modo panel', () => {
+    it('panel_muestraBotonMarcarServido', fakeAsync(() => {
+      const { f } = armar(conAna, 'panel');
+      const botones = f.nativeElement.querySelectorAll('button');
       expect(botones.length).toBe(1);
-      expect(botones[0].textContent).toContain('Servido');
-      expect(f.nativeElement.textContent).toContain('Ana Pérez');
+      expect(botones[0].textContent).toContain('Marcar servido');
       f.destroy();
     }));
 
-    it('tarjeta_muestraNombreSinFoto', fakeAsync(() => {
-      const { f } = armar([solicitud({ fotoUrl: 'http://x/foto.jpg' })]);
-      const texto: string = f.nativeElement.textContent;
-      expect(texto).toContain('Ana Pérez');
-      expect(texto).toContain('Matutino');
-      expect(texto).toContain('Comida');
-      expect(f.nativeElement.querySelector('img')).toBeNull();
-      expect(f.nativeElement.querySelector('.avatar')).toBeNull();
-      f.destroy();
-    }));
-
-    it('errorDeRed_muestraSinConexion', fakeAsync(() => {
-      const servicio = jasmine.createSpyObj<PuntoService>('PuntoService', ['solicitudes', 'marcarServido']);
-      servicio.solicitudes.and.returnValues(
-        throwError(() => new Error('red')),
-        of([solicitud({})]),
-      );
-      const f = crear(SolicitudesComponent, servicio);
-      f.detectChanges();
-      tick(0);
-      f.detectChanges();
-      expect(f.nativeElement.textContent).toContain('Sin conexión');
-
-      tick(2000);
-      f.detectChanges();
-      expect(servicio.solicitudes).toHaveBeenCalledTimes(2);
-      expect(f.nativeElement.textContent).not.toContain('Sin conexión');
-      expect(f.nativeElement.textContent).toContain('Ana Pérez');
-      f.destroy();
-    }));
-
-    it('rechazado_noMuestraBotones', fakeAsync(() => {
-      const { f } = armar([
-        solicitud({ consumoId: null, autorizado: false, motivo: 'Fuera de horario' }),
-      ]);
+    it('panel_sinActual_noMuestraBoton', fakeAsync(() => {
+      const { f } = armar(vacia, 'panel');
       expect(f.nativeElement.querySelectorAll('button').length).toBe(0);
-      expect(f.nativeElement.textContent).toContain('Fuera de horario');
       f.destroy();
     }));
 
-    it('servido_quitaTarjetaDeLaLista', fakeAsync(() => {
-      const { f, servicio } = armar([solicitud({})]);
-      f.nativeElement.querySelector('button').click();
-      f.detectChanges();
+    it('panel_ignoraTeclasClicYToque', fakeAsync(() => {
+      const { f, servicio } = armar(conAna, 'panel');
+      tecla();
+      document.dispatchEvent(new MouseEvent('click'));
+      document.dispatchEvent(new Event('touchstart'));
+      expect(servicio.marcarServido).not.toHaveBeenCalled();
+      f.destroy();
+    }));
 
+    it('panel_botonMarcaSoloUnaVez', fakeAsync(() => {
+      const { f, servicio } = armar(conAna, 'panel');
+      const boton: HTMLButtonElement = f.nativeElement.querySelector('button');
+      boton.click();
+      boton.click();
       expect(servicio.marcarServido).toHaveBeenCalledOnceWith('c1');
-      expect(f.nativeElement.querySelectorAll('button').length).toBe(0);
-      f.destroy();
-    }));
-
-    it('noHayBotonesDeAprobarNiRechazar', fakeAsync(() => {
-      const { f } = armar([
-        solicitud({}),
-        solicitud({ consumoId: null, autorizado: false, motivo: 'Fuera de horario' }),
-      ]);
-      const textos = Array.from<HTMLButtonElement>(f.nativeElement.querySelectorAll('button')).map((b) =>
-        (b.textContent ?? '').toLowerCase(),
-      );
-      expect(textos.some((t) => t.includes('aprobar') || t.includes('rechazar') || t.includes('autorizar'))).toBeFalse();
-      f.destroy();
-    }));
-  });
-
-  describe('captura-manual', () => {
-    it('enter_enviaMatricula', fakeAsync(() => {
-      const servicio = jasmine.createSpyObj<PuntoService>('PuntoService', ['capturaManual']);
-      servicio.capturaManual.and.returnValue(of({} as ResultadoAcceso));
-      const f = crear(CapturaManualComponent, servicio);
-      f.detectChanges();
-      tick();
-
-      const input: HTMLInputElement = f.nativeElement.querySelector('input');
-      input.value = 'A123';
-      input.dispatchEvent(new Event('input'));
-      f.detectChanges();
-      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-      tick();
-      f.detectChanges();
-
-      tick();
-      expect(servicio.capturaManual).toHaveBeenCalledOnceWith('A123', 'P1');
-      expect(input.value).toBe('');
+      tick(1500);
       f.destroy();
     }));
   });

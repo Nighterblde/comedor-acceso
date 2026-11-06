@@ -11,3 +11,9 @@ export interface SolicitudPunto {
   motivo: string | null;
   servido: boolean;
 }
+
+export interface FilaServicio {
+  actual: SolicitudPunto | null;
+  siguientes: SolicitudPunto[];
+  total: number;
+}
