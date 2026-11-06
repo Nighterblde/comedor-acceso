@@ -5,8 +5,35 @@ using Comedor.Infrastructure.Persistencia;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting.WindowsServices;
 
-var builder = WebApplication.CreateBuilder(args);
+// Como servicio de Windows el directorio actual es System32: la raíz y wwwroot salen de la carpeta del ejecutable.
+var comoServicio = WindowsServiceHelpers.IsWindowsService();
+var builder = WebApplication.CreateBuilder(comoServicio
+    ? new WebApplicationOptions
+    {
+        Args = args,
+        ContentRootPath = AppContext.BaseDirectory,
+        WebRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot"),
+    }
+    : new WebApplicationOptions { Args = args });
+builder.Host.UseWindowsService(o => o.ServiceName = "Comedor");
+
+// Configuración de la instalación, fuera del repositorio y de la carpeta del programa (D-39). COMEDOR_CONFIG_LOCAL
+// solo la usan las pruebas para apuntar a otro archivo.
+var configLocal = builder.Configuration["COMEDOR_CONFIG_LOCAL"];
+if (string.IsNullOrWhiteSpace(configLocal))
+{
+    configLocal = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+        "Comedor", "appsettings.Local.json");
+}
+
+builder.Configuration.AddJsonFile(configLocal, optional: true, reloadOnChange: false);
+
+if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{builder.Configuration.GetValue("Comedor:Puerto", 80)}");
+}
 builder.Services.AddServiciosComedor(builder.Configuration);
 
 var app = builder.Build();
@@ -29,9 +56,24 @@ app.UseExceptionHandler(salida => salida.Run(async contexto =>
 }));
 app.UseCors();
 app.UseSoloRedLocal();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+// Las rutas del frontend (Angular) caen en index.html; una ruta /api desconocida sigue siendo 404.
+app.MapFallback(contexto =>
+{
+    var indice = app.Environment.WebRootFileProvider.GetFileInfo("index.html");
+    if (contexto.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase) || !indice.Exists)
+    {
+        contexto.Response.StatusCode = StatusCodes.Status404NotFound;
+        return Task.CompletedTask;
+    }
+
+    contexto.Response.ContentType = "text/html; charset=utf-8";
+    return contexto.Response.SendFileAsync(indice);
+});
 
 using (var scope = app.Services.CreateScope())
 {
