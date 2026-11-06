@@ -33,3 +33,7 @@ Thumbs.db
 
 # Pruebas de carga
 load/resultados/
+
+# Salida del instalador
+publicacion/
+salida/

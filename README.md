@@ -25,6 +25,9 @@ Quien no tenga celular puede identificarse con su matrícula ante el chef, que l
 | [Guía de diseño](docs/diseno.md) | Principios, colores, tipografía, componentes, pantallas de referencia y reglas de accesibilidad del frontend. |
 | [Plan de implementación v2](docs/plan-v2.md) | Siguiente etapa: fila del chef, tres roles, panel único e instalación con un .exe (10 tareas). |
 | [Registro de decisiones](docs/decisiones.md) | Decisiones de arquitectura y de negocio, con su motivo y alternativas descartadas. |
+| [Guía de instalación](docs/instalacion.md) | Instalar con `InstalarComedor.exe`, reservar la IP, imprimir el QR, verificar, actualizar y desinstalar. Para quien instala, sin términos técnicos. |
+| [Manual del chef](docs/manual-chef.md) | Una página: abrir la Pantalla del chef, servir y qué hacer si dice "Sin conexión". |
+| [Manual del administrador](docs/manual-administrador.md) | Panel, reportes, reglas, usuarios, importar personal y respaldos. |
 | [Carga y aceptación](docs/aceptacion.md) | Resultado de la prueba de carga (RNF-01, RNF-02) y del recorrido de los criterios de aceptación, con lo pendiente en el entorno del cliente. |
 
 ## Arquitectura
@@ -48,6 +51,7 @@ La fuente de RR. HH. y el autenticador de la empresa se integran mediante interf
 backend/            Solución .NET (Comedor.sln), proyectos por capa y pruebas
 frontend/           Aplicación Angular (comedor-web)
 load/               Prueba de carga con k6
+instalador/         Instalador (Inno Setup) y scripts de publicación, configuración, respaldo y verificación
 docs/               SRS, plan, decisiones e imágenes
 ```
 
@@ -101,6 +105,16 @@ El QR apunta a `App:UrlPublica` y el frontend llama a la API en `apiUrl` (`front
 5. Volver a mostrar el QR desde Administración → Puntos → "Imprimir QR", porque el anterior apuntaba a `localhost`.
 
 Al terminar, se quitan los dos secretos del paso 1 y se revierte `environment.ts`.
+
+### Generar el instalador
+
+En Windows, con Node.js, .NET SDK 8 e [Inno Setup 6](https://jrsoftware.org/isdl.php) (`iscc.exe`) instalados, desde la raíz del repositorio:
+
+```powershell
+.\instalador\publicar.ps1
+```
+
+Compila el frontend, publica la API autocontenida en `publicacion/` y genera `salida/InstalarComedor.exe`; la PC de la empresa no necesita .NET. Ambas carpetas están en `.gitignore`. Después de instalar, `instalador\verificar.ps1` comprueba el servicio, el firewall, el respaldo y la dirección del QR. Ver la [guía de instalación](docs/instalacion.md).
 
 ### Pruebas
 
