@@ -10,6 +10,7 @@ using Comedor.Application.Qr;
 using Comedor.Application.Reportes;
 using Comedor.Application.Sesion;
 using Comedor.Application.Sincronizacion;
+using Comedor.Application.Usuarios;
 using Comedor.Infrastructure;
 using Comedor.Infrastructure.Exportacion;
 using Comedor.Infrastructure.Externos;
@@ -39,6 +40,27 @@ public static class ServiciosComedor
         }
 
         return valor;
+    }
+
+    /// <summary>
+    /// Revocación de la sesión del chef y del administrador (D-34): en cada petición el usuario debe existir,
+    /// estar activo y conservar el rol del token. Los tokens de empleado no consultan UsuariosSistema.
+    /// </summary>
+    private static async Task ValidarSesionDeSistemaAsync(TokenValidatedContext contexto)
+    {
+        var rol = contexto.Principal?.FindFirst(ClaimTypes.Role)?.Value;
+        if (rol != Roles.Chef && rol != Roles.Administrador)
+        {
+            return;
+        }
+
+        var usuario = contexto.Principal!.FindFirst("sub")?.Value;
+        var repo = contexto.HttpContext.RequestServices.GetRequiredService<IUsuarioSistemaRepositorio>();
+        var u = string.IsNullOrEmpty(usuario) ? null : await repo.ObtenerAsync(usuario);
+        if (u is null || !u.Activo || u.Rol != rol)
+        {
+            contexto.Fail("Sesión revocada");
+        }
     }
 
     public static IServiceCollection AddServiciosComedor(this IServiceCollection servicios, IConfiguration config)
@@ -74,8 +96,8 @@ public static class ServiciosComedor
         servicios.AddSingleton(new OpcionesSesion { DiasEmpleado = config.GetValue("Sesion:DiasEmpleado", 30) });
         servicios.AddSingleton(new OpcionesJwt
         {
-            HorasSistema = config.GetValue("Jwt:HorasSistema", 12),
-            DiasPunto = config.GetValue("Jwt:DiasPunto", 30),
+            DiasChef = config.GetValue("Jwt:DiasChef", 3650),
+            HorasAdministrador = config.GetValue("Jwt:HorasAdministrador", 2),
         });
 
         var sincronizacion = new OpcionesSincronizacion();
@@ -133,6 +155,7 @@ public static class ServiciosComedor
                     NameClaimType = "sub",
                     RoleClaimType = ClaimTypes.Role,
                 };
+                o.Events = new JwtBearerEvents { OnTokenValidated = ValidarSesionDeSistemaAsync };
             });
         servicios.AddAuthorization();
 

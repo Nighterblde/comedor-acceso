@@ -3,16 +3,17 @@ using Comedor.Application.Usuarios;
 
 namespace Comedor.Application.Sesion;
 
-public record ResultadoSesionSistema(bool Exito, string? Token, string? Rol, DateTime? ExpiraEn);
+public record ResultadoSesionSistema(bool Exito, string? Token, string? Rol, DateTime? ExpiraEn, string? Inicio);
 
 public class IniciarSesionSistema(
     IUsuarioSistemaRepositorio usuarios,
+    IPuntoRepositorio puntos,
     IHasherContrasena hasher,
     IEmisorJwt emisor,
     OpcionesJwt opciones,
     TimeProvider tiempo)
 {
-    private static readonly ResultadoSesionSistema Fallo = new(false, null, null, null);
+    private static readonly ResultadoSesionSistema Fallo = new(false, null, null, null, null);
 
     // Hash PBKDF2 (PasswordHasher v3) de una contraseña ficticia: sirve para que un usuario inexistente
     // o inactivo cueste lo mismo que uno existente y no se pueda enumerar usuarios por tiempo de respuesta.
@@ -39,10 +40,27 @@ public class IniciarSesionSistema(
             return Fallo;
         }
 
-        var vigencia = u!.Rol == Roles.Chef
-            ? TimeSpan.FromDays(opciones.DiasPunto)
-            : TimeSpan.FromHours(opciones.HorasSistema);
-        var token = emisor.Emitir(u!.Usuario, u.Rol, vigencia);
-        return new ResultadoSesionSistema(true, token, u.Rol, tiempo.GetUtcNow().UtcDateTime + vigencia);
+        string inicio;
+        TimeSpan vigencia;
+        if (u!.Rol == Roles.Chef)
+        {
+            var activo = (await puntos.TodosAsync()).Where(p => p.Activo).OrderBy(p => p.Id, StringComparer.Ordinal).FirstOrDefault();
+            if (activo is null)
+            {
+                // Credenciales válidas pero sin punto al cual enviar al chef: el controlador responde 409.
+                return new ResultadoSesionSistema(false, null, u.Rol, null, null);
+            }
+
+            inicio = $"/punto/{activo.Id}";
+            vigencia = TimeSpan.FromDays(opciones.DiasChef);
+        }
+        else
+        {
+            inicio = "/panel";
+            vigencia = TimeSpan.FromHours(opciones.HorasAdministrador);
+        }
+
+        var token = emisor.Emitir(u.Usuario, u.Rol, vigencia);
+        return new ResultadoSesionSistema(true, token, u.Rol, tiempo.GetUtcNow().UtcDateTime + vigencia, inicio);
     }
 }

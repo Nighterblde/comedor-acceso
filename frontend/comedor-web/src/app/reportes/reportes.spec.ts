@@ -92,7 +92,7 @@ describe('módulo reportes', () => {
         providers: [
           { provide: ReportesService, useValue: servicio },
           { provide: SincronizacionService, useValue: sincronizacion },
-          { provide: AuthService, useValue: { rol: () => 'Administrador', usuario: () => 'super' } },
+          { provide: AuthService, useValue: { rol: () => 'Administrador', usuario: () => 'super', finSesion: () => '14:30' } },
         ],
       });
       const f = TestBed.createComponent(ReportesComponent);
@@ -151,7 +151,7 @@ describe('módulo reportes', () => {
         providers: [
           { provide: ReportesService, useValue: servicio },
           { provide: SincronizacionService, useValue: { estado: signal(null), refrescar: () => undefined } },
-          { provide: AuthService, useValue: { rol: () => 'Administrador', usuario: () => 'super' } },
+          { provide: AuthService, useValue: { rol: () => 'Administrador', usuario: () => 'super', finSesion: () => '14:30' } },
         ],
       });
       const f = TestBed.createComponent(ReportesComponent);

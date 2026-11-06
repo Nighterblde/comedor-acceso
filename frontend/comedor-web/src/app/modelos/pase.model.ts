@@ -20,6 +20,7 @@ export interface RespuestaLogin {
   token: string;
   rol: string;
   expiraEn: string;
+  inicio: string;
 }
 
 export interface RespuestaSesionEmpleado {

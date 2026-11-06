@@ -12,6 +12,7 @@ import { AuthService } from '../core/auth.service';
 export class LoginComponent {
   enviando = false;
   error: string | null = null;
+  aviso: string | null = null;
 
   private readonly fb = inject(FormBuilder);
 
@@ -24,7 +25,10 @@ export class LoginComponent {
     private readonly auth: AuthService,
     private readonly router: Router,
     private readonly ruta: ActivatedRoute,
-  ) {}
+  ) {
+    const estado = (this.router.getCurrentNavigation()?.extras.state ?? history.state) as { aviso?: unknown } | null;
+    this.aviso = typeof estado?.aviso === 'string' ? estado.aviso : null;
+  }
 
   entrar(): void {
     if (this.enviando) {
@@ -45,14 +49,19 @@ export class LoginComponent {
         const destino = this.ruta.snapshot.queryParamMap.get('returnUrl');
         if (destino && destino.startsWith('/') && !destino.startsWith('//')) {
           void this.router.navigateByUrl(destino);
+        } else {
+          void this.router.navigateByUrl(this.auth.inicio() ?? '/');
         }
       },
       error: (e) => {
         this.enviando = false;
+        this.aviso = null;
         this.error =
           e?.status === 401
             ? 'Usuario o contraseña incorrectos'
-            : 'No fue posible iniciar sesión. Intenta de nuevo.';
+            : e?.status === 409 && typeof e?.error?.error === 'string'
+              ? e.error.error
+              : 'No fue posible iniciar sesión. Intenta de nuevo.';
       },
     });
   }

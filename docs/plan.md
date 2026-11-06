@@ -40,7 +40,7 @@ Toda tarea cumple implícitamente esta lista.
 - QR del punto permanente e impreso ([D-21](decisiones.md#d-21-qr-permanente-impreso)): el token no caduca; firma HMAC-SHA256 con `Qr:ClaveFirma`; el validador exige firma válida y punto activo.
 - Sesión de empleado: JWT de rol `Empleado`, `sub` = matrícula, vigencia `Sesion:DiasEmpleado = 30`. Se asume que el ID de la empresa es la matrícula.
 - Bloqueo de inicio de sesión de empleado: 5 intentos fallidos en 15 minutos bloquean ese ID 15 minutos.
-- Usuarios del sistema: roles `Punto`, `Encargado`, `Supervisor`, `Administrador`; JWT de 12 h (`Jwt:HorasSistema = 12`) salvo `Punto`, de 30 días (`Jwt:DiasPunto = 30`); contraseñas con `PasswordHasher<UsuarioSistema>`.
+- Usuarios del sistema: roles `Punto`, `Encargado`, `Supervisor`, `Administrador`; JWT de 2 h para el administrador (`Jwt:HorasAdministrador = 2`) y de 3,650 días, revocable, para el chef (`Jwt:DiasChef = 3650`; v2, D-34); contraseñas con `PasswordHasher<UsuarioSistema>`.
 - Pantalla del chef: consulta solicitudes cada 2 s. "Por servir" = consumos del punto sin entrega cuya fecha de servicio y tiempo de comida son los del horario en curso.
 - Textos de UI en español. Motivos exactos: "No registrado", "Contrato vencido", "Hoy es tu día de descanso", "Fuera de horario", "Tu turno no tiene derecho a este tiempo de comida", "Ya consumiste este tiempo de comida". Token inválido: "Escanea de nuevo el código de la entrada".
 - Interfaz según la guía de diseño [docs/diseno.md](diseno.md) (tipografía, colores, componentes y pantallas de referencia). Versión de Angular fijada en la Tarea 1 (la estable vigente al generar el proyecto) y anotada en `README.md`.
@@ -268,7 +268,7 @@ Reglas: matrícula vacía o turno no presente en el catálogo → omitido; emple
 
 **Interfaces (produce):**
 
-- `POST /api/auth/login` (anónimo) `{usuario, contrasena}` → `{token, rol, expiraEn}`; vigencia 12 h, o 30 días si el rol es `Punto`.
+- `POST /api/auth/login` (anónimo) `{usuario, contrasena}` → `{token, rol, expiraEn, inicio}`; vigencia 2 h (Administrador) o 3,650 días (Chef); v2, tarea 2.
 - `GET /api/auth/yo` (cualquier rol del sistema) → `{usuario, rol}`.
 - Se siembra un administrador desde `Semilla:Admin` si no hay usuarios.
 

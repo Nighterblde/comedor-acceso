@@ -72,6 +72,11 @@ public class SincronizacionEstadoTests(SqlServerFixture sql)
     {
         using var fabrica = new ComedorApiFactory(sql);
         await fabrica.SembrarAsync();
+        if (rol != Roles.Empleado)
+        {
+            await fabrica.CrearUsuarioAsync("x-" + rol, "Clave-Prueba-123", rol);
+        }
+
         var token = fabrica.Services.GetRequiredService<IEmisorJwt>().Emitir("x-" + rol, rol, TimeSpan.FromHours(1));
         var c = fabrica.CreateClient();
         c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);

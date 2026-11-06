@@ -14,7 +14,7 @@ public class IniciarSesionSistemaTests
         var hasher = new Mock<IHasherContrasena>();
         hasher.Setup(h => h.Verificar(It.IsAny<UsuarioSistema>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(false);
-        var caso = new IniciarSesionSistema(repo.Object, hasher.Object, Mock.Of<IEmisorJwt>(),
+        var caso = new IniciarSesionSistema(repo.Object, Mock.Of<IPuntoRepositorio>(), hasher.Object, Mock.Of<IEmisorJwt>(),
             new OpcionesJwt(), TimeProvider.System);
         return (caso, hasher);
     }

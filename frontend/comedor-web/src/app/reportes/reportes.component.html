@@ -3,7 +3,12 @@
     <p class="rotulo">Comedor de personal</p>
     <h1 class="pantalla">Reportes</h1>
   </div>
-  <p class="rol">{{ auth.usuario() }} · {{ auth.rol() }}</p>
+  <div class="sesion">
+    <p class="rol">{{ auth.usuario() }} · {{ auth.rol() }}</p>
+    @if (auth.finSesion(); as hora) {
+      <p class="rol">Sesión hasta las {{ hora }}</p>
+    }
+  </div>
 </header>
 
 <main class="contenido">

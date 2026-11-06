@@ -1,14 +1,19 @@
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Router } from '@angular/router';
+import { catchError, Observable, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
 const RUTAS_SIN_TOKEN = ['/api/auth/login', '/api/empleados/sesion'];
 const RUTA_EMPLEADO = '/api/accesos/celular';
+const AVISO_SESION_TERMINADA = 'Tu sesión terminó; vuelve a iniciar sesión';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly router: Router,
+  ) {}
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const ruta = this.rutaDe(req.url);
@@ -16,11 +21,24 @@ export class AuthInterceptor implements HttpInterceptor {
       return next.handle(req);
     }
 
-    const token = ruta === RUTA_EMPLEADO ? this.auth.tokenEmpleado() : this.auth.tokenSistema();
+    const esDelEmpleado = ruta === RUTA_EMPLEADO;
+    const token = esDelEmpleado ? this.auth.tokenEmpleado() : this.auth.tokenSistema();
     if (!token) {
       return next.handle(req);
     }
-    return next.handle(req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }));
+    return next.handle(req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })).pipe(
+      catchError((e) => {
+        // Sesión del chef o del administrador revocada o vencida: se borra y se vuelve a iniciar sesión.
+        if (!esDelEmpleado && e instanceof HttpErrorResponse && e.status === 401) {
+          this.auth.cerrarSesionSistema();
+          void this.router.navigate(['/login'], {
+            queryParams: { returnUrl: this.router.url },
+            state: { aviso: AVISO_SESION_TERMINADA },
+          });
+        }
+        return throwError(() => e);
+      }),
+    );
   }
 
   private rutaDe(url: string): string {

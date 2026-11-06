@@ -45,6 +45,7 @@ Cada decisión indica su estado, el motivo y las alternativas descartadas. Una d
 | [D-41](#d-41-acceso-desde-internet-implementación-futura) | Acceso desde internet (datos móviles): implementación futura | Pospuesta |
 | [D-42](#d-42-fuente-de-rr-hh-en-sql-server-o-excel) | Fuente de RR. HH. en SQL Server o Excel | Aceptada |
 | [D-43](#d-43-dirección-e-identidad-profesionales) | Dirección e identidad profesionales | Aceptada |
+| [D-44](#d-44-detalles-de-la-sesión-por-rol-tarea-2-del-plan-v2) | Detalles de la sesión por rol (tarea 2 del plan v2) | Aceptada |
 
 ## D-01 Dividir la plataforma en subproyectos
 
@@ -379,3 +380,12 @@ Plan v2. Pedido por el dueño del producto.
 - **Sin rastros de Angular:** ícono propio, título "Comedor de personal" y la fuente servida por la aplicación (también funciona sin internet).
 - **Ocultar la IP por completo** requiere un nombre: con el dominio propio (D-41) la dirección será, por ejemplo, `https://comedor.tuempresa.com`. Se descartan los nombres `.local` y el nombre del equipo de Windows, porque muchos celulares Android no los resuelven.
 
+
+## D-44 Detalles de la sesión por rol (tarea 2 del plan v2)
+
+Plan v2, tarea 2. Detalles que el plan no fijaba; no cambian lo que hace el sistema (RF-24, D-34).
+
+- **Punto de inicio del chef:** el primer punto activo ordenado por `Id` (comparación ordinal). Si no hay ninguno, el inicio de sesión responde 409 con "No hay un punto de entrada activo; pide al administrador que lo cree." y no emite token.
+- **Revocación:** solo los tokens de Chef y Administrador consultan `UsuariosSistema` en cada petición; los de Empleado no.
+- **Hora de fin de sesión:** el frontend guarda `expiraEn` (`comedor.expira`) y la muestra en hora local como "Sesión hasta las hh:mm" en la barra superior de Administración y de Reportes, que hoy usa el administrador; se mueve al panel en la tarea 6.
+- **Aviso por 401:** la sesión terminada se avisa con el estado de navegación del enrutador (no con un parámetro en la URL), de modo que la dirección queda `/login?returnUrl=<ruta>`.
