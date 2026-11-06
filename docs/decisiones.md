@@ -262,3 +262,13 @@ Tarea 8b.
 - **Doble clic en Servido:** la segunda respuesta es 200 con `yaServido = true` y la hora del momento, no la de la entrega original, porque la API no la consulta.
 - **URL del QR:** el token va escapado en la URL; un punto inexistente o inactivo responde 404.
 - **Quién captura:** la matrícula del celular sale siempre del `sub` del token, y el usuario de la sesión queda como encargado de la captura manual y de la entrega. Un usuario de rol Punto no queda limitado a su propio punto; con un solo punto (D-12) no hace falta.
+
+## D-31 Entorno de la prueba de carga y de la aceptación
+
+Tarea 15. Estado: aplicada. Resultados en [aceptacion.md](aceptacion.md).
+
+- **Entorno fuera del repositorio:** la carga y la aceptación corren contra la API publicada en Release con `ASPNETCORE_ENVIRONMENT=Carga` o `Aceptacion`. Su `appsettings.<entorno>.json` se genera junto a la API publicada y no se versiona, porque lleva claves de prueba y 1,000 contraseñas simuladas (regla "nada de secretos en el repositorio"). Cada corrida usa una base dedicada que se crea vacía (`ComedorCarga`, `ComedorAceptacion`).
+- **Preparación dentro de k6:** `setup()` crea el punto, una regla de 00:00 a 23:59 y un usuario Encargado, sincroniza al personal e inicia sesión con los 1,000 empleados antes de medir. Así la prueba no depende de la hora en que corre y mide "con sesión ya iniciada" (RNF-01). Por eso exige una base dedicada.
+- **Mezcla de validaciones:** el plan no la fija. Una de cada diez validaciones es captura manual, para medir `{name:manual}`. La fase sostenida usa 1,000 empleados distintos (1,000 consumos, RNF-02). En la fase pico vuelven los primeros 300 empleados y se espera que todos sean rechazados por "ya consumió". Si se quisiera un pico con consumos nuevos, harían falta 1,300 empleados simulados.
+- **Alcance de la medición:** API, SQL Server y k6 en el mismo equipo. Lo que agregan la red y el celular se confirma en el entorno del cliente (pasos en aceptacion.md).
+- **Runtime:** el equipo de prueba solo tiene .NET 10, así que la API corrió con `DOTNET_ROLL_FORWARD=Major`. Si el servidor del cliente usa .NET 8, la carga se repite ahí.

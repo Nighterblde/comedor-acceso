@@ -423,10 +423,10 @@ Pantallas: Reportes con rango de fechas, tablas y botones Excel/PDF; Administrac
 
 **Archivos:** crear `load/validacion.k6.js`, `docs/aceptacion.md`.
 
-- [ ] **Paso 1:** escribir el escenario k6: 1,000 empleados simulados con sesión previa; 1 punto de entrada; 50 validaciones por minuto sostenidas durante 20 minutos y un pico de 150 por minuto durante 2 minutos. Umbrales: `http_req_duration{name:celular}` p95 < 2000 ms, `{name:manual}` p95 < 1000 ms, `http_req_failed` < 1 %.
-- [ ] **Paso 2:** `k6 run load/validacion.k6.js` contra un entorno con SQL Server → los umbrales pasan; luego verificar que el conteo de Consumo es igual al número de autorizados.
-- [ ] **Paso 3:** recorrer cada criterio de la sección 9.2 del SRS en un entorno de prueba y registrar el resultado y la evidencia en `docs/aceptacion.md`.
-- [ ] **Paso 4:** `git commit -m "test: carga y aceptación"`
+- [x] **Paso 1:** escribir el escenario k6: 1,000 empleados simulados con sesión previa; 1 punto de entrada; 50 validaciones por minuto sostenidas durante 20 minutos y un pico de 150 por minuto durante 2 minutos. Umbrales: `http_req_duration{name:celular}` p95 < 2000 ms, `{name:manual}` p95 < 1000 ms, `http_req_failed` < 1 %.
+- [x] **Paso 2:** `k6 run load/validacion.k6.js` contra un entorno con SQL Server → los umbrales pasan; luego verificar que el conteo de Consumo es igual al número de autorizados.
+- [x] **Paso 3:** recorrer cada criterio de la sección 9.2 del SRS en un entorno de prueba y registrar el resultado y la evidencia en `docs/aceptacion.md`.
+- [x] **Paso 4:** `git commit -m "test: carga y aceptación"`
 
 ## Fuera de las tareas de código
 
