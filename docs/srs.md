@@ -10,7 +10,7 @@
 | Documentos asociados | [Plan de implementación](plan.md) · [Guía de diseño](diseno.md) · [Decisiones](decisiones.md) |
 | Fuente editable | Documento colaborativo en Claude (este archivo es una exportación) |
 
-**Versión 1.4.** Las decisiones D-NN se detallan en el [registro de decisiones](decisiones.md).
+**Versión 1.5.** Las decisiones D-NN se detallan en el [registro de decisiones](decisiones.md).
 
 | Versión | Cambios                                                                                                                                                                                                                    |
 |---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -19,6 +19,7 @@
 | 1.2     | RF-23 precisa qué reportes se exportan y en qué formato (D-14). RF-26 precisa las reglas de la captura de contingencia (D-15).                                                                                             |
 | 1.3     | El QR del punto es permanente e impreso y no comprueba presencia; se elimina la caducidad del token (RF-07, RF-10, D-21). La pantalla del chef muestra el nombre sin foto; la foto queda como mejora futura (RF-29, D-20). |
 | 1.4     | Riesgos aceptados D-16 y D-21 en 2.7. Turno y tiempo de comida como texto libre (D-17). Mejoras futuras D-19 y D-20 en 10. Se corrigen dos menciones de foto en la pantalla del chef (2.2 y 9.2).                          |
+| 1.5     | La matrícula puede llevar letras y números; el celular abre el teclado de texto (D-32). Se agrega el formato de la matrícula a los pendientes con el cliente (11).                                                         |
 
 ## 1. Introducción
 
@@ -353,6 +354,8 @@ Estas decisiones pueden cambiar requisitos; cada una indica a cuáles afecta.
 - [ ] Wi-Fi accesible desde celulares personales y certificado HTTPS (sección 2.6).
 
 - [ ] Motor, tabla o vista y credenciales de solo lectura de la fuente RR. HH., incluido el formato del rol de descansos (RF-01 a RF-03, RF-27).
+
+- [ ] Formato de la matrícula en la fuente RR. HH.: si es solo numérica o puede llevar letras (D-32).
 
 - [ ] Lista de turnos y horarios de cada tiempo de comida, cuáles pertenecen a la jornada del día anterior y cómo tratar horarios que se traslapen (RF-05, RF-06, RF-28).
 

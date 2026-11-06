@@ -9,7 +9,7 @@
     <form [formGroup]="formulario" (ngSubmit)="entrar()" novalidate>
       <div class="campo">
         <label for="id">Número de empleado</label>
-        <input id="id" type="text" inputmode="numeric" formControlName="id" autocomplete="username"
+        <input id="id" type="text" formControlName="id" autocomplete="username"
                [attr.aria-describedby]="error ? 'error-login' : null" [attr.aria-invalid]="error ? true : null" />
       </div>
 

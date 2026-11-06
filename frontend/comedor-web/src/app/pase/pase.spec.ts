@@ -212,6 +212,15 @@ describe('módulo Pase', () => {
     http.expectNone(URL_SESION);
   });
 
+  it('login_numeroDeEmpleado_usaTecladoDeTexto', () => {
+    // El formato de la matrícula no está definido; puede llevar letras (D-32).
+    const f = crear('abc.def');
+    const id = (f.nativeElement as HTMLElement).querySelector('#id') as HTMLInputElement;
+
+    expect(id.type).toBe('text');
+    expect(id.getAttribute('inputmode')).not.toBe('numeric');
+  });
+
   it('login_muestraPuntoDelToken', () => {
     const t = btoa('P1|638000000').replace(/=+$/, '') + '.mac';
     const f = crear(t);

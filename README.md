@@ -24,6 +24,7 @@ Quien no tenga celular puede identificarse con su matrícula ante el chef, que l
 | [Plan de implementación](docs/plan.md) | 16 tareas con desarrollo guiado por pruebas: archivos, interfaces, pruebas y comandos de cada una. |
 | [Guía de diseño](docs/diseno.md) | Principios, colores, tipografía, componentes, pantallas de referencia y reglas de accesibilidad del frontend. |
 | [Registro de decisiones](docs/decisiones.md) | Decisiones de arquitectura y de negocio, con su motivo y alternativas descartadas. |
+| [Carga y aceptación](docs/aceptacion.md) | Resultado de la prueba de carga (RNF-01, RNF-02) y del recorrido de los criterios de aceptación, con lo pendiente en el entorno del cliente. |
 
 ## Arquitectura
 
@@ -85,6 +86,24 @@ dotnet user-secrets set "Semilla:Admin:Contrasena" "<contraseña>"
 ```
 
 En producción se usan variables de entorno equivalentes (`Jwt__Clave`, `Qr__ClaveFirma`, `ConnectionStrings__Comedor`, `Semilla__Admin__Usuario`, `Semilla__Admin__Contrasena`). Al iniciar, la API aplica las migraciones.
+
+Para levantar el sistema: la API con `dotnet run --launch-profile http` desde `backend/src/Comedor.Api` (puerto 5277) y el frontend con `npx ng serve` desde `frontend/comedor-web` (puerto 4200). En desarrollo, el autenticador simulado solo tiene los empleados `E1001` y `E1002` (contraseñas en `appsettings.Development.json`). Para agregar otro empleado de prueba sin tocar el repositorio, hay que apuntar `Fuente:RutaEmpleados` a una copia del archivo simulado (ruta absoluta) y definir `Autenticacion:Simulada:Usuarios:<MATRÍCULA>` con user-secrets.
+
+### Probar desde un celular en la red local
+
+El QR apunta a `App:UrlPublica` y el frontend llama a la API en `apiUrl` (`frontend/comedor-web/src/environments/environment.ts`); ambos valen `localhost` por defecto, que el celular no alcanza. Para probar con un celular en la misma red, con `<IP>` como la IP de la PC:
+
+1. `dotnet user-secrets set "App:UrlPublica" "http://<IP>:4200"` y `dotnet user-secrets set "Cors:Origenes:1" "http://<IP>:4200"`.
+2. Cambiar `apiUrl` a `http://<IP>:5277` solo en la copia local; no se hace commit de ese cambio.
+3. Levantar la API con `ASPNETCORE_URLS=http://0.0.0.0:5277` y `dotnet run --no-launch-profile` (con `ASPNETCORE_ENVIRONMENT=Development`), y el frontend con `npx ng serve --host 0.0.0.0`.
+4. Permitir los puertos 4200 y 5277 en el firewall de Windows (PowerShell como administrador): `New-NetFirewallRule -DisplayName "Comedor (prueba local)" -Direction Inbound -Protocol TCP -LocalPort 4200,5277 -RemoteAddress LocalSubnet -Action Allow -Profile Any`. Al terminar, se quita con `Remove-NetFirewallRule -DisplayName "Comedor (prueba local)"`.
+5. Volver a mostrar el QR desde Administración → Puntos → "Imprimir QR", porque el anterior apuntaba a `localhost`.
+
+Al terminar, se quitan los dos secretos del paso 1 y se revierte `environment.ts`.
+
+### Pruebas
+
+`dotnet test backend/Comedor.sln` necesita Docker en ejecución: las pruebas de API levantan SQL Server con Testcontainers. La prueba de carga y el resultado de la aceptación están en [docs/aceptacion.md](docs/aceptacion.md).
 
 ### Convenciones
 
