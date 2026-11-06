@@ -59,7 +59,9 @@ export const options = {
   thresholds: {
     'http_req_duration{name:celular}': ['p(95)<2000'],
     'http_req_duration{name:manual}': ['p(95)<1000'],
-    http_req_failed: ['rate<0.01'],
+    // Solo las validaciones; las peticiones de setup() no cuentan.
+    'http_req_failed{scenario:sostenido}': ['rate<0.01'],
+    'http_req_failed{scenario:pico}': ['rate<0.01'],
   },
 };
 
@@ -142,12 +144,17 @@ export default function (datos) {
       });
 
   const estado = res.status === 200 ? res.json('estado') : null;
+  const motivo = res.status === 200 ? res.json('motivo') : null;
   if (estado === 'Autorizado') autorizados.add(1);
   if (estado === 'Rechazado') rechazados.add(1);
 
+  // constant-arrival-rate puede lanzar una iteración más que rate × duración; esa vuelta
+  // repite a un empleado que ya comió y debe ser rechazada como en el pico.
+  const primeraVez = __ENV.FASE === 'sostenido' && n < EMPLEADOS;
+  const yaConsumio = estado === 'Rechazado' && motivo === 'Ya consumiste este tiempo de comida';
   check(res, {
     'responde 200': (r) => r.status === 200,
-    'sostenido: autorizado': () => __ENV.FASE !== 'sostenido' || estado === 'Autorizado',
-    'pico: rechazado por ya consumió': () => __ENV.FASE !== 'pico' || estado === 'Rechazado',
+    'primera vez: autorizado': () => !primeraVez || estado === 'Autorizado',
+    'repetido: rechazado por ya consumió': () => primeraVez || yaConsumio,
   });
 }
