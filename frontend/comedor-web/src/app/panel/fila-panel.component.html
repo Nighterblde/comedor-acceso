@@ -1,0 +1,8 @@
+@if (puntoId(); as id) {
+  <p class="acciones">
+    <a class="boton" [routerLink]="['/punto', id]" target="_blank" rel="noopener">Abrir pantalla del chef</a>
+  </p>
+  <app-fila [puntoId]="id" modo="panel"></app-fila>
+} @else if (cargado()) {
+  <p class="aviso-sin-punto">No hay un punto de entrada activo; créalo en Administración &gt; Puntos.</p>
+}

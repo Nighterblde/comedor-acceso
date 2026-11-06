@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { textoDeError } from '../compartido/errores';
-import { AuthService } from '../core/auth.service';
 import { Canal, FilaConteo, FilaCotejo, FilaDetalle, FiltrosDetalle, MotivoRechazo } from '../modelos/reporte.model';
 import { conFiltros, ReportesService } from './reportes.service';
 import { HttpParams } from '@angular/common/http';
@@ -15,11 +15,6 @@ export type TipoReporte = 'cotejo' | 'conteo' | 'detalle';
   styleUrl: './reportes.component.scss',
 })
 export class ReportesComponent {
-  readonly tipos: { valor: TipoReporte; etiqueta: string }[] = [
-    { valor: 'cotejo', etiqueta: 'Cotejo de factura' },
-    { valor: 'conteo', etiqueta: 'Conteo' },
-    { valor: 'detalle', etiqueta: 'Detalle' },
-  ];
   readonly canales: Canal[] = ['Celular', 'Manual', 'Contingencia'];
   readonly motivos: { valor: MotivoRechazo; texto: string }[] = [
     { valor: 'NoRegistrado', texto: 'No registrado' },
@@ -30,7 +25,8 @@ export class ReportesComponent {
     { valor: 'YaConsumio', texto: 'Ya consumiste este tiempo de comida' },
   ];
 
-  tipo: TipoReporte = 'cotejo';
+  /** Tipo de reporte: lo fija la ruta (/panel/cotejo, /panel/conteo, /panel/detalle). */
+  tipo: TipoReporte;
   desde = '';
   hasta = '';
   filtros: FiltrosDetalle = {};
@@ -43,8 +39,10 @@ export class ReportesComponent {
 
   constructor(
     private readonly reportes: ReportesService,
-    readonly auth: AuthService,
-  ) {}
+    ruta: ActivatedRoute,
+  ) {
+    this.tipo = ruta.snapshot.data['tipo'] ?? 'cotejo';
+  }
 
   get rangoCompleto(): boolean {
     return !!this.desde && !!this.hasta;
@@ -52,11 +50,6 @@ export class ReportesComponent {
 
   get puedeExportarPdf(): boolean {
     return this.tipo !== 'detalle';
-  }
-
-  cambiarTipo(tipo: TipoReporte): void {
-    this.tipo = tipo;
-    this.error.set(null);
   }
 
   /** Al cambiar el rango o los filtros se ocultan los resultados: lo visible debe coincidir con lo que se exporta. */

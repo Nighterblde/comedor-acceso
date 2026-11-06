@@ -417,3 +417,15 @@ Plan v2, tarea 5. Detalles que el plan no fijaba; no cambian lo que hace el sist
 - **Accesibilidad:** el texto va en una región `role="status"` (`aria-live="polite"`) siempre presente y vacía mientras no hay turno, a 28 px en negrita para leerse a 1–2 m.
 
 **Estado:** vigente.
+
+## D-48 Detalles del panel único (tarea 6 del plan v2)
+
+Plan v2, tarea 6. Detalles que el plan no fijaba; no cambian lo que hace el sistema (RF-34, D-37).
+
+- **Horario de comida:** `/panel` consulta `GET /api/admin/reglas` y abre `/panel/fila` si la hora local del navegador cae en alguna regla (fin exclusivo; las reglas que cruzan la medianoche cuentan); si no, o si las reglas no se pueden leer, abre `/panel/cotejo`. No se agregó ningún endpoint.
+- **Punto de la fila en el panel:** el primer punto activo por `Id` (comparación ordinal, como el inicio del chef, D-44), tomado de `GET /api/admin/puntos`. De ahí sale también el enlace "Abrir pantalla del chef" (`/punto/{id}`, pestaña nueva). Sin punto activo se muestra "No hay un punto de entrada activo; créalo en Administración > Puntos."
+- **Rutas:** `/reportes` y `/admin` redirigen a `/panel` (se conserva lo que sigue en la ruta). Los reportes Cotejo, Conteo y Detalle son rutas hijas; el tipo viene de los datos de la ruta y desaparecen las pestañas.
+- **Barra superior única:** el usuario, el rol y "Sesión hasta las hh:mm" (D-44) viven solo en la barra del panel; se retiran las de Administración y Reportes.
+- **Personal:** `/panel/personal` existe con un marcador mínimo hasta que la tarea 8 cree la pantalla de importación.
+
+**Estado:** vigente.

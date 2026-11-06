@@ -1,15 +1,21 @@
 @use '../compartido/pantalla';
 
-.admin {
+.panel {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
 }
 
 .lateral {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
   padding: 24px 12px;
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+  }
 
   a {
     display: flex;
@@ -32,21 +38,35 @@
   }
 }
 
+.grupo {
+  margin: 0 0 6px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-texto-secundario);
+}
+
 @media print {
   // Sin la navegación, el contenido ocuparía la columna de 220 px y el QR saldría recortado.
-  .admin {
+  .panel {
     display: block;
   }
 }
 
+// En el celular la navegación pasa arriba del contenido (diseño §3).
 @media (max-width: 760px) {
-  .admin {
+  .panel {
     grid-template-columns: 1fr;
   }
 
   .lateral {
-    flex-direction: row;
-    flex-wrap: wrap;
     padding: 12px;
+
+    ul {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
   }
 }

@@ -1,33 +1,4 @@
-<header class="barra">
-  <div>
-    <p class="rotulo">Comedor de personal</p>
-    <h1 class="pantalla">Reportes</h1>
-  </div>
-  <div class="sesion">
-    <p class="rol">{{ auth.usuario() }} · {{ auth.rol() }}</p>
-    @if (auth.finSesion(); as hora) {
-      <p class="rol">Sesión hasta las {{ hora }}</p>
-    }
-  </div>
-</header>
-
-<main class="contenido">
-  <app-aviso-sincronizacion></app-aviso-sincronizacion>
-
-  <nav class="pestanas" aria-label="Tipo de reporte">
-    @for (t of tipos; track t.valor) {
-      <button
-        type="button"
-        class="pestana"
-        [class.activa]="tipo === t.valor"
-        [attr.aria-pressed]="tipo === t.valor"
-        (click)="cambiarTipo(t.valor)"
-      >
-        {{ t.etiqueta }}
-      </button>
-    }
-  </nav>
-
+<div>
   <section class="tarjeta" aria-label="Filtros">
     <div class="campos">
       <div class="campo">
@@ -191,4 +162,4 @@
       </div>
     </section>
   }
-</main>
+</div>

@@ -3,11 +3,11 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { signal } from '@angular/core';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AvisoSincronizacionComponent } from '../compartido/aviso-sincronizacion.component';
 import { SincronizacionService } from '../compartido/sincronizacion.service';
-import { AuthService } from '../core/auth.service';
 import { EstadoSincronizacion } from '../modelos/reporte.model';
 import { ReportesComponent } from './reportes.component';
 import { ReportesService } from './reportes.service';
@@ -92,7 +92,7 @@ describe('módulo reportes', () => {
         providers: [
           { provide: ReportesService, useValue: servicio },
           { provide: SincronizacionService, useValue: sincronizacion },
-          { provide: AuthService, useValue: { rol: () => 'Administrador', usuario: () => 'super', finSesion: () => '14:30' } },
+          provideRouter([]),
         ],
       });
       const f = TestBed.createComponent(ReportesComponent);
@@ -134,7 +134,7 @@ describe('módulo reportes', () => {
   });
 
   describe('ReportesComponent, rango y detalle', () => {
-    function armar() {
+    function armar(tipo = 'cotejo') {
       const servicio = jasmine.createSpyObj<ReportesService>('ReportesService', [
         'conteo',
         'cotejo',
@@ -151,7 +151,7 @@ describe('módulo reportes', () => {
         providers: [
           { provide: ReportesService, useValue: servicio },
           { provide: SincronizacionService, useValue: { estado: signal(null), refrescar: () => undefined } },
-          { provide: AuthService, useValue: { rol: () => 'Administrador', usuario: () => 'super', finSesion: () => '14:30' } },
+          { provide: ActivatedRoute, useValue: { snapshot: { data: { tipo } } } },
         ],
       });
       const f = TestBed.createComponent(ReportesComponent);
@@ -184,8 +184,7 @@ describe('módulo reportes', () => {
     }));
 
     it('exportarDetalle_incluyeFiltros', fakeAsync(() => {
-      const { f, servicio } = armar();
-      boton(f, 'Detalle')!.click();
+      const { f, servicio } = armar('detalle');
       f.componentInstance.filtros = { canal: 'Manual', motivo: 'YaConsumio' };
       f.detectChanges();
       boton(f, 'Excel')!.click();
@@ -197,21 +196,14 @@ describe('módulo reportes', () => {
       );
     }));
 
-    it('detalle_sinBotonPdf', () => {
+    it('cotejo_conBotonPdf', () => {
       const { f } = armar();
       expect(boton(f, 'PDF')).toBeDefined();
-
-      boton(f, 'Detalle')!.click();
-      f.detectChanges();
-
-      expect(boton(f, 'PDF')).toBeUndefined();
     });
 
-    it('barra_muestraUsuarioYRol', () => {
-      const { f } = armar();
-      const barra = (f.nativeElement.querySelector('header') as HTMLElement).textContent ?? '';
-      expect(barra).toContain('super');
-      expect(barra).toContain('Administrador');
+    it('detalle_sinBotonPdf_enRutaDetalle', () => {
+      const { f } = armar('detalle');
+      expect(boton(f, 'PDF')).toBeUndefined();
     });
   });
 
