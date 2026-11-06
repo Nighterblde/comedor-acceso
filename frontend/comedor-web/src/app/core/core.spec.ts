@@ -69,6 +69,32 @@ describe('núcleo del frontend', () => {
     req.flush({});
   });
 
+  it('interceptor_usaTokenEmpleadoEnMiTurno', () => {
+    const http = TestBed.inject(HttpTestingController);
+    localStorage.setItem('comedor.token.empleado', 'tok-empleado');
+    localStorage.setItem('comedor.token.sistema', 'tok-sistema');
+
+    TestBed.inject(HttpClient).get(`${environment.apiUrl}/api/accesos/mi-turno`).subscribe();
+
+    const req = http.expectOne(`${environment.apiUrl}/api/accesos/mi-turno`);
+    expect(req.request.headers.get('Authorization')).toBe('Bearer tok-empleado');
+    req.flush({});
+  });
+
+  it('respuesta401_deMiTurno_noBorraSesionDelSistemaNiNavega', () => {
+    const http = TestBed.inject(HttpTestingController);
+    const router = TestBed.inject(Router);
+    const navegar = spyOn(router, 'navigate').and.resolveTo(true);
+    localStorage.setItem('comedor.token.empleado', 'tok-empleado');
+    localStorage.setItem('comedor.token.sistema', 'tok-sistema');
+
+    TestBed.inject(HttpClient).get(`${environment.apiUrl}/api/accesos/mi-turno`).subscribe({ error: () => {} });
+    http.expectOne(`${environment.apiUrl}/api/accesos/mi-turno`).flush({}, { status: 401, statusText: 'Unauthorized' });
+
+    expect(localStorage.getItem('comedor.token.sistema')).toBe('tok-sistema');
+    expect(navegar).not.toHaveBeenCalled();
+  });
+
   it('interceptor_usaTokenSistemaEnReportes', () => {
     const http = TestBed.inject(HttpTestingController);
     localStorage.setItem('comedor.token.empleado', 'tok-empleado');

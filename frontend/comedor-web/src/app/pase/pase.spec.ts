@@ -140,6 +140,7 @@ describe('módulo Pase', () => {
 
     const antes = leer();
     tick(1000);
+    http.expectOne(`${environment.apiUrl}/api/accesos/mi-turno`).flush({ estado: 'SinTurno', posicion: null });
     f.detectChanges();
 
     expect(leer()).not.toBe(antes);
@@ -257,5 +258,114 @@ describe('módulo Pase', () => {
 
     expect(texto(f)).toContain('Listo. El día que abra el comedor solo escanea el código de la entrada');
     http.expectNone(URL_CELULAR);
+  });
+
+  describe('turno en la fila', () => {
+    const URL_TURNO = `${environment.apiUrl}/api/accesos/mi-turno`;
+
+    function conPase(estado: 'Autorizado' | 'Rechazado'): ComponentFixture<PaseComponent> {
+      localStorage.setItem('comedor.token.empleado', 'jwt');
+      const f = crear('abc.def');
+      http.expectOne(URL_CELULAR).flush(resultado({ estado, motivo: estado === 'Rechazado' ? 'Fuera de horario' : null }));
+      f.detectChanges();
+      return f;
+    }
+
+    it('autorizado_consultaTurnoCada3Segundos', fakeAsync(() => {
+      const f = conPase('Autorizado');
+      tick(0);
+      http.expectOne(URL_TURNO).flush({ estado: 'EnFila', posicion: 3 });
+
+      tick(2999);
+      http.expectNone(URL_TURNO);
+      tick(1);
+      http.expectOne(URL_TURNO).flush({ estado: 'EnFila', posicion: 2 });
+      tick(3000);
+      http.expectOne(URL_TURNO).flush({ estado: 'EnFila', posicion: 1 });
+
+      f.destroy();
+    }));
+
+    it('enFila_muestraPosicion', fakeAsync(() => {
+      const f = conPase('Autorizado');
+      tick(0);
+      http.expectOne(URL_TURNO).flush({ estado: 'EnFila', posicion: 4 });
+      f.detectChanges();
+
+      const el = f.nativeElement.querySelector('[data-prueba="turno"]');
+      expect(el.textContent).toContain('Eres el 4.º en la fila');
+      expect(el.getAttribute('role')).toBe('status');
+      f.destroy();
+    }));
+
+    it('sirviendo_muestraPasaConElChef', fakeAsync(() => {
+      const f = conPase('Autorizado');
+      tick(0);
+      http.expectOne(URL_TURNO).flush({ estado: 'Sirviendo', posicion: 1 });
+      f.detectChanges();
+
+      expect(texto(f)).toContain('Te están sirviendo: pasa con el chef');
+      f.destroy();
+    }));
+
+    it('servido_muestraBuenProvecho_yDejaDeConsultar', fakeAsync(() => {
+      const f = conPase('Autorizado');
+      tick(0);
+      http.expectOne(URL_TURNO).flush({ estado: 'Servido', posicion: null });
+      f.detectChanges();
+
+      expect(texto(f)).toContain('Servido. ¡Buen provecho!');
+      tick(9000);
+      http.expectNone(URL_TURNO);
+      f.destroy();
+    }));
+
+    it('sinTurno_dejaDeConsultar_sinTexto', fakeAsync(() => {
+      const f = conPase('Autorizado');
+      tick(0);
+      http.expectOne(URL_TURNO).flush({ estado: 'SinTurno', posicion: null });
+      f.detectChanges();
+
+      expect(f.nativeElement.querySelector('[data-prueba="turno"]').textContent.trim()).toBe('');
+      tick(9000);
+      http.expectNone(URL_TURNO);
+      f.destroy();
+    }));
+
+    it('rechazado_noConsultaTurno', fakeAsync(() => {
+      const f = conPase('Rechazado');
+      tick(9000);
+
+      http.expectNone(URL_TURNO);
+      f.destroy();
+    }));
+
+    it('errorAlConsultar_conservaTexto', fakeAsync(() => {
+      const f = conPase('Autorizado');
+      tick(0);
+      http.expectOne(URL_TURNO).flush({ estado: 'EnFila', posicion: 2 });
+      f.detectChanges();
+
+      tick(3000);
+      http.expectOne(URL_TURNO).flush(null, { status: 500, statusText: 'Error' });
+      f.detectChanges();
+      expect(texto(f)).toContain('Eres el 2.º en la fila');
+
+      tick(3000);
+      http.expectOne(URL_TURNO).flush({ estado: 'EnFila', posicion: 1 });
+      f.detectChanges();
+      expect(texto(f)).toContain('Eres el 1.º en la fila');
+      f.destroy();
+    }));
+
+    it('alDestruir_dejaDeConsultar', fakeAsync(() => {
+      const f = conPase('Autorizado');
+      tick(0);
+      http.expectOne(URL_TURNO).flush({ estado: 'EnFila', posicion: 2 });
+      f.destroy();
+
+      tick(9000);
+      http.expectNone(URL_TURNO);
+    }));
   });
 });

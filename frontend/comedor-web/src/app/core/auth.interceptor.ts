@@ -5,7 +5,7 @@ import { catchError, Observable, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
 const RUTAS_SIN_TOKEN = ['/api/auth/login', '/api/empleados/sesion'];
-const RUTA_EMPLEADO = '/api/accesos/celular';
+const RUTAS_EMPLEADO = ['/api/accesos/celular', '/api/accesos/mi-turno'];
 const AVISO_SESION_TERMINADA = 'Tu sesión terminó; vuelve a iniciar sesión';
 
 @Injectable()
@@ -21,7 +21,7 @@ export class AuthInterceptor implements HttpInterceptor {
       return next.handle(req);
     }
 
-    const esDelEmpleado = ruta === RUTA_EMPLEADO;
+    const esDelEmpleado = RUTAS_EMPLEADO.includes(ruta);
     const token = esDelEmpleado ? this.auth.tokenEmpleado() : this.auth.tokenSistema();
     if (!token) {
       return next.handle(req);

@@ -1,11 +1,13 @@
 import { Component, computed, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { interval, Subscription } from 'rxjs';
-import { ResultadoAcceso } from '../modelos/pase.model';
+import { catchError, EMPTY, interval, Subscription, switchMap, takeWhile, tap, timer } from 'rxjs';
+import { MiTurno, ResultadoAcceso } from '../modelos/pase.model';
 import { PaseService } from './pase.service';
 
 export const TEXTO_ESCANEAR = 'Escanea de nuevo el código de la entrada';
 export const TEXTO_REGISTRADO = 'Listo. El día que abra el comedor solo escanea el código de la entrada';
+
+const INTERVALO_TURNO_MS = 3000;
 
 type Vista = 'login' | 'cargando' | 'pase' | 'escanear' | 'registrado';
 
@@ -21,6 +23,20 @@ export class PaseComponent implements OnInit, OnDestroy {
 
   readonly vista = signal<Vista>('cargando');
   readonly resultado = signal<ResultadoAcceso | null>(null);
+  readonly turno = signal<MiTurno | null>(null);
+  readonly textoTurno = computed(() => {
+    const t = this.turno();
+    switch (t?.estado) {
+      case 'EnFila':
+        return `Eres el ${t.posicion}.º en la fila`;
+      case 'Sirviendo':
+        return 'Te están sirviendo: pasa con el chef';
+      case 'Servido':
+        return 'Servido. ¡Buen provecho!';
+      default:
+        return '';
+    }
+  });
   readonly ahora = signal(new Date());
   readonly iniciales = computed(() =>
     (this.resultado()?.nombre ?? '')
@@ -35,6 +51,7 @@ export class PaseComponent implements OnInit, OnDestroy {
   private token: string | null = null;
   private registro = false;
   private reloj?: Subscription;
+  private consultaTurno?: Subscription;
 
   constructor(
     private readonly ruta: ActivatedRoute,
@@ -51,6 +68,7 @@ export class PaseComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.reloj?.unsubscribe();
+    this.consultaTurno?.unsubscribe();
   }
 
   sesionIniciada(): void {
@@ -75,6 +93,9 @@ export class PaseComponent implements OnInit, OnDestroy {
       next: (r) => {
         this.resultado.set(r);
         this.vista.set(r.estado === 'EscanearDeNuevo' ? 'escanear' : 'pase');
+        if (r.estado === 'Autorizado') {
+          this.consultarTurno();
+        }
       },
       error: (e) => {
         if (e?.status === 401) {
@@ -85,5 +106,17 @@ export class PaseComponent implements OnInit, OnDestroy {
         }
       },
     });
+  }
+
+  /** Consulta el turno cada 3 s; se detiene con Servido o SinTurno y conserva el texto si una consulta falla. */
+  private consultarTurno(): void {
+    this.consultaTurno?.unsubscribe();
+    this.consultaTurno = timer(0, INTERVALO_TURNO_MS)
+      .pipe(
+        switchMap(() => this.pase.miTurno().pipe(catchError(() => EMPTY))),
+        tap((t) => this.turno.set(t)),
+        takeWhile((t) => t.estado === 'EnFila' || t.estado === 'Sirviendo'),
+      )
+      .subscribe();
   }
 }
