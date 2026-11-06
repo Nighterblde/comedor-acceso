@@ -1,0 +1,35 @@
+:host {
+  display: block;
+}
+
+.acciones {
+  margin: 0 0 16px;
+}
+
+a.boton {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--alto-boton);
+  padding: 0 20px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--color-institucional-700);
+  border-radius: var(--radio-control);
+  color: var(--color-institucional-700);
+  background: var(--color-superficie);
+
+  &:focus-visible {
+    outline: var(--foco);
+  }
+}
+
+.aviso-sin-punto {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-texto-secundario);
+}
+
+app-fila {
+  display: flex;
+  min-height: 420px;
+}

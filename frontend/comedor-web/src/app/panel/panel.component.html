@@ -1,7 +1,7 @@
 <header class="barra no-imprimir">
   <div>
     <p class="rotulo">Comedor de personal</p>
-    <h1 class="pantalla">Administración</h1>
+    <p class="pantalla">Panel del administrador</p>
   </div>
   <div class="sesion">
     <p class="rol">{{ auth.usuario() }} · {{ auth.rol() }}</p>
@@ -11,10 +11,17 @@
   </div>
 </header>
 
-<div class="admin">
-  <nav class="lateral no-imprimir" aria-label="Administración">
-    @for (p of pestanas; track p.ruta) {
-      <a [routerLink]="p.ruta" routerLinkActive="activo" ariaCurrentWhenActive="page">{{ p.etiqueta }}</a>
+<div class="panel">
+  <nav class="lateral no-imprimir" aria-label="Panel">
+    @for (g of grupos; track g.titulo) {
+      <h2 class="grupo">{{ g.titulo }}</h2>
+      <ul>
+        @for (e of g.enlaces; track e.ruta) {
+          <li>
+            <a [routerLink]="['/panel', e.ruta]" routerLinkActive="activo" ariaCurrentWhenActive="page">{{ e.etiqueta }}</a>
+          </li>
+        }
+      </ul>
     }
   </nav>
   <main class="contenido">
